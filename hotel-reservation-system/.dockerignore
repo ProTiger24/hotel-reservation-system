@@ -1,9 +1,0 @@
-.git
-.gitignore
-README.md
-frontend/
-data/
-*.log
-target/
-.mvn/
-*.iml

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Reservation System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-brand">
+                    <i class="fas fa-hotel"></i>
+                    <span>Hotel Booking</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#" class="active" data-page="home"><i class="fas fa-home"></i> Home</a>
+                    <a href="#" data-page="bookings"><i class="fas fa-list"></i> My Bookings</a>
+                    <span id="userEmailDisplay" style="color:rgba(255,255,255,0.8);font-size:13px;margin-left:15px;background:rgba(255,255,255,0.15);padding:5px 12px;border-radius:20px;"></span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>Find Your Perfect Stay</h1>
+                    <p>Book luxury rooms at the best prices</p>
+                    <div class="search-box">
+                        <div class="search-group">
+                            <i class="fas fa-calendar-alt"></i>
+                            <label style="font-size:12px;color:#666;margin-right:5px;">Check-in</label>
+                            <input type="date" id="checkIn" style="border:none;padding:8px 0;background:transparent;outline:none;">
+                        </div>
+                        <div class="search-group">
+                            <i class="fas fa-calendar-alt"></i>
+                            <label style="font-size:12px;color:#666;margin-right:5px;">Check-out</label>
+                            <input type="date" id="checkOut" style="border:none;padding:8px 0;background:transparent;outline:none;">
+                        </div>
+                        <div class="search-group">
+                            <i class="fas fa-users"></i>
+                            <label style="font-size:12px;color:#666;margin-right:5px;">Guests</label>
+                            <input type="number" id="guests" value="2" min="1" max="10" style="border:none;padding:8px 0;background:transparent;outline:none;width:60px;">
+                        </div>
+                        <button onclick="searchRooms()" class="btn-search">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    <p style="margin-top:15px;font-size:14px;opacity:0.8;">
+                        <i class="fas fa-info-circle"></i> Select dates and guests to find available rooms
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading -->
+        <div id="loading" style="display:none; text-align:center; padding:40px;">
+            <i class="fas fa-spinner fa-spin" style="font-size:48px; color:#667eea;"></i>
+            <p style="margin-top:10px;">Loading rooms...</p>
+        </div>
+
+        <!-- Rooms -->
+        <section class="rooms-section">
+            <div class="container">
+                <h2 class="section-title"><i class="fas fa-bed"></i> Available Rooms</h2>
+                <div id="roomList" class="room-grid"></div>
+            </div>
+        </section>
+
+        <!-- Booking Modal -->
+        <div id="bookingModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2><i class="fas fa-edit"></i> Complete Booking</h2>
+                <div id="bookingDetails"></div>
+                
+                <div class="payment-section">
+                    <h3><i class="fas fa-credit-card"></i> Payment</h3>
+                    <div class="payment-methods">
+                        <div class="payment-option" onclick="selectPayment('BKASH')">
+                            <i class="fas fa-mobile-alt"></i> bKash
+                        </div>
+                        <div class="payment-option" onclick="selectPayment('CARD')">
+                            <i class="fas fa-credit-card"></i> Card
+                        </div>
+                        <div class="payment-option" onclick="selectPayment('BANK')">
+                            <i class="fas fa-university"></i> Bank
+                        </div>
+                    </div>
+                    <div id="paymentForm" class="payment-form"></div>
+                    <button onclick="processPayment()" class="btn-confirm" id="payBtn">
+                        <i class="fas fa-check"></i> Confirm & Pay
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookings -->
+        <section class="bookings-section" id="bookingsSection" style="display:none;">
+            <div class="container">
+                <h2 class="section-title"><i class="fas fa-list"></i> My Bookings</h2>
+                <div id="bookingList" class="booking-list"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer Section -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3><i class="fas fa-hotel"></i> Hotel Booking</h3>
+                    <p>Book your perfect stay with us. We provide luxury rooms at the best prices.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Home</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Rooms</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> My Bookings</a></li>
+                        <li><a href="#"><i class="fas fa-chevron-right"></i> Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Contact Info</h4>
+                    <ul>
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Hotel Street, City</li>
+                        <li><i class="fas fa-phone"></i> +880 1234 567890</li>
+                        <li><i class="fas fa-envelope"></i> info@hotelbooking.com</li>
+                        <li><i class="fas fa-clock"></i> 24/7 Available</li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Payment Partners</h4>
+                    <div class="payment-icons">
+                        <i class="fas fa-credit-card"></i>
+                        <i class="fas fa-mobile-alt"></i>
+                        <i class="fas fa-university"></i>
+                        <span class="payment-badge">bKash</span>
+                        <span class="payment-badge">Visa</span>
+                        <span class="payment-badge">Mastercard</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 <strong>Hotel Booking System</strong>. All rights reserved.</p>
+                <p>Made with <i class="fas fa-heart" style="color: #e74c3c;"></i> by CodeAlpha Team</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/payment.js"></script>
+</body>
+</html>
