@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drivers Management — Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7", teal:"#1E8A8A" },
+    fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] }
+  }}
+}
+</script>
+<style>
+* { box-sizing: border-box; }
+body { margin:0; font-family:"DM Sans",sans-serif; background:#F3F5F7; color:#0B1F33; }
+.font-serif { font-family:"Playfair Display",serif; }
+.sidebar { width:260px; background:linear-gradient(180deg,#0B1F33 0%,#102A43 100%); min-height:100vh; position:fixed; left:0; top:0; z-index:40; transition:transform .3s ease; }
+.sidebar-link { display:flex; align-items:center; gap:14px; padding:13px 22px; color:#94a3b8; text-decoration:none; font-size:14px; font-weight:500; border-left:3px solid transparent; transition:all .25s ease; }
+.sidebar-link:hover { color:#fff; background:rgba(255,255,255,.05); }
+.sidebar-link.active { color:#fff; background:rgba(199,164,106,.15); border-left-color:#C7A46A; }
+.sidebar-link.active i { color:#C7A46A; }
+.sidebar-link i { width:20px; text-align:center; font-size:16px; }
+.sidebar-section-label { padding:20px 22px 8px; color:#64748b; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; }
+.main-content { margin-left:260px; min-height:100vh; }
+@media (max-width:1023px) { .sidebar { transform:translateX(-100%); } .sidebar.open { transform:translateX(0); } .main-content { margin-left:0; } }
+.topbar { background:#fff; border-bottom:1px solid #e5e7eb; padding:16px 28px; position:sticky; top:0; z-index:30; }
+.card { background:#fff; border-radius:18px; padding:24px; border:1px solid #eef2f7; }
+.stat-card { background:#fff; border-radius:18px; padding:20px; border:1px solid #eef2f7; transition:all .3s ease; }
+.stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(11,31,51,.08); }
+.stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.driver-card { background:#fff; border:1px solid #eef2f7; border-radius:18px; overflow:hidden; transition:all .3s ease; padding:24px; }
+.driver-card:hover { transform:translateY(-6px); box-shadow:0 20px 45px rgba(11,31,51,.12); }
+.driver-avatar { width:80px; height:80px; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:700; color:#fff; margin:0 auto 16px; }
+.status-badge { padding:5px 12px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; display:inline-block; }
+.status-AVAILABLE { background:#d1fae5; color:#065f46; }
+.status-ON_TRIP { background:#dbeafe; color:#1e40af; }
+.status-OFF_DUTY { background:#fee2e2; color:#991b1b; }
+.btn-gold { background:#C7A46A; color:#fff; transition:.25s ease; border:none; cursor:pointer; }
+.btn-gold:hover { background:#aa884e; color:#fff; }
+.btn-navy { background:#0B1F33; color:#fff; transition:.25s ease; border:none; cursor:pointer; }
+.btn-navy:hover { background:#102A43; color:#fff; }
+.search-input { padding:11px 16px 11px 42px; border:2px solid #e5e7eb; border-radius:12px; outline:none; font-size:14px; width:100%; }
+.search-input:focus { border-color:#C7A46A; box-shadow:0 0 0 4px rgba(199,164,106,.12); }
+.search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#9ca3af; }
+.filter-select { padding:10px 16px; border:2px solid #e5e7eb; border-radius:12px; outline:none; font-size:13px; background:#fff; cursor:pointer; font-weight:500; }
+.filter-select:focus { border-color:#C7A46A; }
+.icon-btn { width:36px; height:36px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; transition:all .2s ease; border:none; cursor:pointer; }
+.icon-btn-blue { background:#dbeafe; color:#2563eb; }
+.icon-btn-blue:hover { background:#2563eb; color:#fff; }
+.icon-btn-red { background:#fee2e2; color:#dc2626; }
+.icon-btn-red:hover { background:#dc2626; color:#fff; }
+.icon-btn-green { background:#dcfce7; color:#16a34a; }
+.icon-btn-green:hover { background:#16a34a; color:#fff; }
+.icon-btn-orange { background:#fed7aa; color:#ea580c; }
+.icon-btn-orange:hover { background:#ea580c; color:#fff; }
+.spinner { display:inline-block; width:40px; height:40px; border:4px solid rgba(199,164,106,.25); border-top-color:#C7A46A; border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.modal-overlay { position:fixed; inset:0; background:rgba(11,31,51,.75); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; overflow-y:auto; }
+.modal-overlay.active { display:flex; }
+.modal-box { background:#fff; border-radius:20px; max-width:560px; width:100%; padding:32px; max-height:90vh; overflow-y:auto; margin:auto; }
+.form-input { width:100%; padding:12px 16px; border:2px solid #e5e7eb; border-radius:12px; outline:none; font-size:14px; background:#fff; }
+.form-input:focus { border-color:#C7A46A; box-shadow:0 0 0 4px rgba(199,164,106,.12); }
+.form-label { display:block; font-size:12px; font-weight:700; color:#0B1F33; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+.custom-scroll::-webkit-scrollbar { width:6px; }
+.custom-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:6px; }
+.toast { position:fixed; bottom:30px; right:30px; padding:16px 22px; border-radius:12px; box-shadow:0 10px 30px rgba(11,31,51,.15); font-weight:600; font-size:14px; z-index:9999; max-width:400px; }
+.toast-success { background:#dcfce7; border-left:4px solid #16a34a; color:#166534; }
+.toast-error { background:#fee2e2; border-left:4px solid #dc2626; color:#991b1b; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="sidebar">
+  <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+    <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center text-white"><i class="fa-solid fa-hotel text-xl"></i></div>
+    <div>
+      <div class="text-lg font-bold text-white">Hotel<span class="text-gold">Reserve</span></div>
+      <div class="text-[9px] tracking-[3px] uppercase text-gray-400">Admin Panel</div>
+    </div>
+  </div>
+  <div class="py-3 overflow-y-auto custom-scroll" style="height:calc(100vh - 90px);">
+    <div class="sidebar-section-label">Main</div>
+    <a href="admin.html" class="sidebar-link"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
+    <a href="admin-bookings.html" class="sidebar-link"><i class="fa-solid fa-calendar-check"></i><span>Bookings</span></a>
+    <a href="admin-rooms.html" class="sidebar-link"><i class="fa-solid fa-bed"></i><span>Rooms</span></a>
+    <a href="admin-guests.html" class="sidebar-link"><i class="fa-solid fa-users"></i><span>Guests</span></a>
+    <a href="admin-checkin.html" class="sidebar-link"><i class="fa-solid fa-door-open"></i><span>Check-in / Check-out</span></a>
+    <div class="sidebar-section-label">Operations</div>
+    <a href="admin-payments.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i><span>Payments</span></a>
+    <a href="admin-housekeeping.html" class="sidebar-link"><i class="fa-solid fa-broom"></i><span>Housekeeping</span></a>
+    <a href="admin-reports.html" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></a>
+    <div class="sidebar-section-label">Travel Management</div>
+    <a href="admin-vehicles.html" class="sidebar-link"><i class="fa-solid fa-car"></i><span>Vehicles</span></a>
+    <a href="admin-drivers.html" class="sidebar-link active"><i class="fa-solid fa-id-card"></i><span>Drivers</span></a>
+    <a href="admin-destinations.html" class="sidebar-link"><i class="fa-solid fa-map-location-dot"></i><span>Destinations</span></a>
+    <a href="admin-packages.html" class="sidebar-link"><i class="fa-solid fa-suitcase-rolling"></i><span>Travel Packages</span></a>
+    <a href="admin-vehicle-bookings.html" class="sidebar-link"><i class="fa-solid fa-route"></i><span>Vehicle Bookings</span></a>
+    <div class="sidebar-section-label">System</div>
+    <a href="admin-settings.html" class="sidebar-link"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    <a href="#" onclick="logout()" class="sidebar-link text-red-400 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main-content">
+  <div class="topbar">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="lg:hidden text-navy text-xl"><i class="fa-solid fa-bars"></i></button>
+        <div>
+          <h1 class="text-xl font-bold text-navy mb-0">Drivers Management</h1>
+          <p class="text-xs text-gray-500 mb-0">Manage all travel drivers</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openAddModal()" class="btn-gold px-5 py-2.5 rounded-lg text-sm font-semibold"><i class="fa-solid fa-plus mr-2"></i>Add Driver</button>
+        <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
+          <div class="hidden md:block text-right">
+            <div class="text-sm font-semibold text-navy" id="adminName">Admin</div>
+            <div class="text-xs text-gray-500">Administrator</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-gold flex items-center justify-center text-white font-bold" id="adminInitial">A</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-6 lg:p-8">
+    <div id="loading" class="text-center py-24">
+      <div class="spinner mx-auto"></div>
+      <p class="text-gray-500 mt-4">Loading drivers...</p>
+    </div>
+
+    <div id="content" class="hidden">
+      <!-- STATS -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total</div><div class="stat-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-id-card"></i></div></div><div class="font-serif text-3xl font-bold text-navy" id="statTotal">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Available</div><div class="stat-icon bg-green-50 text-green-600"><i class="fa-solid fa-circle-check"></i></div></div><div class="font-serif text-3xl font-bold text-green-600" id="statAvailable">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">On Trip</div><div class="stat-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-route"></i></div></div><div class="font-serif text-3xl font-bold text-blue-600" id="statOnTrip">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Off Duty</div><div class="stat-icon bg-red-50 text-red-600"><i class="fa-solid fa-bed"></i></div></div><div class="font-serif text-3xl font-bold text-red-500" id="statOffDuty">0</div></div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="card mb-6">
+        <div class="grid md:grid-cols-12 gap-4">
+          <div class="md:col-span-6 relative">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by name, phone or license...">
+          </div>
+          <div class="md:col-span-3">
+            <select id="statusFilter" class="filter-select w-full">
+              <option value="">All Status</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="ON_TRIP">On Trip</option>
+              <option value="OFF_DUTY">Off Duty</option>
+            </select>
+          </div>
+          <div class="md:col-span-3">
+            <select id="vehicleFilter" class="filter-select w-full">
+              <option value="">All Vehicles</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- DRIVERS GRID -->
+      <div id="driversGrid" class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+
+      <div id="emptyState" class="hidden text-center py-16">
+        <i class="fa-solid fa-id-card text-4xl text-gray-300 mb-3"></i>
+        <h3 class="font-serif text-xl font-semibold text-gray-500 mb-2">No drivers found</h3>
+        <p class="text-gray-400 text-sm">Try changing filters or add a new driver</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div id="driverModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-serif text-2xl font-semibold" id="modalTitle">Add Driver</h3>
+      <button onclick="closeModal()" class="icon-btn" style="background:#f1f5f9;color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div id="modalError" class="hidden mb-4 p-3 rounded-xl text-sm" style="background:#fee2e2;color:#991b1b;border-left:4px solid #dc2626;"><span id="modalErrorMsg"></span></div>
+
+    <form id="driverForm" class="space-y-4">
+      <div><label class="form-label">Full Name *</label><input type="text" id="name" required class="form-input" placeholder="Rahim Mia"></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Phone *</label><input type="tel" id="phone" required class="form-input" placeholder="01711111111"></div>
+        <div><label class="form-label">Experience (Years)</label><input type="number" id="experienceYears" min="0" max="50" class="form-input" placeholder="5"></div>
+      </div>
+      <div><label class="form-label">License Number</label><input type="text" id="licenseNumber" class="form-input" placeholder="DL-DHK-001"></div>
+      <div><label class="form-label">Assigned Vehicle</label>
+        <select id="assignedVehicleId" class="form-input">
+          <option value="">Not Assigned</option>
+        </select>
+      </div>
+      <div><label class="form-label">Image URL</label><input type="url" id="imageUrl" class="form-input" placeholder="https://..."></div>
+
+      <div class="flex gap-3 pt-4 border-t border-gray-100">
+        <button type="button" onclick="closeModal()" class="flex-1 border-2 border-navy text-navy hover:bg-navy hover:text-white py-3 rounded-xl font-semibold transition">Cancel</button>
+        <button type="submit" id="saveBtn" class="btn-gold flex-1 py-3 rounded-xl font-semibold"><i class="fa-solid fa-save mr-2"></i>Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div id="deleteModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i></div>
+      <h3 class="font-serif text-2xl font-semibold mb-2">Delete Driver?</h3>
+      <p class="text-gray-500 text-sm" id="deleteMsg">This action cannot be undone.</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeDeleteModal()" class="flex-1 border-2 border-navy text-navy hover:bg-navy hover:text-white py-3 rounded-xl font-semibold transition">Cancel</button>
+      <button id="confirmDeleteBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold border-0">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+const API = "http://localhost:8080/api";
+const api = axios.create({ baseURL: API });
+const token = localStorage.getItem("accessToken");
+if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+else window.location.href = "login.html";
+
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (!user || user.role !== "ADMIN") window.location.href = "index.html";
+document.getElementById("adminName").textContent = user.name;
+document.getElementById("adminInitial").textContent = user.name.charAt(0).toUpperCase();
+
+let allDrivers = [];
+let allVehicles = [];
+let editingId = null;
+let deleteId = null;
+
+function logout() { localStorage.clear(); window.location.href = "index.html"; }
+function showToast(msg, type = "info") {
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+const avatarColors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#6366f1','#ef4444'];
+function getColor(name) { let h = 0; for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h); return avatarColors[Math.abs(h) % avatarColors.length]; }
+
+async function loadData() {
+  try {
+    const [dr, ve] = await Promise.all([
+      api.get("/admin/drivers"),
+      api.get("/admin/vehicles")
+    ]);
+    allDrivers = dr.data.data || [];
+    allVehicles = ve.data.data || [];
+
+    // Populate vehicle filter
+    const vf = document.getElementById("vehicleFilter");
+    allVehicles.forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v.id;
+      opt.textContent = `${v.vehicleNumber} - ${v.model || v.vehicleType}`;
+      vf.appendChild(opt);
+    });
+
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("content").classList.remove("hidden");
+    updateStats();
+    render();
+  } catch (e) {
+    document.getElementById("loading").innerHTML = `<div class="text-center"><i class="fa-solid fa-circle-exclamation text-red-500 text-5xl mb-4"></i><button onclick="location.reload()" class="btn-navy px-5 py-2 rounded-lg text-sm mt-2">Retry</button></div>`;
+  }
+}
+
+function updateStats() {
+  document.getElementById("statTotal").textContent = allDrivers.length;
+  document.getElementById("statAvailable").textContent = allDrivers.filter(d => d.status === "AVAILABLE").length;
+  document.getElementById("statOnTrip").textContent = allDrivers.filter(d => d.status === "ON_TRIP").length;
+  document.getElementById("statOffDuty").textContent = allDrivers.filter(d => d.status === "OFF_DUTY").length;
+}
+
+["searchInput"].forEach(id => document.getElementById(id).addEventListener("input", render));
+["statusFilter","vehicleFilter"].forEach(id => document.getElementById(id).addEventListener("change", render));
+
+function filtered() {
+  const s = document.getElementById("searchInput").value.toLowerCase().trim();
+  const st = document.getElementById("statusFilter").value;
+  const vf = document.getElementById("vehicleFilter").value;
+  return allDrivers.filter(d => {
+    if (s && !((d.name||"").toLowerCase().includes(s) || (d.phone||"").includes(s) || (d.licenseNumber||"").toLowerCase().includes(s))) return false;
+    if (st && d.status !== st) return false;
+    if (vf && String(d.assignedVehicleId) !== vf) return false;
+    return true;
+  });
+}
+
+function render() {
+  const list = filtered();
+  const grid = document.getElementById("driversGrid");
+  const em = document.getElementById("emptyState");
+
+  if (!list.length) { grid.innerHTML = ""; em.classList.remove("hidden"); return; }
+  em.classList.add("hidden");
+
+  grid.innerHTML = list.map(d => {
+    const color = getColor(d.name || "X");
+    const initial = (d.name || "?").charAt(0).toUpperCase();
+    const statusText = d.status.replace(/_/g, ' ');
+    const avatarHtml = d.imageUrl 
+      ? `<div class="driver-avatar" style="overflow:hidden; padding:0; background:${color};"><img src="${d.imageUrl}" alt="${d.name}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'; this.parentElement.textContent='${initial}';"></div>`
+      : `<div class="driver-avatar" style="background:${color}">${initial}</div>`;
+    return `
+      <div class="driver-card">
+        ${avatarHtml}
+        <div class="text-center mb-3">
+          <h3 class="font-serif text-xl font-bold text-navy">${d.name}</h3>
+          <div class="text-xs text-gray-500 mt-1">
+            <i class="fa-solid fa-phone mr-1"></i>${d.phone}
+          </div>
+        </div>
+        <div class="flex justify-center mb-4">
+          <span class="status-badge status-${d.status}">${statusText}</span>
+        </div>
+        <div class="space-y-2 text-xs text-gray-600 mb-4">
+          <div class="flex justify-between"><span class="text-gray-400">License</span><span class="font-semibold">${d.licenseNumber || '—'}</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Experience</span><span class="font-semibold">${d.experienceYears || 0} years</span></div>
+          <div class="flex justify-between"><span class="text-gray-400">Assigned</span><span class="font-semibold">${d.assignedVehicleNumber || 'Not assigned'}</span></div>
+        </div>
+        <div class="flex gap-2 pt-3 border-t border-gray-100">
+          <button onclick="editDriver(${d.id})" class="icon-btn icon-btn-blue flex-1" title="Edit"><i class="fa-solid fa-pen text-xs"></i></button>
+          <button onclick="cycleStatus(${d.id})" class="icon-btn icon-btn-orange flex-1" title="Change Status"><i class="fa-solid fa-arrows-rotate text-xs"></i></button>
+          <button onclick="openDeleteModal(${d.id})" class="icon-btn icon-btn-red flex-1" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById("modalTitle").textContent = "Add Driver";
+  document.getElementById("driverForm").reset();
+
+  // Populate vehicle dropdown
+  const vSelect = document.getElementById("assignedVehicleId");
+  vSelect.innerHTML = '<option value="">Not Assigned</option>';
+  allVehicles.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v.id;
+    opt.textContent = `${v.vehicleNumber} - ${v.model || v.vehicleType}`;
+    vSelect.appendChild(opt);
+  });
+
+  document.getElementById("modalError").classList.add("hidden");
+  document.getElementById("driverModal").classList.add("active");
+}
+
+function editDriver(id) {
+  const d = allDrivers.find(x => x.id === id);
+  if (!d) return;
+  editingId = id;
+  document.getElementById("modalTitle").textContent = "Edit Driver";
+  document.getElementById("name").value = d.name;
+  document.getElementById("phone").value = d.phone;
+  document.getElementById("licenseNumber").value = d.licenseNumber || "";
+  document.getElementById("experienceYears").value = d.experienceYears || 0;
+  document.getElementById("imageUrl").value = d.imageUrl || "";
+
+  const vSelect = document.getElementById("assignedVehicleId");
+  vSelect.innerHTML = '<option value="">Not Assigned</option>';
+  allVehicles.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v.id;
+    opt.textContent = `${v.vehicleNumber} - ${v.model || v.vehicleType}`;
+    vSelect.appendChild(opt);
+  });
+  vSelect.value = d.assignedVehicleId || "";
+
+  document.getElementById("modalError").classList.add("hidden");
+  document.getElementById("driverModal").classList.add("active");
+}
+
+function closeModal() { document.getElementById("driverModal").classList.remove("active"); editingId = null; }
+
+document.getElementById("driverForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...';
+
+  const vId = document.getElementById("assignedVehicleId").value;
+  const p = {
+    name: document.getElementById("name").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    licenseNumber: document.getElementById("licenseNumber").value.trim() || null,
+    experienceYears: parseInt(document.getElementById("experienceYears").value) || 0,
+    assignedVehicleId: vId ? parseInt(vId) : null,
+    imageUrl: document.getElementById("imageUrl").value.trim() || null
+  };
+
+  try {
+    if (editingId) await api.put(`/admin/drivers/${editingId}`, p);
+    else await api.post("/admin/drivers", p);
+    showToast(editingId ? "Driver updated" : "Driver added", "success");
+    closeModal();
+    await loadData();
+  } catch (err) {
+    document.getElementById("modalErrorMsg").textContent = err.response?.data?.message || "Save failed";
+    document.getElementById("modalError").classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-save mr-2"></i>Save';
+  }
+});
+
+async function cycleStatus(id) {
+  const d = allDrivers.find(x => x.id === id);
+  if (!d) return;
+  const statuses = ['AVAILABLE', 'ON_TRIP', 'OFF_DUTY'];
+  const idx = statuses.indexOf(d.status);
+  const next = statuses[(idx + 1) % statuses.length];
+  try {
+    await api.put(`/admin/drivers/${id}/status?status=${next}`);
+    showToast(`Status: ${next.replace('_', ' ')}`, "success");
+    await loadData();
+  } catch (err) {
+    showToast("Failed to update", "error");
+  }
+}
+
+function openDeleteModal(id) {
+  const d = allDrivers.find(x => x.id === id);
+  deleteId = id;
+  document.getElementById("deleteMsg").textContent = `Delete "${d.name}"? This cannot be undone.`;
+  document.getElementById("deleteModal").classList.add("active");
+}
+function closeDeleteModal() { document.getElementById("deleteModal").classList.remove("active"); deleteId = null; }
+
+document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+  if (!deleteId) return;
+  const btn = document.getElementById("confirmDeleteBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    await api.delete(`/admin/drivers/${deleteId}`);
+    showToast("Driver deleted", "success");
+    closeDeleteModal();
+    await loadData();
+  } catch (err) {
+    showToast(err.response?.data?.message || "Delete failed", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Yes, Delete";
+  }
+});
+
+document.getElementById("driverModal").addEventListener("click", e => { if (e.target.id === "driverModal") closeModal(); });
+document.getElementById("deleteModal").addEventListener("click", e => { if (e.target.id === "deleteModal") closeDeleteModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); closeDeleteModal(); } });
+
+
+// Warn user about large images
+const imageInput = document.getElementById("imageUrl");
+if (imageInput) {
+  imageInput.addEventListener("input", function() {
+    if (this.value.length > 100000) {
+      this.style.borderColor = "#eab308";
+      // Only show warning once
+      if (!this.dataset.warned) {
+        this.dataset.warned = "1";
+        showToast("Image is very large. Consider using a shorter URL.", "info");
+      }
+    } else {
+      this.style.borderColor = "";
+    }
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>

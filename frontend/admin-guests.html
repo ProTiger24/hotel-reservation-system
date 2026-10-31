@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guests Management — Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7", teal:"#1E8A8A" },
+    fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] }
+  }}
+}
+</script>
+<style>
+* { box-sizing: border-box; }
+body { margin:0; font-family:"DM Sans",sans-serif; background:#F3F5F7; color:#0B1F33; }
+.font-serif { font-family:"Playfair Display",serif; }
+.sidebar { width:260px; background:linear-gradient(180deg,#0B1F33 0%,#102A43 100%); min-height:100vh; position:fixed; left:0; top:0; z-index:40; }
+.sidebar-link { display:flex; align-items:center; gap:14px; padding:13px 22px; color:#94a3b8; text-decoration:none; font-size:14px; font-weight:500; border-left:3px solid transparent; transition:all .25s ease; }
+.sidebar-link:hover { color:#fff; background:rgba(255,255,255,.05); }
+.sidebar-link.active { color:#fff; background:rgba(199,164,106,.15); border-left-color:#C7A46A; }
+.sidebar-link.active i { color:#C7A46A; }
+.sidebar-link i { width:20px; text-align:center; font-size:16px; }
+.sidebar-section-label { padding:20px 22px 8px; color:#64748b; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; }
+.main-content { margin-left:260px; min-height:100vh; }
+@media (max-width:1023px) { .sidebar { transform:translateX(-100%); transition:transform .3s ease; } .sidebar.open { transform:translateX(0); } .main-content { margin-left:0; } }
+.topbar { background:#fff; border-bottom:1px solid #e5e7eb; padding:16px 28px; position:sticky; top:0; z-index:30; }
+.card { background:#fff; border-radius:18px; padding:24px; border:1px solid #eef2f7; }
+.stat-card { background:#fff; border-radius:18px; padding:20px; border:1px solid #eef2f7; transition:all .3s ease; }
+.stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(11,31,51,.08); }
+.stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.guest-table { width:100%; border-collapse:separate; border-spacing:0; }
+.guest-table th { text-align:left; padding:14px 18px; background:#f8fafc; color:#64748b; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #eef2f7; }
+.guest-table td { padding:16px 18px; border-bottom:1px solid #f1f5f9; font-size:14px; color:#334155; vertical-align:middle; }
+.guest-table tbody tr { cursor:pointer; transition:background .15s; }
+.guest-table tbody tr:hover { background:#fafbfc; }
+.avatar-circle { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:16px; flex-shrink:0; }
+.role-badge { padding:4px 10px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; display:inline-block; }
+.role-ADMIN { background:#fee2e2; color:#991b1b; }
+.role-USER { background:#dbeafe; color:#1e40af; }
+.status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+.status-active { background:#22c55e; }
+.status-inactive { background:#ef4444; }
+.status-staying { background:#eab308; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.5;} }
+.btn-gold { background:#C7A46A; color:#fff; transition:.25s ease; border:none; cursor:pointer; }
+.btn-gold:hover { background:#aa884e; color:#fff; }
+.btn-navy { background:#0B1F33; color:#fff; transition:.25s ease; border:none; cursor:pointer; }
+.btn-navy:hover { background:#102A43; color:#fff; }
+.search-input { padding:11px 16px 11px 42px; border:2px solid #e5e7eb; border-radius:12px; outline:none; font-size:14px; width:100%; }
+.search-input:focus { border-color:#C7A46A; box-shadow:0 0 0 4px rgba(199,164,106,.12); }
+.search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#9ca3af; }
+.filter-select { padding:10px 16px; border:2px solid #e5e7eb; border-radius:12px; outline:none; font-size:13px; background:#fff; cursor:pointer; font-weight:500; }
+.filter-select:focus { border-color:#C7A46A; }
+.spinner { display:inline-block; width:40px; height:40px; border:4px solid rgba(199,164,106,.25); border-top-color:#C7A46A; border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.drawer-overlay { position:fixed; inset:0; background:rgba(11,31,51,.5); backdrop-filter:blur(4px); z-index:90; opacity:0; pointer-events:none; transition:opacity .3s ease; }
+.drawer-overlay.active { opacity:1; pointer-events:auto; }
+.drawer { position:fixed; top:0; right:0; width:100%; max-width:680px; height:100vh; background:#F3F5F7; z-index:100; overflow-y:auto; transform:translateX(100%); transition:transform .35s cubic-bezier(.4,0,.2,1); }
+.drawer.active { transform:translateX(0); }
+.drawer-header { background:linear-gradient(135deg,#0B1F33,#102A43); padding:28px; color:#fff; }
+.drawer-tabs { display:flex; gap:4px; padding:16px 24px 0; background:#fff; border-bottom:2px solid #eef2f7; overflow-x:auto; }
+.drawer-tab { padding:12px 18px; font-size:13px; font-weight:600; color:#64748b; cursor:pointer; border-bottom:3px solid transparent; transition:all .2s ease; white-space:nowrap; }
+.drawer-tab:hover { color:#0B1F33; }
+.drawer-tab.active { color:#C7A46A; border-bottom-color:#C7A46A; }
+.tab-content { display:none; padding:24px; }
+.tab-content.active { display:block; }
+.icon-btn { width:36px; height:36px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; transition:all .2s ease; border:none; cursor:pointer; }
+.icon-btn-blue { background:#dbeafe; color:#2563eb; }
+.icon-btn-blue:hover { background:#2563eb; color:#fff; }
+.icon-btn-red { background:#fee2e2; color:#dc2626; }
+.icon-btn-red:hover { background:#dc2626; color:#fff; }
+.booking-row { background:#fff; border-radius:14px; padding:18px; border:1px solid #eef2f7; margin-bottom:12px; }
+.badge { padding:4px 10px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+.badge-PENDING { background:#fef3c7; color:#92400e; }
+.badge-CONFIRMED { background:#d1fae5; color:#065f46; }
+.badge-CANCELLED { background:#fee2e2; color:#991b1b; }
+.badge-COMPLETED { background:#dbeafe; color:#1e40af; }
+.note-item { background:#fff; border-radius:14px; padding:16px; border:1px solid #eef2f7; margin-bottom:10px; border-left:3px solid #C7A46A; }
+.activity-item { display:flex; gap:14px; padding:14px 0; border-bottom:1px solid #f1f5f9; }
+.activity-item:last-child { border-bottom:none; }
+.activity-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px; }
+.modal-overlay { position:fixed; inset:0; background:rgba(11,31,51,.75); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:110; padding:20px; overflow-y:auto; }
+.modal-overlay.active { display:flex; }
+.modal-box { background:#fff; border-radius:20px; max-width:540px; width:100%; padding:32px; max-height:90vh; overflow-y:auto; margin:auto; }
+.form-input { width:100%; padding:12px 16px; border:2px solid #e5e7eb; border-radius:12px; outline:none; font-size:14px; background:#fff; }
+.form-input:focus { border-color:#C7A46A; box-shadow:0 0 0 4px rgba(199,164,106,.12); }
+.form-label { display:block; font-size:12px; font-weight:700; color:#0B1F33; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+.custom-scroll::-webkit-scrollbar { width:6px; }
+.custom-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:6px; }
+.toast { position:fixed; bottom:30px; right:30px; padding:16px 22px; border-radius:12px; box-shadow:0 10px 30px rgba(11,31,51,.15); font-weight:600; font-size:14px; z-index:9999; max-width:400px; }
+.toast-success { background:#dcfce7; border-left:4px solid #16a34a; color:#166534; }
+.toast-error { background:#fee2e2; border-left:4px solid #dc2626; color:#991b1b; }
+.toast-warning { background:#fef3c7; border-left:4px solid #eab308; color:#92400e; }
+.tag-badge { padding:4px 10px; border-radius:999px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; display:inline-block; }
+.tag-VIP { background:linear-gradient(135deg,#FFD700,#FFA500); color:#fff; }
+.tag-BLACKLISTED { background:#991b1b; color:#fff; }
+.tag-CORPORATE { background:#1e40af; color:#fff; }
+.tag-FREQUENT { background:#065f46; color:#fff; }
+.tag-NEW { background:#7c3aed; color:#fff; }
+.tag-DEFAULT { background:#e5e7eb; color:#374151; }
+
+/* Pagination */
+.pagination-wrap { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-top:1px solid #f1f5f9; background:#fafbfc; flex-wrap:wrap; gap:12px; }
+.page-btn { min-width:36px; height:36px; border-radius:9px; border:1px solid #e5e7eb; background:#fff; color:#64748b; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s ease; display:inline-flex; align-items:center; justify-content:center; }
+.page-btn:hover:not(:disabled) { border-color:#C7A46A; color:#C7A46A; }
+.page-btn.active { background:#0B1F33; color:#fff; border-color:#0B1F33; }
+.page-btn:disabled { opacity:.4; cursor:not-allowed; }
+
+/* Bulk Selection */
+.row-checkbox { width:20px; height:20px; border-radius:6px; border:2px solid #cbd5e1; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s ease; }
+.row-checkbox:hover { border-color:#C7A46A; }
+.row-checkbox.checked { background:#C7A46A; border-color:#C7A46A; }
+.row-checkbox.checked::after { content:"✓"; color:white; font-weight:bold; font-size:13px; }
+
+/* Bulk Action Bar */
+.bulk-bar { position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(150%); background:#0B1F33; color:#fff; border-radius:16px; padding:14px 24px; box-shadow:0 20px 60px rgba(11,31,51,.35); z-index:50; transition:transform .4s cubic-bezier(.4,0,.2,1); display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+.bulk-bar.active { transform:translateX(-50%) translateY(0); }
+.bulk-action-btn { padding:8px 16px; border-radius:10px; font-size:13px; font-weight:600; border:none; cursor:pointer; transition:all .2s ease; color:#fff; }
+.bulk-action-btn:hover { transform:translateY(-2px); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="sidebar">
+  <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+    <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center text-white"><i class="fa-solid fa-hotel text-xl"></i></div>
+    <div>
+      <div class="text-lg font-bold text-white">Hotel<span class="text-gold">Reserve</span></div>
+      <div class="text-[9px] tracking-[3px] uppercase text-gray-400">Admin Panel</div>
+    </div>
+  </div>
+  <div class="py-3 overflow-y-auto custom-scroll" style="height:calc(100vh - 90px);">
+    <div class="sidebar-section-label">Main</div>
+    <a href="admin.html" class="sidebar-link"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
+    <a href="admin-bookings.html" class="sidebar-link"><i class="fa-solid fa-calendar-check"></i><span>Bookings</span></a>
+    <a href="admin-rooms.html" class="sidebar-link"><i class="fa-solid fa-bed"></i><span>Rooms</span></a>
+    <a href="admin-guests.html" class="sidebar-link active"><i class="fa-solid fa-users"></i><span>Guests</span></a>
+    <a href="admin-checkin.html" class="sidebar-link"><i class="fa-solid fa-door-open"></i><span>Check-in / Check-out</span></a>
+    <div class="sidebar-section-label">Operations</div>
+    <a href="admin-payments.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i><span>Payments</span></a>
+    <a href="admin-housekeeping.html" class="sidebar-link"><i class="fa-solid fa-broom"></i><span>Housekeeping</span></a>
+    <a href="admin-reports.html" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></a>
+    <div class="sidebar-section-label">Travel Management</div>
+    <a href="admin-vehicles.html" class="sidebar-link"><i class="fa-solid fa-car"></i><span>Vehicles</span></a>
+    <a href="admin-drivers.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i><span>Drivers</span></a>
+    <a href="admin-destinations.html" class="sidebar-link"><i class="fa-solid fa-map-location-dot"></i><span>Destinations</span></a>
+    <a href="admin-packages.html" class="sidebar-link"><i class="fa-solid fa-suitcase-rolling"></i><span>Travel Packages</span></a>
+    <a href="admin-vehicle-bookings.html" class="sidebar-link"><i class="fa-solid fa-route"></i><span>Vehicle Bookings</span></a>
+    <div class="sidebar-section-label">System</div>
+    <a href="admin-settings.html" class="sidebar-link"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    <a href="#" onclick="logout()" class="sidebar-link text-red-400"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main-content">
+  <div class="topbar">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="lg:hidden text-navy text-xl"><i class="fa-solid fa-bars"></i></button>
+        <div>
+          <h1 class="text-xl font-bold text-navy mb-0">Guests Management</h1>
+          <p class="text-xs text-gray-500 mb-0">Manage customer profiles & history</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="exportGuests()" class="btn-navy px-4 py-2.5 rounded-lg text-xs font-semibold"><i class="fa-solid fa-download mr-2"></i>Export CSV</button>
+        <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
+          <div class="hidden md:block text-right">
+            <div class="text-sm font-semibold text-navy" id="adminName">Admin</div>
+            <div class="text-xs text-gray-500">Administrator</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-gold flex items-center justify-center text-white font-bold" id="adminInitial">A</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-6 lg:p-8">
+    <div id="loading" class="text-center py-24">
+      <div class="spinner mx-auto"></div>
+      <p class="text-gray-500 mt-4">Loading guests...</p>
+    </div>
+
+    <div id="content" class="hidden">
+      <!-- STATS -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Guests</div><div class="stat-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-users"></i></div></div><div class="font-serif text-3xl font-bold text-navy" id="statTotal">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Active</div><div class="stat-icon bg-green-50 text-green-600"><i class="fa-solid fa-circle-check"></i></div></div><div class="font-serif text-3xl font-bold text-green-600" id="statActive">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Staying</div><div class="stat-icon bg-yellow-50 text-yellow-600"><i class="fa-solid fa-hotel"></i></div></div><div class="font-serif text-3xl font-bold text-yellow-600" id="statStaying">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Bookings</div><div class="stat-icon bg-purple-50 text-purple-600"><i class="fa-solid fa-calendar-check"></i></div></div><div class="font-serif text-3xl font-bold text-purple-600" id="statBookings">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Revenue</div><div class="stat-icon bg-[#f7f0e4] text-gold"><i class="fa-solid fa-money-bill-wave"></i></div></div><div class="font-serif text-xl font-bold text-navy">৳<span id="statRevenue">0</span></div></div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="card mb-6">
+        <div class="grid md:grid-cols-12 gap-4">
+          <div class="md:col-span-5 relative">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by name, email or phone...">
+          </div>
+          <div class="md:col-span-2">
+            <select id="statusFilter" class="filter-select w-full">
+              <option value="">All Status</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <select id="tierFilter" class="filter-select w-full">
+              <option value="">All Tiers</option>
+              <option value="BRONZE">Bronze</option>
+              <option value="SILVER">Silver</option>
+              <option value="GOLD">Gold</option>
+              <option value="PLATINUM">Platinum</option>
+            </select>
+          </div>
+          <div class="md:col-span-3">
+            <select id="sortFilter" class="filter-select w-full">
+              <option value="recent">Recently Joined</option>
+              <option value="bookings">Most Bookings</option>
+              <option value="spent">Highest Spending</option>
+              <option value="name">Name (A-Z)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="overflow-x-auto custom-scroll">
+          <table class="guest-table" style="min-width:1000px;">
+            <thead><tr><th style="width:40px;"><div class="row-checkbox" id="selectAllCheck" onclick="toggleSelectAll()"></div></th><th>Guest</th><th>Contact</th><th>Bookings</th><th>Total Spent</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
+            <tbody id="guestsBody"><tr><td colspan="7" class="text-center py-12 text-gray-400">Loading...</td></tr></tbody>
+          </table>
+        </div>
+        <div id="emptyState" class="hidden text-center py-16">
+          <i class="fa-solid fa-user-slash text-4xl text-gray-300 mb-3"></i>
+          <h3 class="font-serif text-xl font-semibold text-gray-500 mb-2">No guests found</h3>
+          <p class="text-gray-400 text-sm">Try changing your search or filter</p>
+        </div>
+
+        <!-- PAGINATION -->
+        <div id="paginationBar" class="pagination-wrap hidden">
+          <div class="flex items-center gap-3 text-sm text-gray-600">
+            <span>Show</span>
+            <select id="perPageSelect" class="filter-select" style="padding:6px 10px;font-size:13px;">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+            <span>per page</span>
+            <span class="text-gray-400 ml-3" id="rangeInfo">Showing 0-0 of 0</span>
+          </div>
+          <div class="flex items-center gap-1" id="pageButtons"></div>
+        </div>
+      </div>
+
+      <!-- BULK ACTION BAR -->
+      <div id="bulkBar" class="bulk-bar">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-gold flex items-center justify-center font-bold" id="bulkCount">0</div>
+          <span class="text-sm font-semibold">guests selected</span>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="bulkActivate()" class="bulk-action-btn" style="background:#22c55e;">
+            <i class="fa-solid fa-check mr-1"></i>Activate
+          </button>
+          <button onclick="bulkDeactivate()" class="bulk-action-btn" style="background:#eab308;">
+            <i class="fa-solid fa-power-off mr-1"></i>Deactivate
+          </button>
+          <button onclick="bulkExport()" class="bulk-action-btn" style="background:#2563eb;">
+            <i class="fa-solid fa-download mr-1"></i>Export
+          </button>
+          <button onclick="clearSelection()" class="bulk-action-btn" style="background:rgba(255,255,255,.15);">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DRAWER -->
+<div id="drawerOverlay" class="drawer-overlay" onclick="closeDrawer()"></div>
+<aside id="profileDrawer" class="drawer custom-scroll">
+  <div class="drawer-header">
+    <div class="flex items-center justify-between mb-4">
+      <button onclick="closeDrawer()" class="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition border-0 text-white"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="flex gap-2">
+        <button onclick="openEditModal()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-semibold transition border-0 text-white"><i class="fa-solid fa-pen mr-2"></i>Edit</button>
+        <button onclick="toggleGuestStatus()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-sm font-semibold transition border-0 text-white"><i class="fa-solid fa-power-off mr-2"></i>Toggle</button>
+        <button onclick="deleteGuest()" class="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-sm font-semibold transition border-0 text-white"><i class="fa-solid fa-trash mr-2"></i>Delete</button>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="w-20 h-20 rounded-2xl flex items-center justify-center font-bold text-white text-3xl" id="drawerAvatar">A</div>
+      <div class="flex-1">
+        <h2 class="font-serif text-3xl font-semibold mb-1" id="drawerName">Guest</h2>
+        <div class="text-sm text-gray-300 mb-2" id="drawerEmail">—</div>
+        <div class="flex flex-wrap gap-2">
+          <span id="drawerRole" class="role-badge role-USER">USER</span>
+          <span id="drawerStatus" class="role-badge" style="background:#d1fae5;color:#065f46;">ACTIVE</span>
+          <span id="drawerTier" class="role-badge" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;">BRONZE</span>
+        </div>
+        <div id="drawerTags" class="flex flex-wrap gap-2 mt-3"></div>
+      </div>
+    </div>
+    <div class="grid grid-cols-4 gap-2 mt-5">
+      <a id="actionCall" href="#" class="flex flex-col items-center gap-1 p-3 rounded-xl transition" style="background:rgba(255,255,255,.1);color:#fff;text-decoration:none;font-size:11px;font-weight:600;"><i class="fa-solid fa-phone" style="color:#C7A46A;font-size:16px;"></i>Call</a>
+      <a id="actionEmail" href="#" class="flex flex-col items-center gap-1 p-3 rounded-xl transition" style="background:rgba(255,255,255,.1);color:#fff;text-decoration:none;font-size:11px;font-weight:600;"><i class="fa-solid fa-envelope" style="color:#C7A46A;font-size:16px;"></i>Email</a>
+      <a id="actionWhatsapp" href="#" target="_blank" class="flex flex-col items-center gap-1 p-3 rounded-xl transition" style="background:rgba(255,255,255,.1);color:#fff;text-decoration:none;font-size:11px;font-weight:600;"><i class="fa-brands fa-whatsapp" style="color:#25D366;font-size:16px;"></i>WhatsApp</a>
+      <a href="admin-bookings.html" class="flex flex-col items-center gap-1 p-3 rounded-xl transition" style="background:rgba(255,255,255,.1);color:#fff;text-decoration:none;font-size:11px;font-weight:600;"><i class="fa-solid fa-calendar-plus" style="color:#C7A46A;font-size:16px;"></i>Booking</a>
+    </div>
+  </div>
+
+  <div class="drawer-tabs">
+    <div class="drawer-tab active" onclick="switchTab('overview', this)"><i class="fa-solid fa-user mr-1"></i>Overview</div>
+    <div class="drawer-tab" onclick="switchTab('bookings', this)"><i class="fa-solid fa-calendar-check mr-1"></i>Bookings</div>
+    <div class="drawer-tab" onclick="switchTab('notes', this)"><i class="fa-solid fa-note-sticky mr-1"></i>Notes</div>
+    <div class="drawer-tab" onclick="switchTab('activity', this)"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Activity</div>
+  </div>
+
+  <div id="tab-overview" class="tab-content active">
+    <div class="grid grid-cols-3 gap-3 mb-6">
+      <div class="bg-white rounded-2xl p-4 border"><div class="text-[10px] text-gray-400 uppercase font-bold mb-1">Bookings</div><div class="font-serif text-2xl font-bold text-navy" id="dStatBookings">0</div></div>
+      <div class="bg-white rounded-2xl p-4 border"><div class="text-[10px] text-gray-400 uppercase font-bold mb-1">Spent</div><div class="font-serif text-xl font-bold text-navy">৳<span id="dStatSpent">0</span></div></div>
+      <div class="bg-white rounded-2xl p-4 border"><div class="text-[10px] text-gray-400 uppercase font-bold mb-1">Avg/Stay</div><div class="font-serif text-xl font-bold text-navy">৳<span id="dStatAvg">0</span></div></div>
+    </div>
+
+    <h3 class="font-serif text-lg font-semibold text-navy mb-3"><i class="fa-solid fa-address-card text-gold mr-2"></i>Contact Info</h3>
+    <div class="bg-white rounded-2xl p-5 border space-y-3 mb-6">
+      <div class="flex justify-between text-sm"><span class="text-gray-500">Email</span><span class="font-semibold text-navy" id="dEmail">—</span></div>
+      <div class="flex justify-between text-sm"><span class="text-gray-500">Phone</span><span class="font-semibold text-navy" id="dPhone">—</span></div>
+      <div class="flex justify-between text-sm"><span class="text-gray-500">Address</span><span class="font-semibold text-navy" id="dAddress">—</span></div>
+      <div class="flex justify-between text-sm"><span class="text-gray-500">Nationality</span><span class="font-semibold text-navy" id="dNationality">—</span></div>
+      <div class="flex justify-between text-sm"><span class="text-gray-500">ID/Passport</span><span class="font-semibold text-navy" id="dIdNumber">—</span></div>
+      <div class="flex justify-between text-sm"><span class="text-gray-500">Member Since</span><span class="font-semibold text-navy" id="dJoined">—</span></div>
+      <div class="flex justify-between text-sm"><span class="text-gray-500">Email Verified</span><span class="font-semibold text-navy" id="dVerified">—</span></div>
+    </div>
+
+    <h3 class="font-serif text-lg font-semibold text-navy mb-3"><i class="fa-solid fa-crown text-gold mr-2"></i>Loyalty Progress</h3>
+    <div class="bg-white rounded-2xl p-5 border mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-sm text-gray-500">Points: <span class="font-bold text-navy" id="dLoyaltyPoints">0</span></span>
+        <span class="text-sm font-semibold" id="dTierName">BRONZE</span>
+      </div>
+      <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden mb-2">
+        <div id="loyaltyBar" class="h-full rounded-full" style="width:0%;background:linear-gradient(90deg,#C7A46A,#aa884e);"></div>
+      </div>
+      <div class="text-xs text-gray-500 text-center" id="loyaltyHint">0 points</div>
+    </div>
+
+    <h3 class="font-serif text-lg font-semibold text-navy mb-3"><i class="fa-solid fa-tags text-gold mr-2"></i>Tags</h3>
+    <div class="bg-white rounded-2xl p-5 border">
+      <div id="dTags" class="flex flex-wrap gap-2 mb-3"></div>
+      <div class="flex gap-2">
+        <input type="text" id="newTagInput" class="form-input flex-1 text-sm" placeholder="Add tag (VIP, Corporate...)">
+        <button onclick="addTag()" class="btn-gold px-4 py-2 rounded-xl font-semibold text-sm"><i class="fa-solid fa-plus"></i></button>
+      </div>
+      <div class="text-xs text-gray-400 mt-2">Suggest: VIP, Corporate, Frequent, Blacklisted</div>
+    </div>
+  </div>
+
+  <div id="tab-bookings" class="tab-content">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-serif text-lg font-semibold text-navy">Booking History</h3>
+      <span class="text-xs text-gray-500" id="dBookingCount">0 bookings</span>
+    </div>
+    <div id="bookingHistory" class="space-y-2"></div>
+  </div>
+
+  <div id="tab-notes" class="tab-content">
+    <h3 class="font-serif text-lg font-semibold text-navy mb-4">Internal Notes</h3>
+    <div class="bg-white rounded-2xl p-4 border mb-4">
+      <textarea id="newNoteInput" class="form-input" rows="3" placeholder="Private note (staff only)..."></textarea>
+      <button onclick="addNote()" class="btn-gold w-full mt-3 py-2.5 rounded-xl font-semibold text-sm"><i class="fa-solid fa-plus mr-2"></i>Add Note</button>
+    </div>
+    <div id="notesList" class="space-y-2"></div>
+  </div>
+
+  <div id="tab-activity" class="tab-content">
+    <h3 class="font-serif text-lg font-semibold text-navy mb-4">Activity Log</h3>
+    <div class="bg-white rounded-2xl p-5 border"><div id="activityList"></div></div>
+  </div>
+</aside>
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-serif text-2xl font-semibold">Edit Guest</h3>
+      <button onclick="closeEditModal()" class="icon-btn" style="background:#f1f5f9;color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="editForm" class="space-y-4">
+      <div><label class="form-label">Full Name</label><input type="text" id="editName" class="form-input" required></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Phone</label><input type="tel" id="editPhone" class="form-input"></div>
+        <div><label class="form-label">Nationality</label><input type="text" id="editNationality" class="form-input"></div>
+      </div>
+      <div><label class="form-label">Address</label><textarea id="editAddress" class="form-input" rows="2"></textarea></div>
+      <div><label class="form-label">ID / Passport</label><input type="text" id="editIdNumber" class="form-input"></div>
+      <div class="flex gap-3 pt-4 border-t">
+        <button type="button" onclick="closeEditModal()" class="flex-1 border-2 border-navy text-navy py-3 rounded-xl font-semibold">Cancel</button>
+        <button type="submit" id="saveEditBtn" class="btn-gold flex-1 py-3 rounded-xl font-semibold"><i class="fa-solid fa-save mr-2"></i>Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+const API = "http://localhost:8080/api";
+const api = axios.create({ baseURL: API });
+const token = localStorage.getItem("accessToken");
+if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+else window.location.href = "login.html";
+
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (!user || user.role !== "ADMIN") window.location.href = "index.html";
+document.getElementById("adminName").textContent = user.name;
+document.getElementById("adminInitial").textContent = user.name.charAt(0).toUpperCase();
+
+let allGuests = [];
+let currentGuest = null;
+let guestTags = [];
+
+function logout() { localStorage.clear(); window.location.href = "index.html"; }
+function showToast(msg, type = "info") {
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+const colors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#06b6d4','#6366f1','#ef4444'];
+function avColor(name) { let h = 0; for (let i=0;i<name.length;i++) h = name.charCodeAt(i) + ((h<<5)-h); return colors[Math.abs(h)%colors.length]; }
+function fmtDate(s) { if (!s) return '—'; return new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtDT(s) { if (!s) return '—'; return new Date(s).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
+
+async function loadAll() {
+  try {
+    const [s, g] = await Promise.all([api.get("/admin/guests/stats"), api.get("/admin/guests")]);
+    const st = s.data.data;
+    document.getElementById("statTotal").textContent = st.totalGuests;
+    document.getElementById("statActive").textContent = st.activeGuests;
+    document.getElementById("statStaying").textContent = st.currentlyStaying;
+    document.getElementById("statBookings").textContent = st.totalBookings;
+    document.getElementById("statRevenue").textContent = parseFloat(st.totalRevenue).toLocaleString('en-BD');
+    allGuests = g.data.data || [];
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("content").classList.remove("hidden");
+    render();
+  } catch (err) {
+    document.getElementById("loading").innerHTML = `<div class="text-center"><i class="fa-solid fa-circle-exclamation text-red-500 text-5xl mb-4"></i><button onclick="location.reload()" class="btn-navy px-5 py-2 rounded-lg text-sm mt-2">Retry</button></div>`;
+  }
+}
+
+["searchInput"].forEach(id => document.getElementById(id).addEventListener("input", render));
+["statusFilter","tierFilter","sortFilter"].forEach(id => document.getElementById(id).addEventListener("change", render));
+
+function filtered() {
+  const s = document.getElementById("searchInput").value.toLowerCase().trim();
+  const st = document.getElementById("statusFilter").value;
+  const t = document.getElementById("tierFilter").value;
+  const so = document.getElementById("sortFilter").value;
+  let list = allGuests.filter(g => {
+    if (s && !((g.name||"").toLowerCase().includes(s) || (g.email||"").toLowerCase().includes(s) || (g.phone||"").includes(s))) return false;
+    if (st === "ACTIVE" && !g.enabled) return false;
+    if (st === "INACTIVE" && g.enabled) return false;
+    if (t && g.tier !== t) return false;
+    return true;
+  });
+  if (so === "recent") list.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  else if (so === "bookings") list.sort((a,b)=>(b.totalBookings||0)-(a.totalBookings||0));
+  else if (so === "spent") list.sort((a,b)=>parseFloat(b.totalSpent||0)-parseFloat(a.totalSpent||0));
+  else if (so === "name") list.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  return list;
+}
+
+function render() {
+  const list = filtered();
+  const tb = document.getElementById("guestsBody");
+  const em = document.getElementById("emptyState");
+  if (!list.length) { tb.innerHTML = ""; em.classList.remove("hidden"); return; }
+  em.classList.add("hidden");
+  tb.innerHTML = list.map(g => {
+    const c = avColor(g.name||"X");
+    const init = (g.name||"?").charAt(0).toUpperCase();
+    let sHtml = g.enabled
+      ? '<span class="status-dot status-active"></span> <span class="text-xs font-semibold text-green-700">Active</span>'
+      : '<span class="status-dot status-inactive"></span> <span class="text-xs font-semibold text-red-700">Inactive</span>';
+    return `<tr onclick="openGuest(${g.id})">
+      <td><div class="flex items-center gap-3"><div class="avatar-circle" style="background:${c}">${init}</div><div><div class="font-semibold text-navy">${g.name}</div><div class="text-xs text-gray-400">ID: #${g.id}</div></div></div></td>
+      <td><div class="text-sm">${g.email}</div><div class="text-xs text-gray-400">${g.phone||'—'}</div></td>
+      <td><span class="font-semibold">${g.totalBookings||0}</span></td>
+      <td class="font-semibold text-navy">৳${parseFloat(g.totalSpent||0).toLocaleString('en-BD')}</td>
+      <td>${sHtml}</td>
+      <td class="text-right"><button onclick="event.stopPropagation();openGuest(${g.id})" class="icon-btn icon-btn-blue"><i class="fa-solid fa-eye text-xs"></i></button></td>
+    </tr>`;
+  }).join("");
+}
+
+async function openGuest(id) {
+  try {
+    const r = await api.get(`/admin/guests/${id}`);
+    const g = r.data.data;
+    currentGuest = g;
+    document.getElementById("drawerAvatar").style.background = avColor(g.name);
+    document.getElementById("drawerAvatar").textContent = (g.name||"?").charAt(0).toUpperCase();
+    document.getElementById("drawerName").textContent = g.name;
+    document.getElementById("drawerEmail").textContent = g.email;
+    document.getElementById("drawerRole").className = `role-badge role-${g.role}`;
+    document.getElementById("drawerRole").textContent = g.role;
+    const stEl = document.getElementById("drawerStatus");
+    if (g.enabled) { stEl.style.background="#d1fae5"; stEl.style.color="#065f46"; stEl.textContent="ACTIVE"; }
+    else { stEl.style.background="#fee2e2"; stEl.style.color="#991b1b"; stEl.textContent="INACTIVE"; }
+    document.getElementById("drawerTier").textContent = g.tier||"BRONZE";
+    document.getElementById("actionCall").href = g.phone ? `tel:${g.phone}` : "#";
+    document.getElementById("actionEmail").href = `mailto:${g.email}`;
+    document.getElementById("actionWhatsapp").href = g.phone ? `https://wa.me/${g.phone.replace(/\D/g,'')}` : "#";
+    document.getElementById("dStatBookings").textContent = g.totalBookings||0;
+    document.getElementById("dStatSpent").textContent = parseFloat(g.totalSpent||0).toLocaleString('en-BD');
+    document.getElementById("dStatAvg").textContent = parseFloat(g.averageBooking||0).toLocaleString('en-BD');
+    document.getElementById("dEmail").textContent = g.email;
+    document.getElementById("dPhone").textContent = g.phone||"—";
+    document.getElementById("dAddress").textContent = g.address||"—";
+    document.getElementById("dNationality").textContent = g.nationality||"—";
+    document.getElementById("dIdNumber").textContent = g.idNumber||"—";
+    document.getElementById("dJoined").textContent = fmtDate(g.createdAt);
+    document.getElementById("dVerified").textContent = g.emailVerified ? "✓ Verified" : "✗ Not verified";
+    const pts = g.loyaltyPoints||0;
+    document.getElementById("dLoyaltyPoints").textContent = pts;
+    document.getElementById("dTierName").textContent = g.tier||"BRONZE";
+    document.getElementById("loyaltyBar").style.width = Math.min((pts/100)*100,100)+"%";
+    document.getElementById("loyaltyHint").textContent = `${pts} points · ${Math.max(0,100-pts)} to Silver`;
+
+    await loadTags(id);
+    await loadBookings(id);
+    await loadNotes(id);
+    await loadActivity(id);
+
+    document.getElementById("drawerOverlay").classList.add("active");
+    document.getElementById("profileDrawer").classList.add("active");
+  } catch (e) { showToast("Failed to load guest", "error"); }
+}
+
+async function loadTags(id) {
+  try {
+    const r = await api.get(`/admin/guests/${id}/tags`);
+    guestTags = r.data.data || [];
+    document.getElementById("drawerTags").innerHTML = guestTags.map(t => {
+      const cls = ['VIP','BLACKLISTED','CORPORATE','FREQUENT','NEW'].includes(t) ? `tag-${t}` : 'tag-DEFAULT';
+      return `<span class="tag-badge ${cls}">${t}</span>`;
+    }).join("");
+    document.getElementById("dTags").innerHTML = guestTags.map(t => {
+      const cls = ['VIP','BLACKLISTED','CORPORATE','FREQUENT','NEW'].includes(t) ? `tag-${t}` : 'tag-DEFAULT';
+      return `<span class="tag-badge ${cls}" onclick="removeTag('${t}')" style="cursor:pointer;">${t} <i class="fa-solid fa-xmark ml-1"></i></span>`;
+    }).join("");
+  } catch (e) {}
+}
+
+async function loadBookings(id) {
+  try {
+    const r = await api.get(`/admin/guests/${id}/bookings`);
+    const b = r.data.data || [];
+    document.getElementById("dBookingCount").textContent = `${b.length} bookings`;
+    const h = document.getElementById("bookingHistory");
+    if (!b.length) h.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm bg-white rounded-2xl border">No bookings yet</div>`;
+    else h.innerHTML = b.slice(0,15).map(x => `
+      <div class="booking-row">
+        <div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-navy">#BK${x.id.toString().padStart(4,'0')}</div><span class="badge badge-${x.status}">${x.status}</span></div>
+        <div class="font-semibold text-navy mb-1">${x.roomType} · Room ${x.roomNumber}</div>
+        <div class="flex justify-between text-xs text-gray-500"><span>${fmtDate(x.checkIn)} — ${fmtDate(x.checkOut)}</span><span class="font-bold text-navy text-sm">৳${parseFloat(x.totalPrice).toLocaleString('en-BD')}</span></div>
+      </div>`).join("");
+  } catch (e) {}
+}
+
+async function loadNotes(id) {
+  try {
+    const r = await api.get(`/admin/guests/${id}/notes`);
+    const n = r.data.data || [];
+    const l = document.getElementById("notesList");
+    if (!n.length) l.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm bg-white rounded-2xl border">No notes yet</div>`;
+    else l.innerHTML = n.map(x => `
+      <div class="note-item">
+        <div class="flex items-start justify-between mb-2"><div class="text-xs text-gray-500"><i class="fa-solid fa-user-shield mr-1"></i>${x.adminName||'Admin'}</div>
+        <div class="flex items-center gap-2"><span class="text-xs text-gray-400">${fmtDT(x.createdAt)}</span><button onclick="deleteNote(${x.id})" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button></div></div>
+        <div class="text-sm text-gray-700">${x.note}</div>
+      </div>`).join("");
+  } catch (e) {}
+}
+
+async function loadActivity(id) {
+  try {
+    const r = await api.get(`/admin/guests/${id}/activity`);
+    const a = r.data.data || [];
+    const l = document.getElementById("activityList");
+    if (!a.length) l.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">No activity yet</div>`;
+    else l.innerHTML = a.map(x => `
+      <div class="activity-item">
+        <div class="activity-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-circle"></i></div>
+        <div class="flex-1"><div class="text-sm font-medium text-navy">${x.action.replace(/_/g,' ')}</div>
+        <div class="text-xs text-gray-400 mt-0.5">${x.actorName||'Admin'} · ${fmtDT(x.createdAt)}${x.metadata?' · '+x.metadata:''}</div></div>
+      </div>`).join("");
+  } catch (e) {}
+}
+
+function switchTab(t, el) {
+  document.querySelectorAll('.drawer-tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(`tab-${t}`).classList.add('active');
+}
+
+function closeDrawer() {
+  document.getElementById("drawerOverlay").classList.remove("active");
+  document.getElementById("profileDrawer").classList.remove("active");
+  currentGuest = null;
+}
+
+document.addEventListener("keydown", e => { if (e.key === "Escape" && currentGuest) closeDrawer(); });
+
+function openEditModal() {
+  if (!currentGuest) return;
+  document.getElementById("editName").value = currentGuest.name||"";
+  document.getElementById("editPhone").value = currentGuest.phone||"";
+  document.getElementById("editAddress").value = currentGuest.address||"";
+  document.getElementById("editNationality").value = currentGuest.nationality||"";
+  document.getElementById("editIdNumber").value = currentGuest.idNumber||"";
+  document.getElementById("editModal").classList.add("active");
+}
+function closeEditModal() { document.getElementById("editModal").classList.remove("active"); }
+
+document.getElementById("editForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (!currentGuest) return;
+  const b = document.getElementById("saveEditBtn");
+  b.disabled = true; b.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...';
+  const p = {
+    name: document.getElementById("editName").value.trim(),
+    phone: document.getElementById("editPhone").value.trim(),
+    address: document.getElementById("editAddress").value.trim(),
+    nationality: document.getElementById("editNationality").value.trim(),
+    idNumber: document.getElementById("editIdNumber").value.trim()
+  };
+  try {
+    await api.put(`/admin/guests/${currentGuest.id}`, p);
+    showToast("Guest updated", "success");
+    closeEditModal();
+    await loadAll();
+    await openGuest(currentGuest.id);
+  } catch (err) { showToast(err.response?.data?.message||"Failed", "error"); }
+  finally { b.disabled = false; b.innerHTML = '<i class="fa-solid fa-save mr-2"></i>Save'; }
+});
+
+async function addTag() {
+  if (!currentGuest) return;
+  const i = document.getElementById("newTagInput");
+  const t = i.value.trim().toUpperCase();
+  if (!t) return;
+  try {
+    await api.post(`/admin/guests/${currentGuest.id}/tags?tag=${encodeURIComponent(t)}`);
+    i.value = "";
+    await loadTags(currentGuest.id);
+    showToast("Tag added", "success");
+  } catch (e) { showToast(e.response?.data?.message||"Failed", "error"); }
+}
+
+async function removeTag(tag) {
+  if (!currentGuest || !confirm(`Remove "${tag}"?`)) return;
+  try {
+    await api.delete(`/admin/guests/${currentGuest.id}/tags?tag=${encodeURIComponent(tag)}`);
+    await loadTags(currentGuest.id);
+    showToast("Tag removed", "success");
+  } catch (e) { showToast("Failed", "error"); }
+}
+
+async function addNote() {
+  if (!currentGuest) return;
+  const i = document.getElementById("newNoteInput");
+  const n = i.value.trim();
+  if (!n) { showToast("Note empty", "warning"); return; }
+  try {
+    await api.post(`/admin/guests/${currentGuest.id}/notes`, { note: n });
+    i.value = "";
+    await loadNotes(currentGuest.id);
+    showToast("Note added", "success");
+  } catch (e) { showToast("Failed", "error"); }
+}
+
+async function deleteNote(id) {
+  if (!currentGuest || !confirm("Delete note?")) return;
+  try {
+    await api.delete(`/admin/guests/${currentGuest.id}/notes/${id}`);
+    await loadNotes(currentGuest.id);
+    showToast("Note deleted", "success");
+  } catch (e) { showToast("Failed", "error"); }
+}
+
+async function toggleGuestStatus() {
+  if (!currentGuest) return;
+  if (!confirm(`Toggle status for ${currentGuest.name}?`)) return;
+  try {
+    await api.patch(`/admin/guests/${currentGuest.id}/status?enabled=${!currentGuest.enabled}`);
+    showToast(currentGuest.enabled ? "Deactivated" : "Activated", "success");
+    closeDrawer();
+    await loadAll();
+  } catch (e) { showToast(e.response?.data?.message||"Failed", "error"); }
+}
+
+async function deleteGuest() {
+  if (!currentGuest) return;
+  if (currentGuest.totalBookings > 0) { showToast("Cannot delete - has bookings. Deactivate instead.", "warning"); return; }
+  if (!confirm(`Delete ${currentGuest.name}?`)) return;
+  try {
+    await api.delete(`/admin/guests/${currentGuest.id}`);
+    showToast("Deleted", "success");
+    closeDrawer();
+    await loadAll();
+  } catch (e) { showToast(e.response?.data?.message||"Failed", "error"); }
+}
+
+function exportGuests() {
+  const list = filtered();
+  const h = ["ID","Name","Email","Phone","Bookings","Spent","Tier","Status","Joined"];
+  let csv = h.join(",") + "\n";
+  list.forEach(g => {
+    csv += [g.id,g.name,g.email,g.phone||"",g.totalBookings||0,parseFloat(g.totalSpent||0).toFixed(2),g.tier||"BRONZE",g.enabled?"Active":"Inactive",fmtDate(g.createdAt)]
+      .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")+"\n";
+  });
+  const b = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = `guests-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+
+// ============================================
+// PAGINATION + BULK SELECTION
+// ============================================
+let currentPage = 1;
+let perPage = 10;
+let selectedGuests = new Set();
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('perPageSelect');
+  if (sel) sel.addEventListener('change', (e) => {
+    perPage = parseInt(e.target.value);
+    currentPage = 1;
+    render();
+  });
+});
+
+// Override render function to include pagination
+const originalRender = render;
+render = function() {
+  const list = filtered();
+  const tb = document.getElementById("guestsBody");
+  const em = document.getElementById("emptyState");
+  const pager = document.getElementById("paginationBar");
+
+  if (!list.length) { 
+    tb.innerHTML = ""; 
+    em.classList.remove("hidden");
+    if (pager) pager.classList.add("hidden");
+    return; 
+  }
+  em.classList.add("hidden");
+  if (pager) pager.classList.remove("hidden");
+
+  // Pagination
+  const totalPages = Math.ceil(list.length / perPage);
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+  const start = (currentPage - 1) * perPage;
+  const end = Math.min(start + perPage, list.length);
+  const pageList = list.slice(start, end);
+
+  // Range info
+  const rangeInfo = document.getElementById('rangeInfo');
+  if (rangeInfo) rangeInfo.textContent = `Showing ${start + 1}-${end} of ${list.length}`;
+
+  // Page buttons
+  const pb = document.getElementById('pageButtons');
+  if (pb) {
+    let html = `<button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><i class="fa-solid fa-chevron-left"></i></button>`;
+    const maxBtns = 5;
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + maxBtns - 1);
+    if (endPage - startPage < maxBtns - 1) startPage = Math.max(1, endPage - maxBtns + 1);
+
+    if (startPage > 1) {
+      html += `<button class="page-btn" onclick="goPage(1)">1</button>`;
+      if (startPage > 2) html += `<span class="text-gray-400 px-1">...</span>`;
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) html += `<span class="text-gray-400 px-1">...</span>`;
+      html += `<button class="page-btn" onclick="goPage(${totalPages})">${totalPages}</button>`;
+    }
+
+    html += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}><i class="fa-solid fa-chevron-right"></i></button>`;
+    pb.innerHTML = html;
+  }
+
+  // Render rows
+  tb.innerHTML = pageList.map(g => {
+    const c = avColor(g.name||"X");
+    const init = (g.name||"?").charAt(0).toUpperCase();
+    const isSelected = selectedGuests.has(g.id);
+    let sHtml = g.enabled
+      ? '<span class="status-dot status-active"></span> <span class="text-xs font-semibold text-green-700">Active</span>'
+      : '<span class="status-dot status-inactive"></span> <span class="text-xs font-semibold text-red-700">Inactive</span>';
+    
+    return `<tr onclick="openGuest(${g.id})">
+      <td onclick="event.stopPropagation(); toggleSelect(${g.id})"><div class="row-checkbox ${isSelected ? 'checked' : ''}"></div></td>
+      <td><div class="flex items-center gap-3"><div class="avatar-circle" style="background:${c}">${init}</div><div><div class="font-semibold text-navy">${g.name}</div><div class="text-xs text-gray-400">ID: #${g.id}</div></div></div></td>
+      <td><div class="text-sm">${g.email}</div><div class="text-xs text-gray-400">${g.phone||'—'}</div></td>
+      <td><span class="font-semibold">${g.totalBookings||0}</span></td>
+      <td class="font-semibold text-navy">৳${parseFloat(g.totalSpent||0).toLocaleString('en-BD')}</td>
+      <td>${sHtml}</td>
+      <td class="text-right"><button onclick="event.stopPropagation();openGuest(${g.id})" class="icon-btn icon-btn-blue"><i class="fa-solid fa-eye text-xs"></i></button></td>
+    </tr>`;
+  }).join("");
+
+  updateBulkBar();
+  updateSelectAllCheck();
+};
+
+window.goPage = function(p) {
+  const list = filtered();
+  const totalPages = Math.ceil(list.length / perPage);
+  if (p < 1 || p > totalPages) return;
+  currentPage = p;
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.toggleSelect = function(id) {
+  if (selectedGuests.has(id)) selectedGuests.delete(id);
+  else selectedGuests.add(id);
+  render();
+};
+
+window.toggleSelectAll = function() {
+  const list = filtered();
+  const start = (currentPage - 1) * perPage;
+  const end = Math.min(start + perPage, list.length);
+  const pageList = list.slice(start, end);
+  
+  const allSelected = pageList.every(g => selectedGuests.has(g.id));
+  
+  if (allSelected) {
+    pageList.forEach(g => selectedGuests.delete(g.id));
+  } else {
+    pageList.forEach(g => selectedGuests.add(g.id));
+  }
+  render();
+};
+
+window.clearSelection = function() {
+  selectedGuests.clear();
+  render();
+};
+
+window.updateBulkBar = function() {
+  const bar = document.getElementById("bulkBar");
+  if (selectedGuests.size > 0) {
+    bar.classList.add("active");
+    document.getElementById("bulkCount").textContent = selectedGuests.size;
+  } else {
+    bar.classList.remove("active");
+  }
+};
+
+window.updateSelectAllCheck = function() {
+  const list = filtered();
+  const start = (currentPage - 1) * perPage;
+  const end = Math.min(start + perPage, list.length);
+  const pageList = list.slice(start, end);
+  const check = document.getElementById("selectAllCheck");
+  
+  if (check && pageList.length > 0) {
+    const allSelected = pageList.every(g => selectedGuests.has(g.id));
+    if (allSelected) check.classList.add("checked");
+    else check.classList.remove("checked");
+  }
+};
+
+window.bulkActivate = async function() {
+  if (selectedGuests.size === 0) return;
+  if (!confirm(`Activate ${selectedGuests.size} guests?`)) return;
+  
+  try {
+    for (const id of selectedGuests) {
+      await api.patch(`/admin/guests/${id}/status?enabled=true`);
+    }
+    showToast(`${selectedGuests.size} guests activated`, "success");
+    clearSelection();
+    await loadAll();
+  } catch (err) {
+    showToast("Some guests could not be activated", "error");
+  }
+};
+
+window.bulkDeactivate = async function() {
+  if (selectedGuests.size === 0) return;
+  if (!confirm(`Deactivate ${selectedGuests.size} guests?`)) return;
+  
+  try {
+    for (const id of selectedGuests) {
+      await api.patch(`/admin/guests/${id}/status?enabled=false`);
+    }
+    showToast(`${selectedGuests.size} guests deactivated`, "success");
+    clearSelection();
+    await loadAll();
+  } catch (err) {
+    showToast("Some guests could not be deactivated", "error");
+  }
+};
+
+window.bulkExport = function() {
+  if (selectedGuests.size === 0) return;
+  const guests = allGuests.filter(g => selectedGuests.has(g.id));
+  
+  const h = ["ID","Name","Email","Phone","Bookings","Spent","Tier","Status","Joined"];
+  let csv = h.join(",") + "\n";
+  guests.forEach(g => {
+    csv += [g.id,g.name,g.email,g.phone||"",g.totalBookings||0,parseFloat(g.totalSpent||0).toFixed(2),g.tier||"BRONZE",g.enabled?"Active":"Inactive",fmtDate(g.createdAt)]
+      .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")+"\n";
+  });
+  const b = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = `selected-guests-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast(`${guests.length} guests exported`, "success");
+};
+
+loadAll();
+</script>
+</body>
+</html>

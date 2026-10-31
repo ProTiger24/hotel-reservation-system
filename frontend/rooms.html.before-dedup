@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rooms — HotelReserve</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7", teal:"#1E8A8A" },
+        fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] },
+        boxShadow: { soft:"0 15px 45px rgba(11,31,51,.08)", premium:"0 25px 70px rgba(11,31,51,.14)" }
+      }}
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin:0; font-family:"DM Sans",sans-serif; color:#0B1F33; background:#F8F6F1; }
+    .font-serif { font-family:"Playfair Display",serif; }
+
+    .glass-nav { background:rgba(11,31,51,.88); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); border-bottom:1px solid rgba(255,255,255,.08); }
+    .nav-link-custom { position:relative; transition:.25s ease; }
+    .nav-link-custom::after { content:""; position:absolute; left:0; bottom:-8px; width:0; height:2px; background:#C7A46A; transition:width .3s ease; }
+    .nav-link-custom:hover::after, .nav-link-custom.active::after { width:100%; }
+
+    /* HERO CAROUSEL */
+    .hero-carousel { position:relative; overflow:hidden; min-height:640px; }
+    .hero-slide { position:absolute; inset:0; opacity:0; transition:opacity 1.2s ease; background-size:cover; background-position:center; background-repeat:no-repeat; }
+    .hero-slide.active { opacity:1; animation: kenBurns 9s ease-in-out infinite alternate; }
+    @keyframes kenBurns { from{transform:scale(1);} to{transform:scale(1.08);} }
+    .hero-overlay { position:absolute; inset:0; z-index:2; background:linear-gradient(90deg, rgba(7,21,33,.95) 0%, rgba(7,21,33,.78) 35%, rgba(7,21,33,.5) 65%, rgba(7,21,33,.25) 100%); }
+    .hero-content-wrap { position:relative; z-index:3; }
+    .hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.12); backdrop-filter:blur(18px); border:1px solid rgba(255,255,255,.2); padding:8px 16px; border-radius:999px; font-size:13px; font-weight:500; }
+    .hero-dot { width:40px; height:4px; border-radius:999px; background:rgba(255,255,255,.35); border:none; transition:all .3s ease; cursor:pointer; padding:0; }
+    .hero-dot.active { background:#C7A46A; width:64px; }
+    .hero-arrow { width:48px; height:48px; border-radius:50%; background:rgba(255,255,255,.15); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.25); color:white; display:flex; align-items:center; justify-content:center; transition:all .3s ease; cursor:pointer; }
+    .hero-arrow:hover { background:#C7A46A; border-color:#C7A46A; transform:scale(1.1); }
+    .hero-slider-controls { position:absolute; bottom:40px; left:0; right:0; z-index:4; }
+    .hero-progress { position:absolute; bottom:0; left:0; height:3px; background:#C7A46A; z-index:5; width:0%; }
+
+    /* FILTER */
+    .filter-card { box-shadow:0 25px 70px rgba(11,31,51,.14); }
+    .input-box { transition:.25s ease; }
+    .input-box:focus-within { border-color:#C7A46A; box-shadow:0 0 0 4px rgba(199,164,106,.12); }
+
+    /* ROOM CARD */
+    .room-card { background:#fff; border:1px solid rgba(11,31,51,.07); transition:all .35s ease; }
+    .room-card:hover { transform:translateY(-8px); box-shadow:0 30px 70px rgba(11,31,51,.13); }
+    .room-image-wrap { height:275px; overflow:hidden; position:relative; }
+    .room-image { width:100%; height:100%; object-fit:cover; transition:transform .65s ease; }
+    .room-card:hover .room-image { transform:scale(1.07); }
+    .wishlist { width:42px; height:42px; border-radius:50%; background:rgba(255,255,255,.95); display:flex; align-items:center; justify-content:center; transition:.25s ease; cursor:pointer; border:none; }
+    .wishlist:hover { transform:scale(1.08); color:#dc3545; }
+    .badge-room { background:#C7A46A; color:white; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:7px 11px; border-radius:999px; }
+    .status-available { background:rgba(25,135,84,.95); color:#fff; }
+    .status-unavailable { background:rgba(220,53,69,.95); color:#fff; }
+    .rating-stars { color:#C7A46A; letter-spacing:1px; }
+    .amenity { display:inline-flex; align-items:center; gap:7px; color:#64748b; font-size:13px; }
+    .amenity i { color:#C7A46A; }
+    .price { font-family:"Playfair Display",serif; }
+
+    /* BUTTONS */
+    .btn-gold { background:#C7A46A; color:#fff; transition:.25s ease; }
+    .btn-gold:hover { background:#aa884e; color:#fff; transform:translateY(-1px); }
+    .btn-outline-navy { border:1px solid #0B1F33; color:#0B1F33; transition:.25s ease; }
+    .btn-outline-navy:hover { background:#0B1F33; color:#fff; }
+    .btn-navy { background:#0B1F33; color:#fff; transition:.25s ease; }
+    .btn-navy:hover { background:#102A43; color:#fff; transform:translateY(-2px); }
+
+    /* SPINNER */
+    .spinner { display:inline-block; width:45px; height:45px; border:4px solid rgba(199,164,106,.25); border-top-color:#C7A46A; border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+
+    /* FADE UP */
+    .fade-up { animation: fadeUp .6s ease both; }
+    @keyframes fadeUp { from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:translateY(0);} }
+
+    /* FEATURE STRIP */
+    .feature-strip { background:#0B1F33; }
+    .feature-item { border-right:1px solid rgba(255,255,255,.12); }
+    .feature-item:last-child { border-right:none; }
+
+    /* EMPTY */
+    .empty-box { border:1px dashed #ccd4db; background:rgba(255,255,255,.65); }
+
+    /* FEATURED ROOMS */
+    .featured-card { position:relative; overflow:hidden; border-radius:1.6rem; transition:all .4s ease; cursor:pointer; height:340px; }
+    .featured-card:hover { transform:translateY(-6px); box-shadow:0 30px 70px rgba(11,31,51,.2); }
+    .featured-card img { width:100%; height:100%; object-fit:cover; transition:transform .7s ease; }
+    .featured-card:hover img { transform:scale(1.1); }
+    .featured-overlay { position:absolute; inset:0; background:linear-gradient(0deg, rgba(7,21,33,.95) 0%, rgba(7,21,33,.4) 50%, transparent 100%); }
+    .featured-badge { position:absolute; top:16px; left:16px; background:#C7A46A; color:white; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:6px 12px; border-radius:999px; }
+
+    /* WHY BOOK */
+    .why-card { transition:all .35s ease; }
+    .why-card:hover { transform:translateY(-8px); }
+    .why-icon { width:64px; height:64px; border-radius:20px; display:flex; align-items:center; justify-content:center; font-size:26px; }
+
+    /* GALLERY */
+    .gallery-item { position:relative; overflow:hidden; border-radius:1rem; cursor:pointer; }
+    .gallery-item img { width:100%; height:100%; object-fit:cover; transition:transform .6s ease; }
+    .gallery-item:hover img { transform:scale(1.12); }
+    .gallery-overlay { position:absolute; inset:0; background:rgba(11,31,51,0); display:flex; align-items:center; justify-content:center; transition:all .35s ease; }
+    .gallery-item:hover .gallery-overlay { background:rgba(11,31,51,.6); }
+    .gallery-overlay i { color:white; font-size:28px; opacity:0; transform:scale(0.5); transition:all .35s ease; }
+    .gallery-item:hover .gallery-overlay i { opacity:1; transform:scale(1); }
+
+    /* TESTIMONIAL SLIDER */
+    .testimonial-slider { overflow:hidden; }
+    .testimonial-track { display:flex; transition:transform .7s cubic-bezier(.4,0,.2,1); }
+    .testimonial-slide { min-width:100%; padding:0 12px; }
+    .testimonial-card { background:#fff; border-radius:1.5rem; padding:32px; box-shadow:0 15px 45px rgba(11,31,51,.08); height:100%; transition:all .3s ease; }
+    .testimonial-card:hover { box-shadow:0 25px 60px rgba(11,31,51,.15); }
+    .testimonial-dot { width:10px; height:10px; border-radius:50%; background:#cbd5e1; border:none; cursor:pointer; transition:all .3s ease; }
+    .testimonial-dot.active { background:#C7A46A; width:28px; border-radius:5px; }
+
+    /* NEARBY */
+    .nearby-item { display:flex; align-items:center; gap:14px; padding:16px 20px; background:#fff; border-radius:1rem; border:1px solid rgba(11,31,51,.06); transition:all .3s ease; }
+    .nearby-item:hover { transform:translateX(6px); box-shadow:0 12px 30px rgba(11,31,51,.08); }
+    .nearby-icon { width:48px; height:48px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+
+    /* NEWSLETTER */
+    .newsletter-section { background:linear-gradient(135deg, #0B1F33 0%, #102A43 100%); position:relative; overflow:hidden; }
+    .newsletter-section::before { content:""; position:absolute; top:-100px; right:-100px; width:400px; height:400px; border-radius:50%; background:rgba(199,164,106,.08); }
+    .newsletter-section::after { content:""; position:absolute; bottom:-100px; left:-100px; width:300px; height:300px; border-radius:50%; background:rgba(30,138,138,.08); }
+
+    /* STATS */
+    .stat-item { text-align:center; }
+    .stat-number { font-family:"Playfair Display",serif; font-size:48px; font-weight:700; color:#0B1F33; opacity:0; transform:translateY(20px); transition:all .8s ease; }
+    .stat-number.visible { opacity:1; transform:translateY(0); }
+
+    @media (max-width:1023px) {
+      .desktop-nav { display:none; }
+      .feature-item { border-right:none; border-bottom:1px solid rgba(255,255,255,.12); }
+      .feature-item:last-child { border-bottom:none; }
+      .hero-carousel { min-height:580px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass-nav text-white">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="h-20 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-3 text-white no-underline">
+        <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center">
+          <i class="fa-solid fa-hotel text-xl"></i>
+        </div>
+        <div>
+          <div class="text-xl font-bold tracking-wide">Hotel<span class="text-gold">Reserve</span></div>
+          <div class="text-[10px] tracking-[3px] uppercase text-gray-300">Hospitality</div>
+        </div>
+      </a>
+
+      <div class="desktop-nav flex items-center gap-9">
+        <a href="index.html" class="nav-link-custom text-white no-underline text-sm">Home</a>
+        <a href="rooms.html" class="nav-link-custom active text-white no-underline text-sm">Rooms</a>
+        <a href="#why" class="nav-link-custom text-white no-underline text-sm">Why Us</a>
+        <a href="#gallery" class="nav-link-custom text-white no-underline text-sm">Gallery</a>
+        <a href="#faq" class="nav-link-custom text-white no-underline text-sm">FAQ</a>
+      </div>
+
+      <div id="navAuth" class="flex items-center gap-3"></div>
+
+      <button id="mobileMenuBtn" class="lg:hidden text-white text-xl bg-transparent border-0">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+
+    <div id="mobileMenu" class="hidden pb-5 lg:hidden">
+      <div class="flex flex-col gap-4 pt-3">
+        <a href="index.html" class="text-white no-underline">Home</a>
+        <a href="rooms.html" class="text-gold no-underline">Rooms</a>
+        <a href="#why" class="text-white no-underline">Why Us</a>
+        <a href="#gallery" class="text-white no-underline">Gallery</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ================= HERO CAROUSEL ================= -->
+<section class="hero-carousel pt-32 pb-28 text-white">
+  <div class="hero-slide active" style="background-image:url('https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=2000&q=90')"></div>
+  <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=2000&q=90')"></div>
+  <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1590490360182-c33d57733427?w=2000&q=90')"></div>
+  <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=2000&q=90')"></div>
+
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content-wrap max-w-7xl mx-auto px-5 lg:px-8 pt-8">
+    <div class="max-w-3xl">
+      <div class="hero-badge mb-6">
+        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+        <span>Now Showing: Our Premium Rooms</span>
+      </div>
+
+      <div class="text-gold uppercase tracking-[4px] text-xs font-bold mb-5">Our Rooms & Suites</div>
+
+      <h1 class="font-serif text-5xl md:text-6xl lg:text-7xl leading-tight font-semibold mb-6">
+        Stay Somewhere <span class="text-gold">Beautiful.</span>
+      </h1>
+
+      <p class="text-gray-200 text-lg md:text-xl max-w-2xl leading-relaxed">
+        Discover thoughtfully designed rooms and suites where comfort, elegance and exceptional hospitality come together.
+      </p>
+
+      <div class="flex flex-wrap gap-4 mt-8">
+        <a href="#rooms" class="btn-gold no-underline px-7 py-3 rounded-full font-semibold">
+          Explore Rooms <i class="fa-solid fa-arrow-down ml-2"></i>
+        </a>
+        <a href="#gallery" class="border border-white/50 hover:bg-white hover:text-navy text-white no-underline px-7 py-3 rounded-full font-semibold transition">
+          <i class="fa-solid fa-images mr-2"></i> View Gallery
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-slider-controls">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 flex items-center justify-between">
+      <div class="flex gap-2">
+        <button class="hero-dot active" onclick="showHeroSlide(0)"></button>
+        <button class="hero-dot" onclick="showHeroSlide(1)"></button>
+        <button class="hero-dot" onclick="showHeroSlide(2)"></button>
+        <button class="hero-dot" onclick="showHeroSlide(3)"></button>
+      </div>
+      <div class="flex gap-3">
+        <button class="hero-arrow" onclick="prevHeroSlide()"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="hero-arrow" onclick="nextHeroSlide()"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <div id="heroProgress" class="hero-progress"></div>
+</section>
+
+
+<!-- ================= FEATURE STRIP ================= -->
+<section class="feature-strip text-white">
+  <div class="max-w-7xl mx-auto grid md:grid-cols-4">
+    <div class="feature-item px-6 py-6 flex items-center gap-4">
+      <div class="text-gold text-2xl"><i class="fa-solid fa-wifi"></i></div>
+      <div>
+        <div class="font-semibold">Free Wi-Fi</div>
+        <div class="text-xs text-gray-400">High-speed internet</div>
+      </div>
+    </div>
+    <div class="feature-item px-6 py-6 flex items-center gap-4">
+      <div class="text-gold text-2xl"><i class="fa-solid fa-mug-hot"></i></div>
+      <div>
+        <div class="font-semibold">Breakfast</div>
+        <div class="text-xs text-gray-400">Selected rooms</div>
+      </div>
+    </div>
+    <div class="feature-item px-6 py-6 flex items-center gap-4">
+      <div class="text-gold text-2xl"><i class="fa-solid fa-shield-heart"></i></div>
+      <div>
+        <div class="font-semibold">Secure Booking</div>
+        <div class="text-xs text-gray-400">Safe & reliable</div>
+      </div>
+    </div>
+    <div class="feature-item px-6 py-6 flex items-center gap-4">
+      <div class="text-gold text-2xl"><i class="fa-solid fa-headset"></i></div>
+      <div>
+        <div class="font-semibold">24/7 Support</div>
+        <div class="text-xs text-gray-400">We're here to help</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= FEATURED ROOMS ================= -->
+<section class="py-20">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+      <div>
+        <div class="text-gold text-xs uppercase tracking-[3px] font-bold mb-3">
+          <i class="fa-solid fa-star mr-2"></i>Top Picks
+        </div>
+        <h2 class="font-serif text-4xl md:text-5xl font-semibold text-navy">
+          Featured <span class="text-gold">Rooms</span>
+        </h2>
+        <p class="text-gray-500 mt-3 max-w-xl">
+          Handpicked rooms our guests love the most
+        </p>
+      </div>
+      <a href="#rooms" class="text-navy font-semibold hover:text-gold no-underline text-sm">
+        View All <i class="fa-solid fa-arrow-right ml-1"></i>
+      </a>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      <!-- Featured 1 -->
+      <div class="featured-card">
+        <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&q=85" alt="Deluxe Room">
+        <div class="featured-overlay"></div>
+        <div class="featured-badge">Most Popular</div>
+        <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <div class="text-xs text-gold uppercase tracking-wider font-bold mb-2">Deluxe</div>
+          <h3 class="font-serif text-2xl font-semibold mb-2">Deluxe City View</h3>
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-2xl font-bold">৳5,500</span>
+              <span class="text-sm opacity-80">/night</span>
+            </div>
+            <a href="#rooms" class="bg-gold hover:bg-[#b28e55] text-white px-4 py-2 rounded-full text-xs font-bold no-underline transition">
+              Book Now
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Featured 2 -->
+      <div class="featured-card">
+        <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=85" alt="Suite">
+        <div class="featured-overlay"></div>
+        <div class="featured-badge">Luxury</div>
+        <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <div class="text-xs text-gold uppercase tracking-wider font-bold mb-2">Suite</div>
+          <h3 class="font-serif text-2xl font-semibold mb-2">Presidential Suite</h3>
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-2xl font-bold">৳9,000</span>
+              <span class="text-sm opacity-80">/night</span>
+            </div>
+            <a href="#rooms" class="bg-gold hover:bg-[#b28e55] text-white px-4 py-2 rounded-full text-xs font-bold no-underline transition">
+              Book Now
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Featured 3 -->
+      <div class="featured-card">
+        <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=800&q=85" alt="Double Room">
+        <div class="featured-overlay"></div>
+        <div class="featured-badge">Best Value</div>
+        <div class="absolute bottom-0 left-0 right-0 p-6 text-white">
+          <div class="text-xs text-gold uppercase tracking-wider font-bold mb-2">Double</div>
+          <h3 class="font-serif text-2xl font-semibold mb-2">Comfort Double</h3>
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-2xl font-bold">৳3,500</span>
+              <span class="text-sm opacity-80">/night</span>
+            </div>
+            <a href="#rooms" class="bg-gold hover:bg-[#b28e55] text-white px-4 py-2 rounded-full text-xs font-bold no-underline transition">
+              Book Now
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= MAIN ROOMS ================= -->
+<section id="rooms" class="py-16 md:py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+
+    <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-5 mb-10">
+      <div>
+        <div class="text-gold text-xs uppercase tracking-[3px] font-bold mb-3">Find Your Stay</div>
+        <h2 class="font-serif text-4xl md:text-5xl font-semibold text-navy">All Rooms & Suites</h2>
+        <p class="text-gray-500 mt-3 max-w-xl">
+          Choose the room that fits your stay, whether you're travelling alone, with family or looking for a luxurious escape.
+        </p>
+      </div>
+      <div class="text-sm text-gray-500">
+        <i class="fa-solid fa-location-dot text-gold mr-1"></i> Premium stays in Dhaka
+      </div>
+    </div>
+
+    <!-- FILTER -->
+    <div class="filter-card bg-white rounded-3xl p-5 md:p-7 mb-12 border border-gray-100">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 rounded-xl bg-[#f7f0e4] flex items-center justify-center text-gold">
+          <i class="fa-solid fa-sliders"></i>
+        </div>
+        <div>
+          <h3 class="font-semibold text-lg mb-0">Find your perfect room</h3>
+          <p class="text-xs text-gray-400 mb-0">Filter by room type, budget and capacity</p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="input-box border-2 border-gray-100 rounded-2xl px-4 py-3">
+          <label class="block text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Room Type</label>
+          <select id="filterType" class="w-full bg-transparent border-0 outline-none text-sm font-medium">
+            <option value="">All Types</option>
+            <option value="Single">Single Room</option>
+            <option value="Double">Double Room</option>
+            <option value="Deluxe">Deluxe Room</option>
+            <option value="Suite">Suite</option>
+          </select>
+        </div>
+
+        <div class="input-box border-2 border-gray-100 rounded-2xl px-4 py-3">
+          <label class="block text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Maximum Price</label>
+          <div class="flex items-center gap-2">
+            <span class="text-gold font-bold">৳</span>
+            <input type="number" id="filterPrice" placeholder="Any budget" class="w-full bg-transparent border-0 outline-none text-sm font-medium">
+          </div>
+        </div>
+
+        <div class="input-box border-2 border-gray-100 rounded-2xl px-4 py-3">
+          <label class="block text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Guests</label>
+          <select id="filterCapacity" class="w-full bg-transparent border-0 outline-none text-sm font-medium">
+            <option value="">Any Guests</option>
+            <option value="1">1+ Guest</option>
+            <option value="2">2+ Guests</option>
+            <option value="3">3+ Guests</option>
+            <option value="4">4+ Guests</option>
+          </select>
+        </div>
+
+        <div class="input-box border-2 border-gray-100 rounded-2xl px-4 py-3">
+          <label class="block text-[10px] uppercase tracking-wider text-gray-400 font-bold mb-1">Sort By</label>
+          <select id="sortRooms" class="w-full bg-transparent border-0 outline-none text-sm font-medium">
+            <option value="recommended">Recommended</option>
+            <option value="low">Price: Low to High</option>
+            <option value="high">Price: High to Low</option>
+            <option value="capacity">Capacity</option>
+          </select>
+        </div>
+
+        <button onclick="clearFilters()" class="btn-outline-navy rounded-2xl font-semibold text-sm min-h-[68px]">
+          <i class="fa-solid fa-rotate-left mr-2"></i>Reset Filters
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULTS HEADER -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-7">
+      <div>
+        <h3 class="font-serif text-2xl font-semibold">Available Rooms</h3>
+        <p id="resultCount" class="text-sm text-gray-500 mt-1">Finding the best rooms for you...</p>
+      </div>
+      <div class="flex items-center gap-2 text-sm text-gray-500">
+        <i class="fa-solid fa-arrow-down-wide-short text-gold"></i>
+        <span>Sort results above</span>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="loading" class="text-center py-24">
+      <div class="spinner mx-auto"></div>
+      <p class="text-gray-500 mt-5 font-medium">Finding available rooms...</p>
+    </div>
+
+    <!-- ROOMS GRID -->
+    <div id="roomsGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-7"></div>
+
+    <!-- EMPTY -->
+    <div id="empty" class="hidden empty-box rounded-3xl text-center py-20 px-6 mt-6">
+      <div class="w-20 h-20 bg-gray-100 rounded-full mx-auto flex items-center justify-center mb-5">
+        <i class="fa-solid fa-bed text-3xl text-gray-300"></i>
+      </div>
+      <h3 class="font-serif text-3xl font-semibold text-gray-500">No rooms found</h3>
+      <p class="text-gray-400 mt-2 mb-6">Try changing your filters to discover more rooms.</p>
+      <button onclick="clearFilters()" class="btn-gold px-6 py-3 rounded-full font-semibold border-0">
+        Clear Filters
+      </button>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ================= WHY BOOK WITH US ================= -->
+<section id="why" class="py-20">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <div class="text-gold text-xs uppercase tracking-[3px] font-bold mb-3">Why HotelReserve</div>
+      <h2 class="font-serif text-4xl md:text-5xl font-semibold text-navy mb-4">
+        Everything you need <br>for a <span class="text-gold">better stay.</span>
+      </h2>
+      <p class="text-gray-500">We combine thoughtful design, reliable service, and modern technology to make hotel booking effortless.</p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="why-card bg-white rounded-2xl p-7 border border-gray-100">
+        <div class="why-icon bg-blue-50 text-blue-600 mb-5"><i class="fa-solid fa-shield-halved"></i></div>
+        <h3 class="font-bold text-lg text-navy mb-2">Secure Booking</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Your reservation is protected with industry-standard encryption and secure payment methods.</p>
+      </div>
+
+      <div class="why-card bg-white rounded-2xl p-7 border border-gray-100">
+        <div class="why-icon bg-green-50 text-green-600 mb-5"><i class="fa-solid fa-circle-check"></i></div>
+        <h3 class="font-bold text-lg text-navy mb-2">Free Cancellation</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Change your plans freely. Cancel up to 48 hours before check-in with no questions asked.</p>
+      </div>
+
+      <div class="why-card bg-white rounded-2xl p-7 border border-gray-100">
+        <div class="why-icon bg-purple-50 text-purple-600 mb-5"><i class="fa-solid fa-tags"></i></div>
+        <h3 class="font-bold text-lg text-navy mb-2">Best Price Guarantee</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Found a lower price elsewhere? We'll match it and give you an additional 10% off.</p>
+      </div>
+
+      <div class="why-card bg-white rounded-2xl p-7 border border-gray-100">
+        <div class="why-icon bg-yellow-50 text-yellow-600 mb-5"><i class="fa-solid fa-headset"></i></div>
+        <h3 class="font-bold text-lg text-navy mb-2">24/7 Support</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Our friendly support team is available anytime to help with your booking.</p>
+      </div>
+
+      <div class="why-card bg-white rounded-2xl p-7 border border-gray-100">
+        <div class="why-icon bg-teal-50 text-teal-600 mb-5"><i class="fa-solid fa-star"></i></div>
+        <h3 class="font-bold text-lg text-navy mb-2">Premium Comfort</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Every room is designed with care — premium bedding, modern amenities and clean spaces.</p>
+      </div>
+
+      <div class="why-card bg-white rounded-2xl p-7 border border-gray-100">
+        <div class="why-icon bg-red-50 text-red-600 mb-5"><i class="fa-solid fa-gift"></i></div>
+        <h3 class="font-bold text-lg text-navy mb-2">Loyalty Rewards</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Earn points on every booking and unlock exclusive discounts for future stays.</p>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 pt-12 border-t border-gray-100">
+      <div class="stat-item">
+        <div class="stat-number" data-target="250" data-suffix="+">0+</div>
+        <div class="text-sm text-gray-500 mt-2">Premium Rooms</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" data-target="50" data-suffix="K+">0K+</div>
+        <div class="text-sm text-gray-500 mt-2">Happy Guests</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" data-target="4.9" data-decimal="1">0</div>
+        <div class="text-sm text-gray-500 mt-2">Average Rating</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">24/7</div>
+        <div class="text-sm text-gray-500 mt-2">Guest Support</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= PHOTO GALLERY ================= -->
+<section id="gallery" class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <div class="text-gold text-xs uppercase tracking-[3px] font-bold mb-3">Explore</div>
+      <h2 class="font-serif text-4xl md:text-5xl font-semibold text-navy mb-4">
+        Hotel <span class="text-gold">Gallery</span>
+      </h2>
+      <p class="text-gray-500">Take a look at our beautiful spaces and amenities</p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 auto-rows-[200px]">
+      <div class="gallery-item md:col-span-2 md:row-span-2">
+        <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=800&q=85" alt="Lobby">
+        <div class="gallery-overlay"><i class="fa-solid fa-expand"></i></div>
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=500&q=85" alt="Room">
+        <div class="gallery-overlay"><i class="fa-solid fa-expand"></i></div>
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?w=500&q=85" alt="Suite">
+        <div class="gallery-overlay"><i class="fa-solid fa-expand"></i></div>
+      </div>
+      <div class="gallery-item md:col-span-2">
+        <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=85" alt="Bedroom">
+        <div class="gallery-overlay"><i class="fa-solid fa-expand"></i></div>
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=500&q=85" alt="Bathroom">
+        <div class="gallery-overlay"><i class="fa-solid fa-expand"></i></div>
+      </div>
+      <div class="gallery-item">
+        <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&q=85" alt="Restaurant">
+        <div class="gallery-overlay"><i class="fa-solid fa-expand"></i></div>
+      </div>
+      <div class="gallery-item md:col-span-2">
+        <img src="https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800&q=85" alt="Pool">
+        <div class="gallery-overlay"><i class="fa-solid fa-expand"></i></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= TESTIMONIALS ================= -->
+<section class="py-20">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+      <div>
+        <div class="text-gold text-xs uppercase tracking-[3px] font-bold mb-3">Guest Stories</div>
+        <h2 class="font-serif text-4xl md:text-5xl font-semibold text-navy">
+          Loved by people <span class="text-gold">like you.</span>
+        </h2>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="slideTestimonial(-1)" class="w-12 h-12 rounded-full bg-white border border-gray-200 hover:bg-navy hover:text-white transition">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <button onclick="slideTestimonial(1)" class="w-12 h-12 rounded-full bg-white border border-gray-200 hover:bg-navy hover:text-white transition">
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="testimonial-slider">
+      <div class="testimonial-track" id="testimonialTrack"></div>
+    </div>
+
+    <div class="flex justify-center gap-2 mt-8" id="testimonialDots"></div>
+  </div>
+</section>
+
+
+<!-- ================= NEARBY ATTRACTIONS ================= -->
+<section class="py-20 bg-white">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="grid lg:grid-cols-2 gap-14 items-center">
+      <div>
+        <div class="text-gold text-xs uppercase tracking-[3px] font-bold mb-3">Location</div>
+        <h2 class="font-serif text-4xl md:text-5xl font-semibold text-navy mb-5">
+          Everything nearby, <br><span class="text-gold">nothing missed.</span>
+        </h2>
+        <p class="text-gray-500 leading-relaxed mb-8">
+          Our hotel is strategically located in the heart of the city, close to major attractions, shopping, dining and transport hubs.
+        </p>
+
+        <div class="space-y-4">
+          <div class="nearby-item">
+            <div class="nearby-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-plane"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-navy">Hazrat Shahjalal Airport</div>
+              <div class="text-xs text-gray-500">12 km · 25 min drive</div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-gray-300"></i>
+          </div>
+
+          <div class="nearby-item">
+            <div class="nearby-icon bg-purple-50 text-purple-600"><i class="fa-solid fa-bag-shopping"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-navy">Bashundhara City Mall</div>
+              <div class="text-xs text-gray-500">3 km · 10 min drive</div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-gray-300"></i>
+          </div>
+
+          <div class="nearby-item">
+            <div class="nearby-icon bg-green-50 text-green-600"><i class="fa-solid fa-tree"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-navy">Ramna Park</div>
+              <div class="text-xs text-gray-500">5 km · 15 min drive</div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-gray-300"></i>
+          </div>
+
+          <div class="nearby-item">
+            <div class="nearby-icon bg-yellow-50 text-yellow-600"><i class="fa-solid fa-utensils"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-navy">Popular Restaurants</div>
+              <div class="text-xs text-gray-500">Within 2 km radius</div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-gray-300"></i>
+          </div>
+
+          <div class="nearby-item">
+            <div class="nearby-icon bg-red-50 text-red-600"><i class="fa-solid fa-hospital"></i></div>
+            <div class="flex-1">
+              <div class="font-semibold text-navy">City Hospital</div>
+              <div class="text-xs text-gray-500">1.5 km · 5 min drive</div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-gray-300"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="relative">
+        <div class="rounded-3xl overflow-hidden shadow-premium">
+          <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=900&q=85" alt="Map" class="w-full h-[500px] object-cover">
+        </div>
+        <div class="absolute top-6 left-6 bg-white rounded-2xl p-4 shadow-premium flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gold flex items-center justify-center text-white">
+            <i class="fa-solid fa-map-pin text-xl"></i>
+          </div>
+          <div>
+            <div class="text-xs text-gray-400 uppercase tracking-wider font-bold">Our Location</div>
+            <div class="font-semibold text-navy">Gulshan, Dhaka</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= NEWSLETTER CTA ================= -->
+<section class="newsletter-section py-20">
+  <div class="max-w-4xl mx-auto px-5 lg:px-8 text-center relative z-10">
+    <div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-4 py-2 text-gold text-sm mb-6">
+      <i class="fa-solid fa-envelope-open-text"></i>
+      <span>Stay Updated</span>
+    </div>
+
+    <h2 class="font-serif text-4xl md:text-5xl font-semibold text-white mb-5">
+      Get exclusive <span class="text-gold">deals</span> in your inbox
+    </h2>
+
+    <p class="text-gray-300 mb-10 max-w-2xl mx-auto">
+      Subscribe to our newsletter for the latest offers, new rooms, and insider travel tips — straight to your email.
+    </p>
+
+    <form class="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto" onsubmit="event.preventDefault(); newsletterSubscribed(this);">
+      <input type="email" required placeholder="Enter your email"
+        class="flex-1 px-6 py-4 rounded-full bg-white/10 border border-white/20 text-white placeholder-gray-400 outline-none focus:border-gold transition">
+      <button type="submit" class="btn-gold px-8 py-4 rounded-full font-bold border-0 whitespace-nowrap">
+        Subscribe <i class="fa-solid fa-paper-plane ml-2"></i>
+      </button>
+    </form>
+
+    <p class="text-gray-500 text-xs mt-5">
+      <i class="fa-solid fa-lock mr-1"></i>We respect your privacy. Unsubscribe anytime.
+    </p>
+  </div>
+</section>
+
+
+
+  <!-- ================= NEARBY ATTRACTIONS ================= -->
+  <section id="nearby" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+      <div class="grid lg:grid-cols-2 gap-14 items-center">
+        <div>
+          <div class="text-gold text-xs uppercase tracking-[3px] font-bold mb-3">Location</div>
+          <h2 class="font-serif text-4xl md:text-5xl font-semibold text-navy mb-5">
+            Everything nearby, <br><span class="text-gold">nothing missed.</span>
+          </h2>
+          <p class="text-gray-500 leading-relaxed mb-8">
+            Our hotel is strategically located in the heart of the city, close to major attractions, shopping, dining and transport hubs.
+          </p>
+          <div class="space-y-4">
+            <div class="flex items-center gap-4 p-4 bg-[#F8F6F1] rounded-2xl border border-gray-100 hover:translate-x-1 transition-all">
+              <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-plane"></i></div>
+              <div class="flex-1">
+                <div class="font-semibold text-navy">Hazrat Shahjalal Airport</div>
+                <div class="text-xs text-gray-500">12 km · 25 min drive</div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-gray-300"></i>
+            </div>
+            <div class="flex items-center gap-4 p-4 bg-[#F8F6F1] rounded-2xl border border-gray-100 hover:translate-x-1 transition-all">
+              <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-bag-shopping"></i></div>
+              <div class="flex-1">
+                <div class="font-semibold text-navy">Bashundhara City Mall</div>
+                <div class="text-xs text-gray-500">3 km · 10 min drive</div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-gray-300"></i>
+            </div>
+            <div class="flex items-center gap-4 p-4 bg-[#F8F6F1] rounded-2xl border border-gray-100 hover:translate-x-1 transition-all">
+              <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-tree"></i></div>
+              <div class="flex-1">
+                <div class="font-semibold text-navy">Ramna Park</div>
+                <div class="text-xs text-gray-500">5 km · 15 min drive</div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-gray-300"></i>
+            </div>
+            <div class="flex items-center gap-4 p-4 bg-[#F8F6F1] rounded-2xl border border-gray-100 hover:translate-x-1 transition-all">
+              <div class="w-12 h-12 rounded-xl bg-yellow-50 text-yellow-600 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-utensils"></i></div>
+              <div class="flex-1">
+                <div class="font-semibold text-navy">Popular Restaurants</div>
+                <div class="text-xs text-gray-500">Within 2 km radius</div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-gray-300"></i>
+            </div>
+            <div class="flex items-center gap-4 p-4 bg-[#F8F6F1] rounded-2xl border border-gray-100 hover:translate-x-1 transition-all">
+              <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-lg flex-shrink-0"><i class="fa-solid fa-hospital"></i></div>
+              <div class="flex-1">
+                <div class="font-semibold text-navy">City Hospital</div>
+                <div class="text-xs text-gray-500">1.5 km · 5 min drive</div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-gray-300"></i>
+            </div>
+          </div>
+        </div>
+        <div class="relative">
+          <div class="rounded-3xl overflow-hidden shadow-2xl">
+            <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=900&q=85" alt="Map" class="w-full h-[500px] object-cover">
+          </div>
+          <div class="absolute top-6 left-6 bg-white rounded-2xl p-4 shadow-2xl flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-gold flex items-center justify-center text-white">
+              <i class="fa-solid fa-map-pin text-xl"></i>
+            </div>
+            <div>
+              <div class="text-xs text-gray-400 uppercase tracking-wider font-bold">Our Location</div>
+              <div class="font-semibold text-navy">Gulshan, Dhaka</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= NEWSLETTER ================= -->
+  <section class="py-20" style="background:linear-gradient(135deg, #0B1F33 0%, #102A43 100%); position:relative; overflow:hidden;">
+    <div class="max-w-4xl mx-auto px-5 lg:px-8 text-center relative z-10">
+      <div class="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 text-gold text-sm mb-6">
+        <i class="fa-solid fa-envelope-open-text"></i>
+        <span>Stay Updated</span>
+      </div>
+      <h2 class="font-serif text-4xl md:text-5xl font-semibold text-white mb-5">
+        Get exclusive <span class="text-gold">deals</span> in your inbox
+      </h2>
+      <p class="text-gray-300 mb-10 max-w-2xl mx-auto">
+        Subscribe to our newsletter for the latest offers, new rooms, and insider travel tips — straight to your email.
+      </p>
+      <form class="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto" onsubmit="event.preventDefault(); this.innerHTML='<div class=&quot;text-green-400 font-semibold py-4&quot;><i class=&quot;fa-solid fa-circle-check mr-2&quot;></i>Subscribed! Check your inbox.</div>';">
+        <input type="email" required placeholder="Enter your email"
+          class="flex-1 px-6 py-4 rounded-full bg-white/10 border border-white/20 text-white placeholder-gray-400 outline-none focus:border-[#C7A46A] transition">
+        <button type="submit" class="bg-[#C7A46A] hover:bg-[#aa884e] text-white px-8 py-4 rounded-full font-bold border-0 whitespace-nowrap transition">
+          Subscribe <i class="fa-solid fa-paper-plane ml-2"></i>
+        </button>
+      </form>
+      <p class="text-gray-500 text-xs mt-5">
+        <i class="fa-solid fa-lock mr-1"></i>We respect your privacy. Unsubscribe anytime.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section id="faq" class="py-20 bg-[#F8F6F1]">
+    <div class="max-w-5xl mx-auto px-5 lg:px-8">
+      <div class="text-center mb-14">
+        <div class="text-gold text-xs uppercase tracking-[3px] font-bold mb-3">FAQ</div>
+        <h2 class="font-serif text-4xl md:text-5xl font-semibold text-navy mb-4">
+          Everything you <span class="text-gold">need to know.</span>
+        </h2>
+        <p class="text-gray-500 max-w-2xl mx-auto">Find quick answers about reservations, check-in, cancellation, payments, and your stay.</p>
+      </div>
+
+      <div class="bg-white rounded-3xl shadow-lg overflow-hidden">
+        <div class="border-b border-gray-100">
+          <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left px-7 py-6 bg-transparent border-0 cursor-pointer">
+            <span class="flex items-center gap-4">
+              <span class="w-9 h-9 rounded-xl bg-[#F8F6F1] text-navy flex items-center justify-center font-bold text-sm flex-shrink-0">01</span>
+              <span class="font-bold text-lg">How can I book a room?</span>
+            </span>
+            <span class="faq-icon w-10 h-10 rounded-full bg-[#F8F6F1] flex items-center justify-center flex-shrink-0 transition-all">
+              <i class="fa-solid fa-plus"></i>
+            </span>
+          </button>
+          <div class="faq-answer px-7" style="max-height:0; overflow:hidden; transition:max-height 0.4s ease;">
+            <p class="text-gray-600 leading-relaxed pb-6 pl-16">Select your preferred room, choose your check-in and check-out dates, enter your guest information, and complete the booking process.</p>
+          </div>
+        </div>
+
+        <div class="border-b border-gray-100">
+          <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left px-7 py-6 bg-transparent border-0 cursor-pointer">
+            <span class="flex items-center gap-4">
+              <span class="w-9 h-9 rounded-xl bg-[#F8F6F1] text-navy flex items-center justify-center font-bold text-sm flex-shrink-0">02</span>
+              <span class="font-bold text-lg">What time is check-in and check-out?</span>
+            </span>
+            <span class="faq-icon w-10 h-10 rounded-full bg-[#F8F6F1] flex items-center justify-center flex-shrink-0 transition-all">
+              <i class="fa-solid fa-plus"></i>
+            </span>
+          </button>
+          <div class="faq-answer px-7" style="max-height:0; overflow:hidden; transition:max-height 0.4s ease;">
+            <p class="text-gray-600 leading-relaxed pb-6 pl-16">Standard check-in starts at 2:00 PM and check-out is available until 12:00 PM. Early check-in may be available depending on room availability.</p>
+          </div>
+        </div>
+
+        <div class="border-b border-gray-100">
+          <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left px-7 py-6 bg-transparent border-0 cursor-pointer">
+            <span class="flex items-center gap-4">
+              <span class="w-9 h-9 rounded-xl bg-[#F8F6F1] text-navy flex items-center justify-center font-bold text-sm flex-shrink-0">03</span>
+              <span class="font-bold text-lg">Can I cancel my reservation?</span>
+            </span>
+            <span class="faq-icon w-10 h-10 rounded-full bg-[#F8F6F1] flex items-center justify-center flex-shrink-0 transition-all">
+              <i class="fa-solid fa-plus"></i>
+            </span>
+          </button>
+          <div class="faq-answer px-7" style="max-height:0; overflow:hidden; transition:max-height 0.4s ease;">
+            <p class="text-gray-600 leading-relaxed pb-6 pl-16">Yes. Cancellation policies depend on the selected room and booking plan. Please check the cancellation terms before confirming your reservation.</p>
+          </div>
+        </div>
+
+        <div class="border-b border-gray-100">
+          <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left px-7 py-6 bg-transparent border-0 cursor-pointer">
+            <span class="flex items-center gap-4">
+              <span class="w-9 h-9 rounded-xl bg-[#F8F6F1] text-navy flex items-center justify-center font-bold text-sm flex-shrink-0">04</span>
+              <span class="font-bold text-lg">Is breakfast included?</span>
+            </span>
+            <span class="faq-icon w-10 h-10 rounded-full bg-[#F8F6F1] flex items-center justify-center flex-shrink-0 transition-all">
+              <i class="fa-solid fa-plus"></i>
+            </span>
+          </button>
+          <div class="faq-answer px-7" style="max-height:0; overflow:hidden; transition:max-height 0.4s ease;">
+            <p class="text-gray-600 leading-relaxed pb-6 pl-16">Breakfast is included with selected room categories. You can see whether breakfast is included in the room comparison before booking.</p>
+          </div>
+        </div>
+
+        <div class="border-b border-gray-100">
+          <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left px-7 py-6 bg-transparent border-0 cursor-pointer">
+            <span class="flex items-center gap-4">
+              <span class="w-9 h-9 rounded-xl bg-[#F8F6F1] text-navy flex items-center justify-center font-bold text-sm flex-shrink-0">05</span>
+              <span class="font-bold text-lg">Is online payment secure?</span>
+            </span>
+            <span class="faq-icon w-10 h-10 rounded-full bg-[#F8F6F1] flex items-center justify-center flex-shrink-0 transition-all">
+              <i class="fa-solid fa-plus"></i>
+            </span>
+          </button>
+          <div class="faq-answer px-7" style="max-height:0; overflow:hidden; transition:max-height 0.4s ease;">
+            <p class="text-gray-600 leading-relaxed pb-6 pl-16">Yes. Our booking process is designed to keep your payment information secure and protected with industry-standard encryption.</p>
+          </div>
+        </div>
+
+        <div>
+          <button onclick="toggleFaq(this)" class="w-full flex items-center justify-between text-left px-7 py-6 bg-transparent border-0 cursor-pointer">
+            <span class="flex items-center gap-4">
+              <span class="w-9 h-9 rounded-xl bg-[#F8F6F1] text-navy flex items-center justify-center font-bold text-sm flex-shrink-0">06</span>
+              <span class="font-bold text-lg">Do you provide airport transportation?</span>
+            </span>
+            <span class="faq-icon w-10 h-10 rounded-full bg-[#F8F6F1] flex items-center justify-center flex-shrink-0 transition-all">
+              <i class="fa-solid fa-plus"></i>
+            </span>
+          </button>
+          <div class="faq-answer px-7" style="max-height:0; overflow:hidden; transition:max-height 0.4s ease;">
+            <p class="text-gray-600 leading-relaxed pb-6 pl-16">Airport transportation can be arranged through our guest support team. Contact us after making your reservation for available options.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ================= FINAL CTA ================= -->
+<section class="pb-20 pt-16 bg-white">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="rounded-[2rem] overflow-hidden relative bg-navy text-white">
+      <div class="absolute inset-0 opacity-30" style="background:url('https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1400&q=80') center/cover;"></div>
+      <div class="relative px-7 md:px-12 py-14 md:py-16">
+        <div class="max-w-2xl">
+          <div class="text-gold text-xs uppercase tracking-[3px] font-bold mb-4">A Better Stay Awaits</div>
+          <h2 class="font-serif text-4xl md:text-5xl font-semibold mb-4">Ready to make your stay memorable?</h2>
+          <p class="text-gray-300 leading-relaxed mb-7">
+            Choose your room, complete your booking and get ready for a comfortable HotelReserve experience.
+          </p>
+          <a href="#rooms" class="btn-gold inline-flex items-center px-7 py-3 rounded-full font-semibold no-underline">
+            Browse Rooms <i class="fa-solid fa-arrow-right ml-2"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= FOOTER ================= -->
+<footer class="bg-[#071521] text-white">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8 py-14">
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
+      <div>
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center">
+            <i class="fa-solid fa-hotel text-xl"></i>
+          </div>
+          <div>
+            <div class="text-xl font-bold">Hotel<span class="text-gold">Reserve</span></div>
+            <div class="text-[10px] tracking-[3px] uppercase text-gray-500">Hospitality</div>
+          </div>
+        </div>
+        <p class="text-gray-400 text-sm leading-7">
+          A modern hotel reservation experience designed to make finding and booking your perfect room simple.
+        </p>
+      </div>
+
+      <div>
+        <h4 class="font-semibold mb-5">Explore</h4>
+        <div class="flex flex-col gap-3 text-sm">
+          <a href="index.html" class="text-gray-400 hover:text-gold no-underline">Home</a>
+          <a href="rooms.html" class="text-gray-400 hover:text-gold no-underline">Rooms</a>
+          <a href="#why" class="text-gray-400 hover:text-gold no-underline">Why Us</a>
+          <a href="#gallery" class="text-gray-400 hover:text-gold no-underline">Gallery</a>
+          <a href="#faq" class="text-gray-400 hover:text-gold no-underline">FAQ</a>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="font-semibold mb-5">Guest Services</h4>
+        <div class="flex flex-col gap-3 text-sm text-gray-400">
+          <span>24/7 Guest Support</span>
+          <span>Secure Booking</span>
+          <span>Free Wi-Fi</span>
+          <span>Free Cancellation</span>
+        </div>
+      </div>
+
+      <div>
+        <h4 class="font-semibold mb-5">Contact</h4>
+        <div class="flex flex-col gap-4 text-sm text-gray-400">
+          <div class="flex gap-3">
+            <i class="fa-solid fa-location-dot text-gold mt-1"></i>
+            <span>Dhaka, Bangladesh</span>
+          </div>
+          <div class="flex gap-3">
+            <i class="fa-solid fa-envelope text-gold mt-1"></i>
+            <span>support@hotelreserve.com</span>
+          </div>
+          <div class="flex gap-3">
+            <i class="fa-solid fa-phone text-gold mt-1"></i>
+            <span>+880 1XXX-XXXXXX</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-white/10 mt-12 pt-7 flex flex-col md:flex-row justify-between gap-4">
+      <p class="text-gray-500 text-sm mb-0">© 2026 HotelReserve. All rights reserved.</p>
+      <div class="flex gap-5 text-gray-500">
+        <i class="fa-brands fa-facebook hover:text-gold cursor-pointer"></i>
+        <i class="fa-brands fa-instagram hover:text-gold cursor-pointer"></i>
+        <i class="fa-brands fa-linkedin hover:text-gold cursor-pointer"></i>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ================= SCRIPTS ================= -->
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+  const API_BASE_URL = "http://localhost:8080/api";
+  const api = axios.create({ baseURL: API_BASE_URL });
+  let allRooms = [];
+
+  /* NAV AUTH */
+  function loadNavAuth() {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const navAuth = document.getElementById("navAuth");
+    if (user) {
+      const firstName = user.name ? user.name.split(" ")[0] : "Guest";
+      navAuth.innerHTML = `
+        <a href="my-bookings.html" class="hidden md:inline text-white text-sm no-underline hover:text-gold">
+          <i class="fa-solid fa-calendar-check mr-1"></i>My Bookings
+        </a>
+        ${user.role === "ADMIN" ? `<a href="admin.html" class="hidden md:inline text-white text-sm no-underline hover:text-gold"><i class="fa-solid fa-gauge mr-1"></i>Admin</a>` : ""}
+        <div class="hidden md:flex items-center gap-3 pl-3 border-l border-white/20">
+          <span class="text-white text-sm">Hi, ${firstName}</span>
+          <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm border-0">
+            <i class="fa-solid fa-right-from-bracket"></i>
+          </button>
+        </div>`;
+    } else {
+      navAuth.innerHTML = `
+        <div class="hidden md:flex items-center gap-3">
+          <a href="login.html" class="text-white text-sm no-underline hover:text-gold">Login</a>
+          <a href="register.html" class="bg-gold hover:bg-[#b28e55] text-white px-5 py-2.5 rounded-full font-semibold text-sm no-underline">Register</a>
+        </div>`;
+    }
+  }
+
+  function logout() { localStorage.clear(); window.location.href = "index.html"; }
+
+  /* MOBILE MENU */
+  document.getElementById("mobileMenuBtn").addEventListener("click", function () {
+    document.getElementById("mobileMenu").classList.toggle("hidden");
+  });
+
+  /* HERO CAROUSEL */
+  let heroIndex = 0;
+  const heroSlides = document.querySelectorAll(".hero-slide");
+  const heroDots = document.querySelectorAll(".hero-dot");
+  const heroProgress = document.getElementById("heroProgress");
+  const HERO_DURATION = 5000;
+  let heroInterval;
+
+  function showHeroSlide(index) {
+    heroSlides.forEach(s => s.classList.remove("active"));
+    heroDots.forEach(d => d.classList.remove("active"));
+    heroIndex = index;
+    if (heroSlides[heroIndex]) heroSlides[heroIndex].classList.add("active");
+    if (heroDots[heroIndex]) heroDots[heroIndex].classList.add("active");
+    resetHeroTimer();
+  }
+
+  function resetHeroTimer() {
+    clearInterval(heroInterval);
+    if (heroProgress) {
+      heroProgress.style.transition = "none";
+      heroProgress.style.width = "0%";
+      setTimeout(() => {
+        heroProgress.style.transition = `width ${HERO_DURATION}ms linear`;
+        heroProgress.style.width = "100%";
+      }, 50);
+    }
+    heroInterval = setInterval(nextHeroSlide, HERO_DURATION);
+  }
+
+  function nextHeroSlide() { let n = heroIndex + 1; if (n >= heroSlides.length) n = 0; showHeroSlide(n); }
+  function prevHeroSlide() { let p = heroIndex - 1; if (p < 0) p = heroSlides.length - 1; showHeroSlide(p); }
+
+  const heroSection = document.querySelector(".hero-carousel");
+  if (heroSection) {
+    heroSection.addEventListener("mouseenter", () => { clearInterval(heroInterval); if (heroProgress) heroProgress.style.transition = "none"; });
+    heroSection.addEventListener("mouseleave", resetHeroTimer);
+  }
+
+  if (heroSlides.length > 0) resetHeroTimer();
+
+  /* ROOM IMAGES */
+  const images = {
+    Single: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=900&q=85",
+    Double: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=900&q=85",
+    Deluxe: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=900&q=85",
+    Suite: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=900&q=85"
+  };
+
+  /* LOAD ROOMS */
+  async function loadRooms() {
+    try {
+      const response = await api.get("/rooms");
+      allRooms = response.data.data || [];
+      document.getElementById("loading").classList.add("hidden");
+      renderRooms(allRooms);
+    } catch (error) {
+      console.error("Room loading error:", error);
+      document.getElementById("loading").innerHTML = `
+        <div class="max-w-md mx-auto">
+          <div class="w-20 h-20 bg-red-50 rounded-full mx-auto flex items-center justify-center mb-5">
+            <i class="fa-solid fa-server text-red-400 text-2xl"></i>
+          </div>
+          <h3 class="font-serif text-2xl font-semibold text-navy mb-2">Unable to load rooms</h3>
+          <p class="text-gray-500 text-sm mb-4">Please make sure the backend is running.</p>
+          <div class="bg-gray-100 rounded-xl p-4 text-left text-xs text-gray-500">
+            <strong>Backend:</strong><br>mvn spring-boot:run
+          </div>
+        </div>`;
+      document.getElementById("resultCount").textContent = "Unable to connect.";
+    }
+  }
+
+  /* FILTER */
+  function getFilteredRooms() {
+    const type = document.getElementById("filterType").value;
+    const price = parseFloat(document.getElementById("filterPrice").value) || Infinity;
+    const capacity = parseInt(document.getElementById("filterCapacity").value) || 0;
+    let filtered = allRooms.filter(room => {
+      if (type && room.roomType !== type) return false;
+      if (room.price > price) return false;
+      if (capacity && room.capacity < capacity) return false;
+      return true;
+    });
+    const sort = document.getElementById("sortRooms").value;
+    if (sort === "low") filtered.sort((a, b) => Number(a.price) - Number(b.price));
+    else if (sort === "high") filtered.sort((a, b) => Number(b.price) - Number(a.price));
+    else if (sort === "capacity") filtered.sort((a, b) => Number(b.capacity) - Number(a.capacity));
+    return filtered;
+  }
+
+  function applyFilters() { renderRooms(getFilteredRooms()); }
+
+  function clearFilters() {
+    document.getElementById("filterType").value = "";
+    document.getElementById("filterPrice").value = "";
+    document.getElementById("filterCapacity").value = "";
+    document.getElementById("sortRooms").value = "recommended";
+    renderRooms(allRooms);
+  }
+
+  /* RENDER ROOMS */
+  function renderRooms(rooms) {
+    const grid = document.getElementById("roomsGrid");
+    const empty = document.getElementById("empty");
+    const count = document.getElementById("resultCount");
+    count.textContent = `${rooms.length} ${rooms.length === 1 ? "room" : "rooms"} available`;
+
+    if (!rooms.length) {
+      grid.innerHTML = "";
+      empty.classList.remove("hidden");
+      return;
+    }
+    empty.classList.add("hidden");
+
+    grid.innerHTML = rooms.map((room, index) => {
+      const isAvailable = room.status === "AVAILABLE";
+      const image = room.imageUrl || images[room.roomType] || images.Single;
+      const price = Number(room.price || 0).toLocaleString();
+      const rating = room.rating || "4.8";
+      const reviews = room.reviews || Math.floor(70 + Math.random() * 160);
+      const description = room.description || getDefaultDescription(room.roomType);
+      const bed = getBedType(room.roomType);
+
+      return `
+        <article class="room-card rounded-[1.6rem] overflow-hidden fade-up" style="animation-delay:${index * 70}ms">
+          <div class="room-image-wrap">
+            <img src="${image}" alt="${room.roomType}" class="room-image" loading="lazy">
+            <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent pointer-events-none"></div>
+            <div class="absolute top-4 left-4"><span class="badge-room">${room.roomType || "Room"}</span></div>
+            <button class="wishlist absolute top-4 right-4" onclick="toggleWishlist(this)"><i class="fa-regular fa-heart"></i></button>
+            <div class="absolute bottom-4 left-4">
+              <span class="${isAvailable ? "status-available" : "status-unavailable"} px-3 py-1.5 rounded-full text-xs font-bold">
+                <i class="fa-solid ${isAvailable ? "fa-circle-check" : "fa-circle-xmark"} mr-1"></i>
+                ${isAvailable ? "Available" : "Fully Booked"}
+              </span>
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h3 class="font-serif text-2xl font-semibold text-navy mb-1">${room.roomType || "Premium Room"}</h3>
+                <div class="text-xs text-gray-400">Room ${room.roomNumber || "—"}</div>
+              </div>
+              <div class="text-right">
+                <div class="rating-stars text-xs">★★★★★</div>
+                <div class="text-[11px] text-gray-400 mt-1">${rating} · ${reviews} reviews</div>
+              </div>
+            </div>
+            <p class="text-gray-500 text-sm leading-6 mt-4 mb-5">${description}</p>
+            <div class="grid grid-cols-2 gap-y-3 mb-5">
+              <span class="amenity"><i class="fa-solid fa-user"></i>${room.capacity || 1} Guests</span>
+              <span class="amenity"><i class="fa-solid fa-bed"></i>${bed}</span>
+              <span class="amenity"><i class="fa-solid fa-ruler-combined"></i>${getRoomSize(room.roomType)}</span>
+              <span class="amenity"><i class="fa-solid fa-wifi"></i>Free Wi-Fi</span>
+              <span class="amenity"><i class="fa-solid fa-snowflake"></i>Air Conditioning</span>
+              <span class="amenity"><i class="fa-solid fa-mug-hot"></i>Breakfast</span>
+            </div>
+            <div class="border-t border-gray-100 pt-4 mb-5">
+              <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                <i class="fa-solid fa-circle-check text-green-600"></i>Free cancellation
+              </div>
+              <div class="flex items-center gap-2 text-xs text-gray-500">
+                <i class="fa-solid fa-circle-check text-green-600"></i>Secure reservation
+              </div>
+            </div>
+            <div class="border-t border-gray-100 pt-5 flex items-end justify-between gap-4">
+              <div>
+                <div class="price text-3xl font-bold text-navy">৳${price}</div>
+                <div class="text-xs text-gray-400 mt-1">per night</div>
+              </div>
+              <div class="flex gap-2">
+                <a href="room-detail.html?id=${room.id}" class="btn-outline-navy no-underline px-4 py-2.5 rounded-xl font-semibold text-xs">Details</a>
+                <a href="${isAvailable ? `room-detail.html?id=${room.id}` : "#"}" class="${isAvailable ? "btn-gold" : "bg-gray-200 text-gray-400 pointer-events-none"} no-underline px-4 py-2.5 rounded-xl font-semibold text-xs">
+                  ${isAvailable ? "Book Now" : "Unavailable"}
+                </a>
+              </div>
+            </div>
+          </div>
+        </article>`;
+    }).join("");
+  }
+
+  /* HELPERS */
+  function getDefaultDescription(type) {
+    const d = {
+      Single: "A quiet and comfortable room designed for solo travellers seeking a relaxing stay.",
+      Double: "A welcoming room with generous space and comfort for couples or two guests.",
+      Deluxe: "An elevated room experience combining elegant interiors, extra space and premium comfort.",
+      Suite: "Our most spacious stay featuring refined interiors, relaxing spaces and a luxurious atmosphere."
+    };
+    return d[type] || "A thoughtfully designed room offering comfort, convenience and a relaxing hotel experience.";
+  }
+
+  function getBedType(type) {
+    if (type === "Single") return "Single Bed";
+    if (type === "Double") return "Queen Bed";
+    if (type === "Deluxe") return "King Bed";
+    if (type === "Suite") return "King Bed";
+    return "Comfort Bed";
+  }
+
+  function getRoomSize(type) {
+    if (type === "Single") return "20 m²";
+    if (type === "Double") return "28 m²";
+    if (type === "Deluxe") return "35 m²";
+    if (type === "Suite") return "50 m²";
+    return "30 m²";
+  }
+
+  /* WISHLIST */
+  function toggleWishlist(button) {
+    const icon = button.querySelector("i");
+    if (icon.classList.contains("fa-regular")) {
+      icon.classList.remove("fa-regular"); icon.classList.add("fa-solid");
+      button.style.color = "#dc3545";
+    } else {
+      icon.classList.remove("fa-solid"); icon.classList.add("fa-regular");
+      button.style.color = "";
+    }
+  }
+
+  /* STATS COUNTER */
+  const statObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.dataset.started) {
+        entry.target.dataset.started = "true";
+        animateStat(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  document.querySelectorAll(".stat-number").forEach(el => statObserver.observe(el));
+
+  function animateStat(el) {
+    const target = parseFloat(el.dataset.target);
+    const suffix = el.dataset.suffix || "";
+    const decimal = parseInt(el.dataset.decimal || "0");
+    if (!target) { el.classList.add("visible"); return; }
+    el.classList.add("visible");
+    const duration = 2000;
+    const steps = 60;
+    const stepTime = duration / steps;
+    let current = 0;
+    const inc = target / steps;
+    const timer = setInterval(() => {
+      current += inc;
+      if (current >= target) { current = target; clearInterval(timer); }
+      el.textContent = (decimal > 0 ? current.toFixed(decimal) : Math.floor(current)) + suffix;
+    }, stepTime);
+  }
+
+  /* TESTIMONIALS */
+  const testimonialData = [
+    { image:"https://randomuser.me/api/portraits/women/44.jpg", name:"Sarah Johnson", location:"London, UK", text:"The room was beautiful, spotless, and incredibly comfortable. Booking was simple and the entire experience felt premium." },
+    { image:"https://randomuser.me/api/portraits/men/32.jpg", name:"David Miller", location:"New York, USA", text:"I loved how easy it was to compare rooms before booking. The Deluxe room was exactly as shown in the photos." },
+    { image:"https://randomuser.me/api/portraits/women/68.jpg", name:"Emily Carter", location:"Toronto, Canada", text:"Perfect for our family vacation. The staff were friendly, the room was spacious, and everything felt thoughtfully managed." },
+    { image:"https://randomuser.me/api/portraits/men/75.jpg", name:"Michael Wilson", location:"Sydney, Australia", text:"The booking process was incredibly smooth. The room was modern, quiet and exactly what I needed after a long flight." },
+    { image:"https://randomuser.me/api/portraits/women/65.jpg", name:"Olivia Brown", location:"Dubai, UAE", text:"Amazing experience from check-in to checkout. The service was excellent and the hotel atmosphere was beautiful." },
+    { image:"https://randomuser.me/api/portraits/men/46.jpg", name:"James Anderson", location:"Singapore", text:"Great hotel for business travel. Fast Wi-Fi, comfortable workspace and a very peaceful room." }
+  ];
+
+  const track = document.getElementById("testimonialTrack");
+  const dotsContainer = document.getElementById("testimonialDots");
+  const slidesPerView = window.innerWidth >= 1024 ? 3 : (window.innerWidth >= 768 ? 2 : 1);
+  const totalSlides = Math.ceil(testimonialData.length / slidesPerView);
+
+  let cardsHTML = "";
+  for (let i = 0; i < testimonialData.length; i += slidesPerView) {
+    const items = testimonialData.slice(i, i + slidesPerView);
+    cardsHTML += `<div class="testimonial-slide"><div class="grid ${slidesPerView === 3 ? 'md:grid-cols-3' : slidesPerView === 2 ? 'md:grid-cols-2' : 'grid-cols-1'} gap-6">`;
+    items.forEach(item => {
+      cardsHTML += `
+        <div class="testimonial-card">
+          <div class="flex items-center gap-4 mb-5">
+            <img src="${item.image}" class="w-14 h-14 rounded-full object-cover" alt="${item.name}">
+            <div>
+              <div class="font-bold">${item.name}</div>
+              <div class="text-xs text-gray-500">${item.location}</div>
+            </div>
+            <span class="ml-auto text-teal text-xs"><i class="fa-solid fa-circle-check"></i> Verified</span>
+          </div>
+          <div class="rating-stars text-sm mb-3">★★★★★</div>
+          <p class="text-gray-600 leading-relaxed text-sm">"${item.text}"</p>
+        </div>`;
+    });
+    cardsHTML += `</div></div>`;
+  }
+  track.innerHTML = cardsHTML;
+
+  for (let i = 0; i < totalSlides; i++) {
+    const dot = document.createElement("button");
+    dot.className = `testimonial-dot ${i === 0 ? 'active' : ''}`;
+    dot.onclick = () => goToTestimonial(i);
+    dotsContainer.appendChild(dot);
+  }
+
+  let testimonialIndex = 0;
+  function goToTestimonial(index) {
+    testimonialIndex = index;
+    track.style.transform = `translateX(-${index * 100}%)`;
+    Array.from(dotsContainer.children).forEach((dot, i) => {
+      dot.className = `testimonial-dot ${i === index ? 'active' : ''}`;
+    });
+  }
+  function slideTestimonial(dir) {
+    testimonialIndex += dir;
+    if (testimonialIndex < 0) testimonialIndex = totalSlides - 1;
+    if (testimonialIndex >= totalSlides) testimonialIndex = 0;
+    goToTestimonial(testimonialIndex);
+  }
+  setInterval(() => slideTestimonial(1), 6000);
+
+  /* NEWSLETTER */
+  function newsletterSubscribed(form) {
+    form.innerHTML = `<div class="text-green-400 font-semibold py-4"><i class="fa-solid fa-circle-check mr-2"></i>Subscribed! Check your inbox.</div>`;
+  }
+
+  /* FILTER EVENTS */
+  document.getElementById("filterType").addEventListener("change", applyFilters);
+  document.getElementById("filterPrice").addEventListener("input", applyFilters);
+  document.getElementById("filterCapacity").addEventListener("change", applyFilters);
+  document.getElementById("sortRooms").addEventListener("change", applyFilters);
+
+  /* INIT */
+  loadNavAuth();
+  loadRooms();
+  goToTestimonial(0);
+
+    /* ================= FAQ ================= */
+    function toggleFaq(button) {
+      const item = button.parentElement;
+      const answer = button.nextElementSibling;
+      const icon = button.querySelector('.faq-icon');
+      
+      // Close all others
+      document.querySelectorAll('.faq-answer').forEach(a => {
+        if (a !== answer) {
+          a.style.maxHeight = null;
+          const otherIcon = a.previousElementSibling.querySelector('.faq-icon');
+          if (otherIcon) {
+            otherIcon.style.transform = 'rotate(0deg)';
+            otherIcon.style.background = '#F8F6F1';
+            otherIcon.style.color = '';
+          }
+        }
+      });
+      
+      if (answer.style.maxHeight && answer.style.maxHeight !== '0px') {
+        answer.style.maxHeight = null;
+        icon.style.transform = 'rotate(0deg)';
+        icon.style.background = '#F8F6F1';
+        icon.style.color = '';
+      } else {
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+        icon.style.transform = 'rotate(135deg)';
+        icon.style.background = '#C7A46A';
+        icon.style.color = 'white';
+      }
+    }
+    
+</script>
+
+</body>
+</html>

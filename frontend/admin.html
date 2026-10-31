@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — HotelReserve</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7", teal:"#1E8A8A" },
+        fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] }
+      }}
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"DM Sans",sans-serif; background:#F3F5F7; color:#0B1F33; }
+    .font-serif { font-family:"Playfair Display",serif; }
+
+    .sidebar { width:260px; background:linear-gradient(180deg,#0B1F33 0%,#102A43 100%); min-height:100vh; position:fixed; left:0; top:0; z-index:40; transition:transform .3s ease; }
+    .sidebar-link { display:flex; align-items:center; gap:14px; padding:13px 22px; color:#94a3b8; text-decoration:none; font-size:14px; font-weight:500; border-left:3px solid transparent; transition:all .25s ease; }
+    .sidebar-link:hover { color:#fff; background:rgba(255,255,255,.05); }
+    .sidebar-link.active { color:#fff; background:rgba(199,164,106,.15); border-left-color:#C7A46A; }
+    .sidebar-link.active i { color:#C7A46A; }
+    .sidebar-link i { width:20px; text-align:center; font-size:16px; }
+    .sidebar-section-label { padding:20px 22px 8px; color:#64748b; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; }
+
+    .main-content { margin-left:260px; min-height:100vh; }
+    @media (max-width:1023px) {
+      .sidebar { transform:translateX(-100%); }
+      .sidebar.open { transform:translateX(0); }
+      .main-content { margin-left:0; }
+    }
+
+    .topbar { background:#fff; border-bottom:1px solid #e5e7eb; padding:16px 28px; position:sticky; top:0; z-index:30; }
+
+    .stat-card { background:#fff; border-radius:18px; padding:22px; border:1px solid #eef2f7; transition:all .3s ease; }
+    .stat-card:hover { transform:translateY(-4px); box-shadow:0 15px 40px rgba(11,31,51,.08); }
+    .stat-icon { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px; }
+
+    .chart-card { background:#fff; border-radius:18px; padding:24px; border:1px solid #eef2f7; }
+
+    .admin-table { width:100%; border-collapse:separate; border-spacing:0; }
+    .admin-table th { text-align:left; padding:14px 18px; background:#f8fafc; color:#64748b; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #eef2f7; }
+    .admin-table td { padding:16px 18px; border-bottom:1px solid #f1f5f9; font-size:14px; color:#334155; }
+    .admin-table tr:hover td { background:#fafbfc; }
+    .admin-table tr:last-child td { border-bottom:none; }
+
+    .badge { padding:5px 12px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+    .badge-PENDING { background:#fef3c7; color:#92400e; }
+    .badge-CONFIRMED { background:#d1fae5; color:#065f46; }
+    .badge-CANCELLED { background:#fee2e2; color:#991b1b; }
+    .badge-COMPLETED { background:#dbeafe; color:#1e40af; }
+
+    .btn-gold { background:#C7A46A; color:#fff; transition:.25s ease; border:none; }
+    .btn-gold:hover { background:#aa884e; color:#fff; }
+    .btn-navy { background:#0B1F33; color:#fff; transition:.25s ease; border:none; }
+    .btn-navy:hover { background:#102A43; color:#fff; }
+
+    .notification-dot { position:absolute; top:6px; right:6px; width:8px; height:8px; background:#ef4444; border-radius:50%; animation:pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:.6;transform:scale(1.3);} }
+
+    .spinner { display:inline-block; width:40px; height:40px; border:4px solid rgba(199,164,106,.25); border-top-color:#C7A46A; border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .custom-scroll::-webkit-scrollbar { width:6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:6px; }
+
+    .fade-up { animation:fadeUp .5s ease both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(15px);} to{opacity:1;transform:translateY(0);} }
+
+    /* Quick Actions */
+    .quick-action { display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 12px; background:#fff; border:1px solid #eef2f7; border-radius:14px; cursor:pointer; transition:all .25s ease; text-decoration:none; color:#0B1F33; }
+    .quick-action:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(11,31,51,.08); border-color:#C7A46A; }
+    .quick-action i { font-size:20px; color:#C7A46A; }
+    .quick-action span { font-size:12px; font-weight:600; }
+
+    /* Occupancy Bar */
+    .occ-bar-track { height:12px; background:#eef2f7; border-radius:999px; overflow:hidden; }
+    .occ-bar-fill { height:100%; background:linear-gradient(90deg,#C7A46A,#aa884e); border-radius:999px; transition:width 1s ease; }
+
+    /* Activity Timeline */
+    .activity-item { display:flex; gap:14px; padding:14px 0; border-bottom:1px solid #f1f5f9; }
+    .activity-item:last-child { border-bottom:none; }
+    .activity-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:14px; }
+
+    /* Notification Dropdown */
+    .notif-dropdown { position:absolute; top:calc(100% + 12px); right:0; width:340px; background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(11,31,51,.15); border:1px solid #eef2f7; z-index:50; display:none; }
+    .notif-dropdown.active { display:block; animation:fadeUp .25s ease; }
+    .notif-item { display:flex; gap:12px; padding:14px 18px; border-bottom:1px solid #f1f5f9; transition:background .2s ease; cursor:pointer; }
+    .notif-item:hover { background:#f8fafc; }
+    .notif-item:last-child { border-bottom:none; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="sidebar">
+  <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+    <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center text-white">
+      <i class="fa-solid fa-hotel text-xl"></i>
+    </div>
+    <div>
+      <div class="text-lg font-bold text-white">Hotel<span class="text-gold">Reserve</span></div>
+      <div class="text-[9px] tracking-[3px] uppercase text-gray-400">Admin Panel</div>
+    </div>
+  </div>
+
+  <div class="py-3 overflow-y-auto custom-scroll" style="height:calc(100vh - 90px);">
+    <div class="sidebar-section-label">Main</div>
+    <a href="admin.html" class="sidebar-link active"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
+    <a href="admin-bookings.html" class="sidebar-link"><i class="fa-solid fa-calendar-check"></i><span>Bookings</span></a>
+    <a href="admin-rooms.html" class="sidebar-link"><i class="fa-solid fa-bed"></i><span>Rooms</span></a>
+    <a href="admin-guests.html" class="sidebar-link"><i class="fa-solid fa-users"></i><span>Guests</span></a>
+    <a href="admin-checkin.html" class="sidebar-link"><i class="fa-solid fa-door-open"></i><span>Check-in / Check-out</span></a>
+
+    <div class="sidebar-section-label">Operations</div>
+    <a href="admin-payments.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i><span>Payments</span></a>
+    <a href="admin-housekeeping.html" class="sidebar-link"><i class="fa-solid fa-broom"></i><span>Housekeeping</span></a>
+    <a href="admin-reports.html" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></a>
+
+    <div class="sidebar-section-label">Travel Management</div>
+    <a href="admin-vehicles.html" class="sidebar-link"><i class="fa-solid fa-car"></i><span>Vehicles</span></a>
+    <a href="admin-drivers.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i><span>Drivers</span></a>
+    <a href="admin-destinations.html" class="sidebar-link"><i class="fa-solid fa-map-location-dot"></i><span>Destinations</span></a>
+    <a href="admin-packages.html" class="sidebar-link"><i class="fa-solid fa-suitcase-rolling"></i><span>Travel Packages</span></a>
+    <a href="admin-vehicle-bookings.html" class="sidebar-link"><i class="fa-solid fa-route"></i><span>Vehicle Bookings</span></a>
+    <div class="sidebar-section-label">System</div>
+    <a href="admin-settings.html" class="sidebar-link"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    <a href="#" onclick="logout()" class="sidebar-link text-red-400 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+</aside>
+
+
+<!-- MAIN -->
+<div class="main-content">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button onclick="toggleSidebar()" class="lg:hidden text-navy text-xl">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div>
+          <h1 class="text-xl font-bold text-navy mb-0" id="greeting">Good Morning, Admin</h1>
+          <p class="text-xs text-gray-500 mb-0" id="todayDate">Loading...</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Notification Dropdown -->
+        <div class="relative">
+          <button onclick="toggleNotif()" class="relative w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 flex items-center justify-center transition">
+            <i class="fa-regular fa-bell text-gray-600"></i>
+            <span id="notifBadge" class="notification-dot hidden"></span>
+          </button>
+          <div id="notifDropdown" class="notif-dropdown">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <div>
+                <div class="font-bold text-navy text-sm">Notifications</div>
+                <div class="text-xs text-gray-500" id="notifCount">0 new</div>
+              </div>
+              <button onclick="markAllRead()" class="text-xs text-gold font-semibold hover:underline">Mark all read</button>
+            </div>
+            <div id="notifList" class="max-h-[400px] overflow-y-auto custom-scroll">
+              <div class="text-center py-8 text-gray-400 text-sm">Loading...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile -->
+        <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
+          <div class="hidden md:block text-right">
+            <div class="text-sm font-semibold text-navy" id="adminName">Admin</div>
+            <div class="text-xs text-gray-500">Administrator</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-gold flex items-center justify-center text-white font-bold" id="adminInitial">A</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6 lg:p-8">
+
+    <div id="loading" class="text-center py-24">
+      <div class="spinner mx-auto"></div>
+      <p class="text-gray-500 mt-4">Loading dashboard...</p>
+    </div>
+
+    <div id="dashboard" class="hidden">
+
+      <!-- QUICK ACTIONS -->
+      <div class="chart-card mb-6 fade-up">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-serif text-lg font-semibold text-navy mb-0">Quick Actions</h3>
+          <span class="text-xs text-gray-400">Shortcuts</span>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <a href="admin-rooms.html?action=add" class="quick-action">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add Room</span>
+          </a>
+          <a href="admin-bookings.html?action=new" class="quick-action">
+            <i class="fa-solid fa-calendar-plus"></i>
+            <span>New Booking</span>
+          </a>
+          <a href="admin-checkin.html" class="quick-action">
+            <i class="fa-solid fa-door-open"></i>
+            <span>Check-in Guest</span>
+          </a>
+          <a href="admin-reports.html" class="quick-action">
+            <i class="fa-solid fa-file-export"></i>
+            <span>Generate Report</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- TODAY'S ACTIVITY -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-up">
+        <div class="stat-card border-l-4" style="border-left-color:#3b82f6;">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Today's Check-ins</div>
+            <i class="fa-solid fa-right-to-bracket text-blue-500"></i>
+          </div>
+          <div class="font-serif text-3xl font-bold text-navy" id="todayCheckIns"><span id="statCheckins">0</span></div>
+          <div class="text-xs text-gray-400 mt-1">Guests arriving today</div>
+        </div>
+
+        <div class="stat-card border-l-4" style="border-left-color:#8b5cf6;">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Today's Check-outs</div>
+            <i class="fa-solid fa-right-from-bracket text-purple-500"></i>
+          </div>
+          <div class="font-serif text-3xl font-bold text-navy" id="todayCheckOuts"><span id="statCheckouts">0</span></div>
+          <div class="text-xs text-gray-400 mt-1">Guests departing today</div>
+        </div>
+
+        <div class="stat-card border-l-4" style="border-left-color:#eab308;">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pending Bookings</div>
+            <i class="fa-solid fa-clock text-yellow-500"></i>
+          </div>
+          <div class="font-serif text-3xl font-bold text-yellow-600" id="todayPending">0</div>
+          <div class="text-xs text-gray-400 mt-1">Awaiting confirmation</div>
+        </div>
+
+        <div class="stat-card border-l-4" style="border-left-color:#ef4444;">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pending Payments</div>
+            <i class="fa-solid fa-credit-card text-red-500"></i>
+          </div>
+          <div class="font-serif text-3xl font-bold text-red-500" id="todayPendingPay">0</div>
+          <div class="text-xs text-gray-400 mt-1">Payments to collect</div>
+        </div>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6 fade-up">
+        <div class="stat-card">
+          <div class="stat-icon bg-blue-50 text-blue-600 mb-3"><i class="fa-solid fa-bed"></i></div>
+          <div class="font-serif text-3xl font-bold text-navy" id="statTotalRooms">0</div>
+          <div class="text-xs text-gray-500 mt-1">Total Rooms</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-green-50 text-green-600 mb-3"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="font-serif text-3xl font-bold text-green-600" id="statAvailable">0</div>
+          <div class="text-xs text-gray-500 mt-1">Available</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-red-50 text-red-600 mb-3"><i class="fa-solid fa-door-closed"></i></div>
+          <div class="font-serif text-3xl font-bold text-red-500" id="statOccupied">0</div>
+          <div class="text-xs text-gray-500 mt-1">Occupied</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-yellow-50 text-yellow-600 mb-3"><i class="fa-solid fa-calendar-check"></i></div>
+          <div class="font-serif text-3xl font-bold text-yellow-600" id="statBookings">0</div>
+          <div class="text-xs text-gray-500 mt-1">Total Bookings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-[#f7f0e4] text-gold mb-3"><i class="fa-solid fa-money-bill-wave"></i></div>
+          <div class="font-serif text-2xl font-bold text-navy">৳<span id="statRevenue">0</span></div>
+          <div class="text-xs text-gray-500 mt-1">Total Revenue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon bg-purple-50 text-purple-600 mb-3"><i class="fa-solid fa-users"></i></div>
+          <div class="font-serif text-3xl font-bold text-navy" id="statUsers">0</div>
+          <div class="text-xs text-gray-500 mt-1">Total Users</div>
+        </div>
+      </div>
+
+      <!-- OCCUPANCY RATE + CHARTS -->
+      <div class="grid lg:grid-cols-3 gap-6 mb-6 fade-up">
+        <!-- Occupancy Bar Card -->
+        <div class="chart-card">
+          <div class="mb-6">
+            <h3 class="font-serif text-xl font-semibold text-navy mb-0">Occupancy Rate</h3>
+            <p class="text-xs text-gray-500 mt-1">Current hotel occupancy</p>
+          </div>
+
+          <div class="text-center mb-6">
+            <div class="font-serif text-5xl font-bold text-navy mb-2" id="occRateValue">0%</div>
+            <div class="text-xs text-gray-500">of rooms occupied</div>
+          </div>
+
+          <div class="occ-bar-track mb-3">
+            <div class="occ-bar-fill" id="occBarFill" style="width:0%"></div>
+          </div>
+
+          <div class="flex justify-between text-xs text-gray-500 mb-6">
+            <span>0%</span>
+            <span>100%</span>
+          </div>
+
+          <div class="border-t pt-4 space-y-3 text-sm">
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Occupied Rooms</span>
+              <span class="font-bold text-red-500" id="occOccupied">0</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Available Rooms</span>
+              <span class="font-bold text-green-600" id="occAvailable">0</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-gray-500">Total Rooms</span>
+              <span class="font-bold text-navy" id="occTotal">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revenue Chart -->
+        <div class="chart-card lg:col-span-2">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h3 class="font-serif text-xl font-semibold text-navy mb-0">Revenue Overview</h3>
+              <p class="text-xs text-gray-500 mt-1">Last 6 months performance</p>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="w-3 h-3 rounded-full bg-gold"></span>
+              <span class="text-gray-600">Revenue (৳)</span>
+            </div>
+          </div>
+          <div style="height: 280px;"><canvas id="revenueChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ROOM STATUS + BOOKING STATUS + ACTIVITY -->
+      <div class="grid lg:grid-cols-3 gap-6 mb-6 fade-up">
+        <!-- Room Status -->
+        <div class="chart-card">
+          <div class="mb-6">
+            <h3 class="font-serif text-xl font-semibold text-navy mb-0">Room Status</h3>
+            <p class="text-xs text-gray-500 mt-1">Live breakdown</p>
+          </div>
+          <div style="height: 200px; position:relative;">
+            <canvas id="roomStatusChart"></canvas>
+          </div>
+          <div class="mt-5 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-green-500"></span>Available</span>
+              <span class="font-semibold" id="roomAvailableCount">0</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500"></span>Occupied</span>
+              <span class="font-semibold" id="roomOccupiedCount">0</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-yellow-500"></span>Maintenance</span>
+              <span class="font-semibold" id="roomMaintenanceCount">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Booking Status -->
+        <div class="chart-card lg:col-span-2">
+          <div class="mb-6">
+            <h3 class="font-serif text-xl font-semibold text-navy mb-0">Booking Status Overview</h3>
+            <p class="text-xs text-gray-500 mt-1">Current booking distribution</p>
+          </div>
+          <div style="height: 200px;"><canvas id="bookingStatusChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- RECENT BOOKINGS -->
+      <div class="chart-card mb-6 fade-up">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3 class="font-serif text-xl font-semibold text-navy mb-0">Recent Bookings</h3>
+            <p class="text-xs text-gray-500 mt-1">Latest 10 bookings</p>
+          </div>
+          <a href="admin-bookings.html" class="btn-navy px-4 py-2 rounded-lg text-xs no-underline font-semibold">
+            View All <i class="fa-solid fa-arrow-right ml-1"></i>
+          </a>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Booking</th>
+                <th>Guest</th>
+                <th>Room</th>
+                <th>Check-in</th>
+                <th>Check-out</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="recentBookingsBody">
+              <tr><td colspan="8" class="text-center py-8 text-gray-400">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RECENT ACTIVITY -->
+      <div class="chart-card fade-up">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3 class="font-serif text-xl font-semibold text-navy mb-0">Recent Activity</h3>
+            <p class="text-xs text-gray-500 mt-1">Latest events from your hotel</p>
+          </div>
+          <button onclick="loadActivity()" class="text-xs text-gold font-semibold hover:underline">
+            <i class="fa-solid fa-rotate mr-1"></i>Refresh
+          </button>
+        </div>
+        <div id="activityList">
+          <div class="text-center py-8 text-gray-400 text-sm">Loading activity...</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+  const API_BASE_URL = "http://localhost:8080/api";
+  const api = axios.create({ baseURL: API_BASE_URL });
+  const token = localStorage.getItem("accessToken");
+
+  if (token) {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    window.location.href = "login.html";
+  }
+
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  if (!user || user.role !== "ADMIN") {
+    window.location.href = "index.html";
+  }
+
+  function setGreeting() {
+    const hour = new Date().getHours();
+    let greeting = "Good Evening";
+    if (hour < 12) greeting = "Good Morning";
+    else if (hour < 17) greeting = "Good Afternoon";
+
+    document.getElementById("greeting").textContent = `${greeting}, ${user.name.split(" ")[0]}`;
+    document.getElementById("adminName").textContent = user.name;
+    document.getElementById("adminInitial").textContent = user.name.charAt(0).toUpperCase();
+
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById("todayDate").textContent = new Date().toLocaleDateString('en-GB', options);
+  }
+
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+
+  // Notification dropdown
+  function toggleNotif() {
+    document.getElementById("notifDropdown").classList.toggle("active");
+  }
+
+  document.addEventListener("click", (e) => {
+    const dropdown = document.getElementById("notifDropdown");
+    if (dropdown && !e.target.closest(".relative")) {
+      dropdown.classList.remove("active");
+    }
+  });
+
+  async function loadStats() {
+    try {
+      const response = await api.get("/admin/stats");
+      const stats = response.data.data;
+
+      // Stat cards
+      document.getElementById("statTotalRooms").textContent = stats.totalRooms;
+      document.getElementById("statAvailable").textContent = stats.availableRooms;
+      document.getElementById("statOccupied").textContent = stats.occupiedRooms;
+      document.getElementById("statBookings").textContent = stats.totalBookings;
+      document.getElementById("statRevenue").textContent = parseFloat(stats.totalRevenue).toLocaleString('en-BD');
+      document.getElementById("statUsers").textContent = stats.totalUsers;
+
+      // Today's Activity
+      document.getElementById("todayCheckIns").textContent = stats.todayCheckIns || 0;
+      document.getElementById("todayCheckOuts").textContent = stats.todayCheckOuts || 0;
+      document.getElementById("todayPending").textContent = stats.pendingBookings || 0;
+      document.getElementById("todayPendingPay").textContent = stats.pendingPayments || 0;
+
+      // Occupancy
+      const occRate = stats.occupancyRate || 0;
+      document.getElementById("occRateValue").textContent = occRate.toFixed(1) + "%";
+      document.getElementById("occBarFill").style.width = Math.min(occRate, 100) + "%";
+      document.getElementById("occOccupied").textContent = stats.occupiedRooms;
+      document.getElementById("occAvailable").textContent = stats.availableRooms;
+      document.getElementById("occTotal").textContent = stats.totalRooms;
+
+      // Room status
+      document.getElementById("roomAvailableCount").textContent = stats.roomsByStatus?.AVAILABLE || 0;
+      document.getElementById("roomOccupiedCount").textContent = stats.roomsByStatus?.BOOKED || 0;
+      document.getElementById("roomMaintenanceCount").textContent = stats.roomsByStatus?.MAINTENANCE || 0;
+
+      // Charts
+      renderRevenueChart(stats.revenue);
+      renderRoomStatusChart(stats.roomStatus);
+      renderBookingStatusChart(stats.bookingStatus);
+
+      // Notifications
+      updateNotifications(stats);
+
+      document.getElementById("loading").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
+    } catch (error) {
+      console.error("Stats loading error:", error);
+      document.getElementById("loading").innerHTML = `
+        <div class="text-center">
+          <i class="fa-solid fa-circle-exclamation text-red-500 text-5xl mb-4"></i>
+          <h3 class="font-serif text-2xl font-semibold mb-2">Unable to load dashboard</h3>
+          <p class="text-gray-500 text-sm mb-4">Backend may be offline</p>
+          <button onclick="location.reload()" class="btn-navy px-5 py-2 rounded-lg text-sm">Retry</button>
+        </div>`;
+    }
+  }
+
+  // Notifications
+  function updateNotifications(stats) {
+    const items = [];
+    if (stats.pendingBookings > 0) items.push({ icon: "fa-calendar-clock", color: "yellow", text: `${stats.pendingBookings} pending booking(s) need confirmation`, time: "Now", link: "admin-bookings.html" });
+    if (stats.todayCheckIns > 0) items.push({ icon: "fa-right-to-bracket", color: "blue", text: `${stats.todayCheckIns} guest(s) checking in today`, time: "Today", link: "admin-checkin.html" });
+    if (stats.todayCheckOuts > 0) items.push({ icon: "fa-right-from-bracket", color: "purple", text: `${stats.todayCheckOuts} guest(s) checking out today`, time: "Today", link: "admin-checkin.html" });
+    if (stats.pendingPayments > 0) items.push({ icon: "fa-credit-card", color: "red", text: `${stats.pendingPayments} payment(s) pending`, time: "Now", link: "admin-payments.html" });
+
+    const badge = document.getElementById("notifBadge");
+    const count = document.getElementById("notifCount");
+    const list = document.getElementById("notifList");
+
+    if (items.length === 0) {
+      badge.classList.add("hidden");
+      count.textContent = "No new notifications";
+      list.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">All caught up! 🎉</div>`;
+      return;
+    }
+
+    badge.classList.remove("hidden");
+    count.textContent = `${items.length} new`;
+
+    const colorMap = { yellow: "bg-yellow-50 text-yellow-600", blue: "bg-blue-50 text-blue-600", purple: "bg-purple-50 text-purple-600", red: "bg-red-50 text-red-600" };
+
+    list.innerHTML = items.map(item => `
+      <a href="${item.link}" class="notif-item no-underline">
+        <div class="w-9 h-9 rounded-lg ${colorMap[item.color]} flex items-center justify-center flex-shrink-0">
+          <i class="fa-solid ${item.icon} text-xs"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm text-navy font-medium">${item.text}</div>
+          <div class="text-xs text-gray-400 mt-0.5">${item.time}</div>
+        </div>
+      </a>
+    `).join("");
+  }
+
+  function markAllRead() {
+    document.getElementById("notifBadge").classList.add("hidden");
+    document.getElementById("notifCount").textContent = "Marked as read";
+  }
+
+  // Charts
+  let revenueChart;
+  function renderRevenueChart(data) {
+    const labels = Object.keys(data).map(k => {
+      const [year, month] = k.split("-");
+      const date = new Date(year, parseInt(month) - 1);
+      return date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+    });
+    const values = Object.values(data);
+
+    const ctx = document.getElementById("revenueChart").getContext("2d");
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(199, 164, 106, 0.35)');
+    gradient.addColorStop(1, 'rgba(199, 164, 106, 0.02)');
+
+    if (revenueChart) revenueChart.destroy();
+
+    revenueChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Revenue',
+          data: values,
+          borderColor: '#C7A46A',
+          backgroundColor: gradient,
+          borderWidth: 3, fill: true, tension: 0.4,
+          pointBackgroundColor: '#C7A46A', pointBorderColor: '#fff',
+          pointBorderWidth: 3, pointRadius: 6, pointHoverRadius: 8,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0B1F33', padding: 12, callbacks: { label: (ctx) => '৳' + Number(ctx.parsed.y).toLocaleString('en-BD') } } },
+        scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { color: '#94a3b8', font: { size: 11 }, callback: (v) => '৳' + v.toLocaleString() } }, x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 11 } } } }
+      }
+    });
+  }
+
+  let roomStatusChart;
+  function renderRoomStatusChart(data) {
+    const ctx = document.getElementById("roomStatusChart").getContext("2d");
+    if (roomStatusChart) roomStatusChart.destroy();
+
+    roomStatusChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Available', 'Occupied', 'Maintenance'],
+        datasets: [{ data: [data.AVAILABLE || 0, data.BOOKED || 0, data.MAINTENANCE || 0], backgroundColor: ['#22c55e', '#ef4444', '#eab308'], borderWidth: 0, cutout: '70%' }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0B1F33', padding: 10 } } }
+    });
+  }
+
+  let bookingStatusChart;
+  function renderBookingStatusChart(data) {
+    const ctx = document.getElementById("bookingStatusChart").getContext("2d");
+    if (bookingStatusChart) bookingStatusChart.destroy();
+
+    bookingStatusChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Pending', 'Confirmed', 'Cancelled', 'Completed'],
+        datasets: [{ data: [data.PENDING || 0, data.CONFIRMED || 0, data.CANCELLED || 0, data.COMPLETED || 0], backgroundColor: ['#eab308', '#22c55e', '#ef4444', '#3b82f6'], borderRadius: 10, barThickness: 50 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0B1F33', padding: 12 } }, scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { color: '#94a3b8', font: { size: 11 }, stepSize: 1 } }, x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 12, weight: '600' } } } } }
+    });
+  }
+
+  // Recent Bookings
+  async function loadRecentBookings() {
+    try {
+      const response = await api.get("/admin/bookings/recent");
+      const bookings = response.data.data || [];
+      const tbody = document.getElementById("recentBookingsBody");
+
+      if (!bookings.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-gray-400">No bookings yet</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = bookings.map(b => `
+        <tr>
+          <td><span class="font-semibold text-navy">#${b.id}</span></td>
+          <td><div class="font-semibold text-navy">${b.userName}</div><div class="text-xs text-gray-400">${b.userEmail}</div></td>
+          <td><div class="font-semibold">${b.roomNumber}</div><div class="text-xs text-gray-400">${b.roomType}</div></td>
+          <td>${formatDate(b.checkIn)}</td>
+          <td>${formatDate(b.checkOut)}</td>
+          <td class="font-semibold text-navy">৳${parseFloat(b.totalPrice).toLocaleString('en-BD')}</td>
+          <td><span class="badge badge-${b.status}">${b.status}</span></td>
+          <td class="text-right">
+            <div class="flex justify-end gap-2">
+              ${b.status === 'PENDING' ? `<button onclick="confirmBooking(${b.id})" class="w-8 h-8 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 flex items-center justify-center transition" title="Confirm"><i class="fa-solid fa-check text-xs"></i></button>` : ''}
+              ${(b.status === 'PENDING' || b.status === 'CONFIRMED') ? `<button onclick="cancelBooking(${b.id})" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition" title="Cancel"><i class="fa-solid fa-xmark text-xs"></i></button>` : ''}
+            </div>
+          </td>
+        </tr>
+      `).join("");
+    } catch (error) {
+      console.error("Recent bookings error:", error);
+      document.getElementById("recentBookingsBody").innerHTML = `<tr><td colspan="8" class="text-center py-8 text-red-400">Failed to load bookings</td></tr>`;
+    }
+  }
+
+  // Recent Activity
+  async function loadActivity() {
+    try {
+      const response = await api.get("/admin/bookings/recent");
+      const bookings = response.data.data || [];
+      const list = document.getElementById("activityList");
+
+      if (!bookings.length) {
+        list.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">No recent activity</div>`;
+        return;
+      }
+
+      const iconMap = {
+        PENDING: { icon: "fa-clock", bg: "bg-yellow-50 text-yellow-600" },
+        CONFIRMED: { icon: "fa-circle-check", bg: "bg-green-50 text-green-600" },
+        CANCELLED: { icon: "fa-xmark", bg: "bg-red-50 text-red-600" },
+        COMPLETED: { icon: "fa-flag-checkered", bg: "bg-blue-50 text-blue-600" }
+      };
+
+      list.innerHTML = bookings.slice(0, 8).map(b => {
+        const m = iconMap[b.status] || iconMap.PENDING;
+        const time = new Date(b.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const date = new Date(b.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+
+        const text = b.status === 'CONFIRMED' ? `Booking #${b.id} confirmed by admin` :
+                     b.status === 'CANCELLED' ? `Booking #${b.id} cancelled` :
+                     b.status === 'COMPLETED' ? `Booking #${b.id} marked as completed` :
+                     `New booking #${b.id} received from ${b.userName}`;
+
+        return `
+          <div class="activity-item">
+            <div class="activity-icon ${m.bg}"><i class="fa-solid ${m.icon}"></i></div>
+            <div class="flex-1">
+              <div class="text-sm text-navy font-medium">${text}</div>
+              <div class="text-xs text-gray-400 mt-0.5">
+                <i class="fa-regular fa-clock mr-1"></i>${time} · ${date} · Room ${b.roomNumber}
+              </div>
+            </div>
+            <div class="text-xs text-gray-400 font-semibold">৳${parseFloat(b.totalPrice).toLocaleString('en-BD')}</div>
+          </div>
+        `;
+      }).join("");
+    } catch (error) {
+      console.error("Activity error:", error);
+      document.getElementById("activityList").innerHTML = `<div class="text-center py-8 text-red-400 text-sm">Failed to load activity</div>`;
+    }
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  }
+
+  async function confirmBooking(id) {
+    if (!confirm("Confirm this booking?")) return;
+    try {
+      await api.put(`/admin/bookings/${id}/confirm`);
+      location.reload();
+    } catch (err) {
+      alert("Failed: " + (err.response?.data?.message || err.message));
+    }
+  }
+
+  async function cancelBooking(id) {
+    if (!confirm("Cancel this booking?")) return;
+    try {
+      await api.put(`/admin/bookings/${id}/cancel`);
+      location.reload();
+    } catch (err) {
+      alert("Failed: " + (err.response?.data?.message || err.message));
+    }
+  }
+
+  setGreeting();
+  loadStats();
+  loadRecentBookings();
+  loadActivity();
+
+    // 🚀 Function to load live check-in / check-out stats
+    async function loadLiveCheckinStats() {
+      try {
+        const res = await api.get("/admin/checkin/today");
+        const bookings = res.data.data || [];
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        // Arrivals: Today's date & Status CONFIRMED
+        const arrivals = bookings.filter(b => b.checkIn === todayStr && b.status === 'CONFIRMED').length;
+        
+        // Departures: Today's date & Status CHECKED_IN
+        const departures = bookings.filter(b => b.checkOut === todayStr && b.status === 'CHECKED_IN').length;
+
+        // Update the DOM
+        const checkinEl = document.getElementById("statCheckins");
+        const checkoutEl = document.getElementById("statCheckouts");
+
+        if (checkinEl) checkinEl.textContent = arrivals;
+        if (checkoutEl) checkoutEl.textContent = departures;
+
+      } catch (err) {
+        console.error("Failed to load live check-in stats:", err);
+      }
+    }
+
+
+    loadLiveCheckinStats();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Travel Packages — Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7", teal:"#1E8A8A" },
+    fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] }
+  }}
+}
+</script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:"DM Sans",sans-serif;background:#f5f7fa;color:#0b1f33}.font-serif{font-family:"Playfair Display",serif}
+.sidebar{width:260px;background:linear-gradient(180deg,#071827 0%,#102d46 100%);min-height:100vh;position:fixed;left:0;top:0;z-index:40;transition:transform .3s ease;box-shadow:8px 0 30px rgba(7,24,39,.12)}
+.sidebar-link{display:flex;align-items:center;gap:14px;padding:13px 22px;color:#91a4b8;text-decoration:none;font-size:14px;font-weight:500;border-left:3px solid transparent;transition:.25s}.sidebar-link:hover{color:#fff;background:rgba(255,255,255,.06)}.sidebar-link.active{color:#fff;background:linear-gradient(90deg,rgba(199,164,106,.18),rgba(199,164,106,.04));border-left-color:#d7b77d}.sidebar-link.active i{color:#d7b77d}.sidebar-link i{width:20px;text-align:center;font-size:16px}.sidebar-section-label{padding:20px 22px 8px;color:#60758a;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:2px}.main-content{margin-left:260px;min-height:100vh}
+.topbar{background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid #e8edf3;padding:16px 30px;position:sticky;top:0;z-index:30}.page-title{font-family:"Playfair Display",serif;font-size:26px;font-weight:700;color:#0b1f33;letter-spacing:-.3px}.page-subtitle{color:#8492a3;font-size:13px;margin-top:3px}
+.card{background:#fff;border-radius:20px;padding:22px;border:1px solid #e9eef4;box-shadow:0 8px 30px rgba(11,31,51,.035)}
+.stat-card{position:relative;background:#fff;border:1px solid #e8edf3;border-radius:18px;padding:20px;overflow:hidden;transition:.3s;box-shadow:0 5px 20px rgba(11,31,51,.035)}.stat-card:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-35px;bottom:-40px;background:rgba(199,164,106,.06)}.stat-card:hover{transform:translateY(-4px);box-shadow:0 15px 35px rgba(11,31,51,.09)}.stat-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px}.stat-number{font-family:"Playfair Display",serif;font-size:29px;font-weight:700;line-height:1.1}
+.pkg-card{background:#fff;border:1px solid #e7edf3;border-radius:22px;overflow:hidden;transition:.3s;position:relative;box-shadow:0 7px 25px rgba(11,31,51,.045)}.pkg-card:hover{transform:translateY(-7px);box-shadow:0 22px 48px rgba(11,31,51,.13)}.pkg-image{width:100%;height:215px;object-fit:cover;display:block;transition:transform .5s}.pkg-card:hover .pkg-image{transform:scale(1.035)}.discount-ribbon{position:absolute;top:15px;right:15px;background:#fff;color:#dc2626;padding:7px 11px;border-radius:10px;font-size:12px;font-weight:800;box-shadow:0 8px 25px rgba(0,0,0,.16);z-index:3}.discount-ribbon:before{content:""}
+.btn-gold{background:linear-gradient(135deg,#c7a46a,#aa884e);color:#fff;transition:.25s;border:none;cursor:pointer;box-shadow:0 7px 18px rgba(199,164,106,.22)}.btn-gold:hover{background:linear-gradient(135deg,#d2b47c,#b18d52);color:#fff;transform:translateY(-1px)}.btn-navy{background:#0b1f33;color:#fff;transition:.25s;border:none;cursor:pointer}.btn-navy:hover{background:#173653;color:#fff}
+.search-wrap{display:flex;gap:10px;align-items:center}.search-input{padding:12px 16px 12px 43px;border:1px solid #e1e7ee;border-radius:13px;outline:none;font-size:14px;width:100%;background:#fbfcfd;transition:.2s}.search-input:focus{border-color:#c7a46a;box-shadow:0 0 0 4px rgba(199,164,106,.1);background:#fff}.search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#9aa8b7}.filter-select{border:1px solid #e1e7ee;border-radius:13px;padding:12px 38px 12px 14px;background:#fbfcfd;color:#445568;font-size:13px;outline:none}.filter-select:focus{border-color:#c7a46a}.icon-btn{width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;transition:.2s;border:none;cursor:pointer}.icon-btn-blue{background:#eaf2ff;color:#2563eb}.icon-btn-blue:hover{background:#2563eb;color:#fff}.icon-btn-red{background:#fff0f0;color:#dc2626}.icon-btn-red:hover{background:#dc2626;color:#fff}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}.status-active{background:#ecfdf3;color:#15803d}.status-inactive{background:#f1f5f9;color:#64748b}.feature-chip{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border-radius:9px;font-size:11px;font-weight:700}.price-box{border:1px solid #edf1f5;background:#fafbfc;border-radius:14px;padding:12px}.discount-price-box{border:1px solid #fee2e2;background:linear-gradient(135deg,#fff8f8,#fff);border-radius:14px;padding:12px}.pkg-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid #eef2f6}.empty-box{border:1px dashed #d6dee8;border-radius:20px;background:#fff}
+.spinner{display:inline-block;width:42px;height:42px;border:4px solid rgba(199,164,106,.22);border-top-color:#c7a46a;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.modal-overlay{position:fixed;inset:0;background:rgba(5,20,32,.72);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;overflow-y:auto}.modal-overlay.active{display:flex}.modal-box{background:#fff;border-radius:24px;max-width:650px;width:100%;padding:30px;max-height:92vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.2)}.form-input{width:100%;padding:12px 15px;border:1px solid #dfe6ee;border-radius:12px;outline:none;font-size:14px;background:#fbfcfd;transition:.2s}.form-input:focus{border-color:#c7a46a;box-shadow:0 0 0 4px rgba(199,164,106,.1);background:#fff}.form-label{display:block;font-size:11px;font-weight:800;color:#415367;margin-bottom:7px;text-transform:uppercase;letter-spacing:.6px}.custom-scroll::-webkit-scrollbar{width:6px}.custom-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px}.toast{position:fixed;bottom:28px;right:28px;padding:15px 20px;border-radius:13px;box-shadow:0 15px 35px rgba(11,31,51,.18);font-weight:600;font-size:14px;z-index:9999;max-width:400px}.toast-success{background:#ecfdf3;border-left:4px solid #16a34a;color:#166534}.toast-error{background:#fff1f2;border-left:4px solid #dc2626;color:#991b1b}.discount-preview{background:#fff9e9;border:1px solid #f4dfaa;border-left:4px solid #eab308;padding:14px 18px;border-radius:12px;margin-top:8px}.discount-preview strong{color:#92400e}
+@media(max-width:1023px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main-content{margin-left:0}}@media(max-width:640px){.topbar{padding:14px 16px}.page-title{font-size:22px}.main-content>.p-6{padding:16px}.card{padding:16px}.modal-box{padding:22px}.pkg-image{height:190px}.search-wrap{flex-direction:column}.filter-select{width:100%}}
+</style>
+</head>
+<body>
+
+<aside id="sidebar" class="sidebar">
+  <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+    <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center text-white"><i class="fa-solid fa-hotel text-xl"></i></div>
+    <div>
+      <div class="text-lg font-bold text-white">Hotel<span class="text-gold">Reserve</span></div>
+      <div class="text-[9px] tracking-[3px] uppercase text-gray-400">Admin Panel</div>
+    </div>
+  </div>
+  <div class="py-3 overflow-y-auto custom-scroll" style="height:calc(100vh - 90px);">
+    <div class="sidebar-section-label">Main</div>
+    <a href="admin.html" class="sidebar-link"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
+    <a href="admin-bookings.html" class="sidebar-link"><i class="fa-solid fa-calendar-check"></i><span>Bookings</span></a>
+    <a href="admin-rooms.html" class="sidebar-link"><i class="fa-solid fa-bed"></i><span>Rooms</span></a>
+    <a href="admin-guests.html" class="sidebar-link"><i class="fa-solid fa-users"></i><span>Guests</span></a>
+    <a href="admin-checkin.html" class="sidebar-link"><i class="fa-solid fa-door-open"></i><span>Check-in / Check-out</span></a>
+    <div class="sidebar-section-label">Operations</div>
+    <a href="admin-payments.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i><span>Payments</span></a>
+    <a href="admin-housekeeping.html" class="sidebar-link"><i class="fa-solid fa-broom"></i><span>Housekeeping</span></a>
+    <a href="admin-reports.html" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></a>
+    <div class="sidebar-section-label">Travel Management</div>
+    <a href="admin-vehicles.html" class="sidebar-link"><i class="fa-solid fa-car"></i><span>Vehicles</span></a>
+    <a href="admin-drivers.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i><span>Drivers</span></a>
+    <a href="admin-destinations.html" class="sidebar-link"><i class="fa-solid fa-map-location-dot"></i><span>Destinations</span></a>
+    <a href="admin-packages.html" class="sidebar-link active"><i class="fa-solid fa-suitcase-rolling"></i><span>Travel Packages</span></a>
+    <a href="admin-vehicle-bookings.html" class="sidebar-link"><i class="fa-solid fa-route"></i><span>Vehicle Bookings</span></a>
+    <div class="sidebar-section-label">System</div>
+    <a href="admin-settings.html" class="sidebar-link"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    <a href="#" onclick="logout()" class="sidebar-link text-red-400 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="lg:hidden text-navy text-xl"><i class="fa-solid fa-bars"></i></button>
+        <div>
+          <h1 class="text-xl font-bold text-navy mb-0">Travel Packages</h1>
+          <p class="text-xs text-gray-500 mb-0">Manage combo packages with discounts</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openAddModal()" class="btn-gold px-5 py-2.5 rounded-lg text-sm font-semibold"><i class="fa-solid fa-plus mr-2"></i>Add Package</button>
+        <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
+          <div class="hidden md:block text-right">
+            <div class="text-sm font-semibold text-navy" id="adminName">Admin</div>
+            <div class="text-xs text-gray-500">Administrator</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-gold flex items-center justify-center text-white font-bold" id="adminInitial">A</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-6 lg:p-8">
+    <div id="loading" class="text-center py-24">
+      <div class="spinner mx-auto"></div>
+      <p class="text-gray-500 mt-4">Loading packages...</p>
+    </div>
+
+    <div id="content" class="hidden">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total</div><div class="stat-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-suitcase-rolling"></i></div></div><div class="stat-number text-navy" id="statTotal">0</div><div class="text-xs text-gray-400 mt-1">All packages</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Active</div><div class="stat-icon bg-green-50 text-green-600"><i class="fa-solid fa-circle-check"></i></div></div><div class="stat-number text-green-600" id="statActive">0</div><div class="text-xs text-gray-400 mt-1">Currently available</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">With Discount</div><div class="stat-icon bg-red-50 text-red-600"><i class="fa-solid fa-percent"></i></div></div><div class="stat-number text-red-500" id="statDiscounted">0</div><div class="text-xs text-gray-400 mt-1">Special offers</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Savings</div><div class="stat-icon bg-[#f7f0e4] text-gold"><i class="fa-solid fa-piggy-bank"></i></div></div><div class="stat-number text-navy text-2xl">৳<span id="statSavings">0</span></div><div class="text-xs text-gray-400 mt-1">Discount value</div></div>
+      </div>
+
+      <div class="card mb-6">
+        <div class="search-wrap">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search packages...">
+          </div>
+          <select id="statusFilter" class="filter-select">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <select id="discountFilter" class="filter-select">
+            <option value="all">All Discounts</option>
+            <option value="discounted">With Discount</option>
+            <option value="regular">No Discount</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="pkgGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+      <div id="emptyState" class="hidden empty-box text-center py-16">
+        <i class="fa-solid fa-suitcase-rolling text-4xl text-gray-300 mb-3"></i>
+        <h3 class="font-serif text-xl font-semibold text-gray-500 mb-2">No packages found</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="pkgModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-serif text-2xl font-semibold" id="modalTitle">Add Package</h3>
+      <button onclick="closeModal()" class="icon-btn" style="background:#f1f5f9;color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div id="modalError" class="hidden mb-4 p-3 rounded-xl text-sm" style="background:#fee2e2;color:#991b1b;border-left:4px solid #dc2626;"><span id="modalErrorMsg"></span></div>
+
+    <form id="pkgForm" class="space-y-4">
+      <div><label class="form-label">Package Name *</label><input type="text" id="name" required class="form-input" placeholder="Cox's Bazar Beach Package"></div>
+      <div><label class="form-label">Description</label><textarea id="description" rows="2" class="form-input" placeholder="Complete 3-day beach tour..."></textarea></div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Destination</label>
+          <select id="destinationId" class="form-input"><option value="">Not Selected</option></select>
+        </div>
+        <div><label class="form-label">Room Type</label>
+          <select id="roomTypeId" class="form-input"><option value="">Not Included</option></select>
+        </div>
+      </div>
+
+      <div><label class="form-label">Vehicle</label>
+        <select id="vehicleId" class="form-input"><option value="">Not Included</option></select>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Duration Days *</label><input type="number" id="durationDays" required min="1" class="form-input" placeholder="3"></div>
+        <div><label class="form-label">Duration Nights</label><input type="number" id="durationNights" min="0" class="form-input" placeholder="2"></div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="includesRoom" checked class="w-4 h-4"><span class="text-sm font-medium">Include Room</span></label>
+        <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="includesVehicle" checked class="w-4 h-4"><span class="text-sm font-medium">Include Vehicle</span></label>
+      </div>
+
+      <div><label class="form-label">Base Price ৳ *</label><input type="number" id="basePrice" required min="0" step="100" class="form-input" placeholder="25000"></div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Discount %</label><input type="number" id="discountPercent" min="0" max="100" class="form-input" placeholder="15"></div>
+        <div><label class="form-label">Extra Discount ৳</label><input type="number" id="discountAmount" min="0" step="100" class="form-input" placeholder="0"></div>
+      </div>
+
+      <div id="discountPreview" class="discount-preview hidden">
+        <div class="text-xs font-bold uppercase tracking-wider mb-1">Discount Preview</div>
+        <div class="flex justify-between text-sm"><span>Base:</span><strong>৳<span id="pvBase">0</span></strong></div>
+        <div class="flex justify-between text-sm"><span>Discount:</span><strong style="color:#dc2626;">- ৳<span id="pvDiscount">0</span></strong></div>
+        <div class="flex justify-between text-base pt-2 border-t border-yellow-300 mt-2"><span class="font-bold">Final:</span><strong style="color:#16a34a;font-size:18px;">৳<span id="pvFinal">0</span></strong></div>
+      </div>
+
+      <div><label class="form-label">Image URL</label><input type="url" id="imageUrl" class="form-input" placeholder="https://..."></div>
+
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="isActive" checked class="w-4 h-4">
+        <label for="isActive" class="text-sm font-medium">Active (visible to users)</label>
+      </div>
+
+      <div class="flex gap-3 pt-4 border-t border-gray-100">
+        <button type="button" onclick="closeModal()" class="flex-1 border-2 border-navy text-navy hover:bg-navy hover:text-white py-3 rounded-xl font-semibold transition">Cancel</button>
+        <button type="submit" id="saveBtn" class="btn-gold flex-1 py-3 rounded-xl font-semibold"><i class="fa-solid fa-save mr-2"></i>Save Package</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="deleteModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i></div>
+      <h3 class="font-serif text-2xl font-semibold mb-2">Delete Package?</h3>
+      <p class="text-gray-500 text-sm" id="deleteMsg">This action cannot be undone.</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeDeleteModal()" class="flex-1 border-2 border-navy text-navy hover:bg-navy hover:text-white py-3 rounded-xl font-semibold transition">Cancel</button>
+      <button id="confirmDeleteBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold border-0">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+const API = "http://localhost:8080/api";
+const api = axios.create({ baseURL: API });
+const token = localStorage.getItem("accessToken");
+if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+else window.location.href = "login.html";
+
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (!user || user.role !== "ADMIN") window.location.href = "index.html";
+document.getElementById("adminName").textContent = user.name;
+document.getElementById("adminInitial").textContent = user.name.charAt(0).toUpperCase();
+
+let allPackages = [];
+let destinations = [];
+let vehicles = [];
+let roomTypes = [];
+let editingId = null;
+let deleteId = null;
+
+function logout() { localStorage.clear(); window.location.href = "index.html"; }
+function showToast(msg, type = "info") {
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+async function loadData() {
+  try {
+    const [pkgRes, destRes, vehRes] = await Promise.all([
+      api.get("/admin/packages"),
+      api.get("/admin/destinations"),
+      api.get("/admin/vehicles")
+    ]);
+    allPackages = pkgRes.data.data || [];
+    destinations = destRes.data.data || [];
+    vehicles = vehRes.data.data || [];
+
+    try {
+      const rtRes = await api.get("/rooms");
+      const uniqueTypes = {};
+      (rtRes.data.data || []).forEach(r => {
+        if (r.roomType) uniqueTypes[r.roomType] = r.roomType;
+      });
+      roomTypes = Object.keys(uniqueTypes).map((name, i) => ({ id: i + 1, name }));
+    } catch (e) {}
+
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("content").classList.remove("hidden");
+    updateStats();
+    render();
+  } catch (e) {
+    document.getElementById("loading").innerHTML = `<div class="text-center"><i class="fa-solid fa-circle-exclamation text-red-500 text-5xl mb-4"></i><button onclick="location.reload()" class="btn-navy px-5 py-2 rounded-lg text-sm mt-2">Retry</button></div>`;
+  }
+}
+
+function updateStats() {
+  document.getElementById("statTotal").textContent = allPackages.length;
+  document.getElementById("statActive").textContent = allPackages.filter(p => p.isActive).length;
+  document.getElementById("statDiscounted").textContent = allPackages.filter(p => p.discountPercent > 0 || parseFloat(p.discountAmount) > 0).length;
+  const totalSavings = allPackages.reduce((s, p) => s + parseFloat(p.discountAmount || 0), 0);
+  document.getElementById("statSavings").textContent = totalSavings.toLocaleString('en-BD');
+}
+
+document.getElementById("searchInput").addEventListener("input", render);
+document.getElementById("statusFilter").addEventListener("change", render);
+document.getElementById("discountFilter").addEventListener("change", render);
+
+function filtered() {
+  const s = document.getElementById("searchInput").value.toLowerCase().trim();
+  const status = document.getElementById("statusFilter").value;
+  const discount = document.getElementById("discountFilter").value;
+  return allPackages.filter(p => {
+    const matchSearch = !s || (p.name || "").toLowerCase().includes(s) || (p.destinationName || "").toLowerCase().includes(s);
+    const matchStatus = status === "all" || (status === "active" ? p.isActive : !p.isActive);
+    const hasDiscount = p.discountPercent > 0 || parseFloat(p.discountAmount) > 0;
+    const matchDiscount = discount === "all" || (discount === "discounted" ? hasDiscount : !hasDiscount);
+    return matchSearch && matchStatus && matchDiscount;
+  });
+}
+
+const fallbackImages = [
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=85",
+  "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=600&q=85",
+  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=85"
+];
+
+function render() {
+  const list = filtered();
+  const grid = document.getElementById("pkgGrid");
+  const em = document.getElementById("emptyState");
+
+  if (!list.length) { grid.innerHTML = ""; em.classList.remove("hidden"); return; }
+  em.classList.add("hidden");
+
+  grid.innerHTML = list.map((p, i) => {
+    const img = p.imageUrl || fallbackImages[i % fallbackImages.length];
+    const hasDiscount = p.discountPercent > 0 || parseFloat(p.discountAmount) > 0;
+    const finalPrice = parseFloat(p.finalPrice ?? (parseFloat(p.basePrice || 0) - parseFloat(p.discountAmount || 0)));
+    const savings = parseFloat(p.discountAmount || 0);
+
+    return `
+      <div class="pkg-card">
+        ${hasDiscount ? `<div class="discount-ribbon"><i class="fa-solid fa-tag mr-1"></i>${p.discountPercent || 0}% OFF</div>` : ''}
+        <div class="relative overflow-hidden">
+          <img src="${img}" class="pkg-image" alt="${p.name}" onerror="this.src='${fallbackImages[i % fallbackImages.length]}'">
+          <div class="absolute inset-0" style="background:linear-gradient(0deg,rgba(5,20,32,.9) 0%,rgba(5,20,32,.05) 68%);"></div>
+          <div class="absolute top-4 left-4">
+            <span class="status-badge ${p.isActive ? 'status-active' : 'status-inactive'}"><i class="fa-solid fa-circle text-[7px]"></i>${p.isActive ? 'Active' : 'Inactive'}</span>
+          </div>
+          <div class="absolute bottom-4 left-5 right-5 text-white">
+            <div class="text-[11px] font-bold uppercase tracking-[1.5px] text-[#d7b77d] mb-1">${p.durationDays} Days · ${p.durationNights} Nights</div>
+            <h3 class="font-serif text-[22px] font-bold leading-tight">${p.name}</h3>
+            ${p.destinationName ? `<div class="text-xs text-white/80 mt-2"><i class="fa-solid fa-location-dot mr-1 text-[#d7b77d]"></i>${p.destinationName}</div>` : ''}
+          </div>
+        </div>
+        <div class="p-5">
+          <p class="text-sm text-gray-500 mb-4 leading-6" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:48px;">${p.description || 'A complete travel experience with comfortable accommodation and transportation.'}</p>
+          <div class="flex flex-wrap gap-2 mb-4">
+            ${p.includesRoom ? '<span class="feature-chip" style="background:#eef5ff;color:#2457a6;"><i class="fa-solid fa-bed"></i> Room included</span>' : ''}
+            ${p.includesVehicle ? '<span class="feature-chip" style="background:#edfaf3;color:#16734a;"><i class="fa-solid fa-car"></i> Vehicle included</span>' : ''}
+            ${!p.includesRoom && !p.includesVehicle ? '<span class="feature-chip" style="background:#f5f6f8;color:#64748b;"><i class="fa-solid fa-circle-info"></i> Custom package</span>' : ''}
+          </div>
+          ${hasDiscount ? `
+            <div class="discount-price-box mb-4">
+              <div class="flex items-center justify-between mb-1"><span class="text-xs text-gray-400 line-through">৳${parseFloat(p.basePrice || 0).toLocaleString()}</span><span class="text-[10px] font-bold uppercase tracking-wider text-red-500">Save ৳${savings.toLocaleString()}</span></div>
+              <div class="flex items-end justify-between"><div><div class="text-[10px] text-gray-400 uppercase tracking-wider">Package price</div><div class="text-2xl font-bold text-green-600">৳${finalPrice.toLocaleString()}</div></div><div class="text-xs text-red-500 font-semibold">${p.discountPercent || 0}% discount</div></div>
+            </div>
+          ` : `
+            <div class="price-box mb-4">
+              <div class="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Package price</div>
+              <div class="text-2xl font-bold text-navy">৳${parseFloat(p.basePrice || 0).toLocaleString()}</div>
+            </div>
+          `}
+          <div class="pkg-footer">
+            <span class="text-xs text-gray-400"><i class="fa-regular fa-clock mr-1"></i>${p.durationDays}D / ${p.durationNights}N</span>
+            <div class="flex gap-2">
+              <button onclick="editPkg(${p.id})" class="icon-btn icon-btn-blue" title="Edit package"><i class="fa-solid fa-pen text-xs"></i></button>
+              <button onclick="openDeleteModal(${p.id})" class="icon-btn icon-btn-red" title="Delete package"><i class="fa-solid fa-trash text-xs"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function populateDropdowns() {
+  const dSel = document.getElementById("destinationId");
+  dSel.innerHTML = '<option value="">Not Selected</option>';
+  destinations.forEach(d => {
+    const opt = document.createElement("option");
+    opt.value = d.id;
+    opt.textContent = d.name;
+    dSel.appendChild(opt);
+  });
+
+  const vSel = document.getElementById("vehicleId");
+  vSel.innerHTML = '<option value="">Not Included</option>';
+  vehicles.forEach(v => {
+    const opt = document.createElement("option");
+    opt.value = v.id;
+    opt.textContent = `${v.vehicleNumber} - ${v.model || v.vehicleType}`;
+    vSel.appendChild(opt);
+  });
+
+  const rSel = document.getElementById("roomTypeId");
+  rSel.innerHTML = '<option value="">Not Included</option>';
+  roomTypes.forEach((rt, idx) => {
+    const opt = document.createElement("option");
+    opt.value = idx + 1;
+    opt.textContent = rt.name;
+    rSel.appendChild(opt);
+  });
+}
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById("modalTitle").textContent = "Add Package";
+  document.getElementById("pkgForm").reset();
+  document.getElementById("isActive").checked = true;
+  document.getElementById("includesRoom").checked = true;
+  document.getElementById("includesVehicle").checked = true;
+  document.getElementById("modalError").classList.add("hidden");
+  document.getElementById("discountPreview").classList.add("hidden");
+  populateDropdowns();
+  document.getElementById("pkgModal").classList.add("active");
+}
+
+function editPkg(id) {
+  const p = allPackages.find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  document.getElementById("modalTitle").textContent = "Edit Package";
+  document.getElementById("name").value = p.name;
+  document.getElementById("description").value = p.description || "";
+  document.getElementById("durationDays").value = p.durationDays;
+  document.getElementById("durationNights").value = p.durationNights;
+  document.getElementById("basePrice").value = p.basePrice;
+  document.getElementById("discountPercent").value = p.discountPercent || 0;
+  document.getElementById("imageUrl").value = p.imageUrl || "";
+  document.getElementById("isActive").checked = p.isActive;
+  document.getElementById("includesRoom").checked = p.includesRoom;
+  document.getElementById("includesVehicle").checked = p.includesVehicle;
+
+  populateDropdowns();
+  document.getElementById("destinationId").value = p.destinationId || "";
+  document.getElementById("vehicleId").value = p.vehicleId || "";
+  document.getElementById("roomTypeId").value = p.roomTypeId || "";
+
+  const pctAmt = parseFloat(p.basePrice) * (p.discountPercent || 0) / 100;
+  const totalDisc = parseFloat(p.discountAmount || 0);
+  const extra = totalDisc - pctAmt;
+  document.getElementById("discountAmount").value = extra > 0 ? extra : 0;
+
+  updateDiscountPreview();
+  document.getElementById("modalError").classList.add("hidden");
+  document.getElementById("pkgModal").classList.add("active");
+}
+
+function updateDiscountPreview() {
+  const base = parseFloat(document.getElementById("basePrice").value) || 0;
+  const pct = parseInt(document.getElementById("discountPercent").value) || 0;
+  const extra = parseFloat(document.getElementById("discountAmount").value) || 0;
+
+  const pctAmt = base * pct / 100;
+  const totalDisc = pctAmt + extra;
+  const final = Math.max(0, base - totalDisc);
+
+  if (base > 0 && totalDisc > 0) {
+    document.getElementById("discountPreview").classList.remove("hidden");
+    document.getElementById("pvBase").textContent = base.toLocaleString('en-BD');
+    document.getElementById("pvDiscount").textContent = totalDisc.toLocaleString('en-BD');
+    document.getElementById("pvFinal").textContent = final.toLocaleString('en-BD');
+  } else {
+    document.getElementById("discountPreview").classList.add("hidden");
+  }
+}
+
+["basePrice", "discountPercent", "discountAmount"].forEach(id => {
+  document.getElementById(id).addEventListener("input", updateDiscountPreview);
+});
+
+function closeModal() { document.getElementById("pkgModal").classList.remove("active"); editingId = null; }
+
+document.getElementById("pkgForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...';
+
+  const payload = {
+    name: document.getElementById("name").value.trim(),
+    description: document.getElementById("description").value.trim(),
+    destinationId: document.getElementById("destinationId").value ? parseInt(document.getElementById("destinationId").value) : null,
+    roomTypeId: document.getElementById("roomTypeId").value ? parseInt(document.getElementById("roomTypeId").value) : null,
+    vehicleId: document.getElementById("vehicleId").value ? parseInt(document.getElementById("vehicleId").value) : null,
+    includesRoom: document.getElementById("includesRoom").checked,
+    includesVehicle: document.getElementById("includesVehicle").checked,
+    durationDays: parseInt(document.getElementById("durationDays").value),
+    durationNights: parseInt(document.getElementById("durationNights").value) || 0,
+    basePrice: parseFloat(document.getElementById("basePrice").value),
+    discountPercent: parseInt(document.getElementById("discountPercent").value) || 0,
+    discountAmount: parseFloat(document.getElementById("discountAmount").value) || 0,
+    imageUrl: document.getElementById("imageUrl").value.trim(),
+    isActive: document.getElementById("isActive").checked
+  };
+
+  try {
+    if (editingId) await api.put(`/admin/packages/${editingId}`, payload);
+    else await api.post("/admin/packages", payload);
+    showToast(editingId ? "Package updated" : "Package created", "success");
+    closeModal();
+    await loadData();
+  } catch (err) {
+    document.getElementById("modalErrorMsg").textContent = err.response?.data?.message || "Save failed";
+    document.getElementById("modalError").classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-save mr-2"></i>Save Package';
+  }
+});
+
+function openDeleteModal(id) {
+  const p = allPackages.find(x => x.id === id);
+  deleteId = id;
+  document.getElementById("deleteMsg").textContent = `Delete "${p.name}"? This cannot be undone.`;
+  document.getElementById("deleteModal").classList.add("active");
+}
+function closeDeleteModal() { document.getElementById("deleteModal").classList.remove("active"); deleteId = null; }
+
+document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+  if (!deleteId) return;
+  const btn = document.getElementById("confirmDeleteBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    await api.delete(`/admin/packages/${deleteId}`);
+    showToast("Package deleted", "success");
+    closeDeleteModal();
+    await loadData();
+  } catch (err) {
+    showToast(err.response?.data?.message || "Delete failed", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Yes, Delete";
+  }
+});
+
+document.getElementById("pkgModal").addEventListener("click", e => { if (e.target.id === "pkgModal") closeModal(); });
+document.getElementById("deleteModal").addEventListener("click", e => { if (e.target.id === "deleteModal") closeDeleteModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); closeDeleteModal(); } });
+
+loadData();
+</script>
+</body>
+</html>

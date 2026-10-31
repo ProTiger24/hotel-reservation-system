@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vehicles Management — Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7", teal:"#1E8A8A" },
+    fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] }
+  }}
+}
+</script>
+<style>
+* { box-sizing: border-box; }
+body { margin:0; font-family:"DM Sans",sans-serif; background:#F3F5F7; color:#0B1F33; }
+.font-serif { font-family:"Playfair Display",serif; }
+.sidebar { width:260px; background:linear-gradient(180deg,#0B1F33 0%,#102A43 100%); min-height:100vh; position:fixed; left:0; top:0; z-index:40; transition:transform .3s ease; }
+.sidebar-link { display:flex; align-items:center; gap:14px; padding:13px 22px; color:#94a3b8; text-decoration:none; font-size:14px; font-weight:500; border-left:3px solid transparent; transition:all .25s ease; }
+.sidebar-link:hover { color:#fff; background:rgba(255,255,255,.05); }
+.sidebar-link.active { color:#fff; background:rgba(199,164,106,.15); border-left-color:#C7A46A; }
+.sidebar-link.active i { color:#C7A46A; }
+.sidebar-link i { width:20px; text-align:center; font-size:16px; }
+.sidebar-section-label { padding:20px 22px 8px; color:#64748b; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; }
+.main-content { margin-left:260px; min-height:100vh; }
+@media (max-width:1023px) { .sidebar { transform:translateX(-100%); } .sidebar.open { transform:translateX(0); } .main-content { margin-left:0; } }
+.topbar { background:#fff; border-bottom:1px solid #e5e7eb; padding:16px 28px; position:sticky; top:0; z-index:30; }
+.card { background:#fff; border-radius:18px; padding:24px; border:1px solid #eef2f7; }
+.stat-card { background:#fff; border-radius:18px; padding:20px; border:1px solid #eef2f7; transition:all .3s ease; }
+.stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(11,31,51,.08); }
+.stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.vehicle-card { background:#fff; border:1px solid #eef2f7; border-radius:18px; overflow:hidden; transition:all .3s ease; }
+.vehicle-card:hover { transform:translateY(-6px); box-shadow:0 20px 45px rgba(11,31,51,.12); }
+.vehicle-image { width:100%; height:180px; object-fit:cover; }
+.status-badge { padding:5px 12px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; display:inline-block; }
+.status-AVAILABLE { background:#d1fae5; color:#065f46; }
+.status-BOOKED { background:#fee2e2; color:#991b1b; }
+.status-MAINTENANCE { background:#fef3c7; color:#92400e; }
+.type-badge { padding:4px 10px; border-radius:8px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; display:inline-block; background:#f1f5f9; color:#475569; }
+.btn-gold { background:#C7A46A; color:#fff; transition:.25s ease; border:none; cursor:pointer; }
+.btn-gold:hover { background:#aa884e; color:#fff; }
+.btn-navy { background:#0B1F33; color:#fff; transition:.25s ease; border:none; cursor:pointer; }
+.btn-navy:hover { background:#102A43; color:#fff; }
+.search-input { padding:11px 16px 11px 42px; border:2px solid #e5e7eb; border-radius:12px; outline:none; font-size:14px; width:100%; }
+.search-input:focus { border-color:#C7A46A; box-shadow:0 0 0 4px rgba(199,164,106,.12); }
+.search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#9ca3af; }
+.filter-select { padding:10px 16px; border:2px solid #e5e7eb; border-radius:12px; outline:none; font-size:13px; background:#fff; cursor:pointer; font-weight:500; }
+.filter-select:focus { border-color:#C7A46A; }
+.icon-btn { width:36px; height:36px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; transition:all .2s ease; border:none; cursor:pointer; }
+.icon-btn-blue { background:#dbeafe; color:#2563eb; }
+.icon-btn-blue:hover { background:#2563eb; color:#fff; }
+.icon-btn-red { background:#fee2e2; color:#dc2626; }
+.icon-btn-red:hover { background:#dc2626; color:#fff; }
+.icon-btn-green { background:#dcfce7; color:#16a34a; }
+.icon-btn-green:hover { background:#16a34a; color:#fff; }
+.spinner { display:inline-block; width:40px; height:40px; border:4px solid rgba(199,164,106,.25); border-top-color:#C7A46A; border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.modal-overlay { position:fixed; inset:0; background:rgba(11,31,51,.75); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; overflow-y:auto; }
+.modal-overlay.active { display:flex; }
+.modal-box { background:#fff; border-radius:20px; max-width:560px; width:100%; padding:32px; max-height:90vh; overflow-y:auto; margin:auto; }
+.form-input { width:100%; padding:12px 16px; border:2px solid #e5e7eb; border-radius:12px; outline:none; font-size:14px; background:#fff; }
+.form-input:focus { border-color:#C7A46A; box-shadow:0 0 0 4px rgba(199,164,106,.12); }
+.form-label { display:block; font-size:12px; font-weight:700; color:#0B1F33; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+.custom-scroll::-webkit-scrollbar { width:6px; }
+.custom-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:6px; }
+.toast { position:fixed; bottom:30px; right:30px; padding:16px 22px; border-radius:12px; box-shadow:0 10px 30px rgba(11,31,51,.15); font-weight:600; font-size:14px; z-index:9999; max-width:400px; }
+.toast-success { background:#dcfce7; border-left:4px solid #16a34a; color:#166534; }
+.toast-error { background:#fee2e2; border-left:4px solid #dc2626; color:#991b1b; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="sidebar">
+  <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+    <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center text-white"><i class="fa-solid fa-hotel text-xl"></i></div>
+    <div>
+      <div class="text-lg font-bold text-white">Hotel<span class="text-gold">Reserve</span></div>
+      <div class="text-[9px] tracking-[3px] uppercase text-gray-400">Admin Panel</div>
+    </div>
+  </div>
+  <div class="py-3 overflow-y-auto custom-scroll" style="height:calc(100vh - 90px);">
+    <div class="sidebar-section-label">Main</div>
+    <a href="admin.html" class="sidebar-link"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
+    <a href="admin-bookings.html" class="sidebar-link"><i class="fa-solid fa-calendar-check"></i><span>Bookings</span></a>
+    <a href="admin-rooms.html" class="sidebar-link"><i class="fa-solid fa-bed"></i><span>Rooms</span></a>
+    <a href="admin-guests.html" class="sidebar-link"><i class="fa-solid fa-users"></i><span>Guests</span></a>
+    <a href="admin-checkin.html" class="sidebar-link"><i class="fa-solid fa-door-open"></i><span>Check-in / Check-out</span></a>
+    <div class="sidebar-section-label">Operations</div>
+    <a href="admin-payments.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i><span>Payments</span></a>
+    <a href="admin-housekeeping.html" class="sidebar-link"><i class="fa-solid fa-broom"></i><span>Housekeeping</span></a>
+    <a href="admin-reports.html" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></a>
+    <div class="sidebar-section-label">Travel Management</div>
+    <a href="admin-vehicles.html" class="sidebar-link active"><i class="fa-solid fa-car"></i><span>Vehicles</span></a>
+    <a href="admin-drivers.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i><span>Drivers</span></a>
+    <a href="admin-destinations.html" class="sidebar-link"><i class="fa-solid fa-map-location-dot"></i><span>Destinations</span></a>
+    <a href="admin-packages.html" class="sidebar-link"><i class="fa-solid fa-suitcase-rolling"></i><span>Travel Packages</span></a>
+    <a href="admin-vehicle-bookings.html" class="sidebar-link"><i class="fa-solid fa-route"></i><span>Vehicle Bookings</span></a>
+    <div class="sidebar-section-label">System</div>
+    <a href="admin-settings.html" class="sidebar-link"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    <a href="#" onclick="logout()" class="sidebar-link text-red-400 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main-content">
+  <div class="topbar">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="lg:hidden text-navy text-xl"><i class="fa-solid fa-bars"></i></button>
+        <div>
+          <h1 class="text-xl font-bold text-navy mb-0">Vehicles Management</h1>
+          <p class="text-xs text-gray-500 mb-0">Manage all travel vehicles</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openAddModal()" class="btn-gold px-5 py-2.5 rounded-lg text-sm font-semibold"><i class="fa-solid fa-plus mr-2"></i>Add Vehicle</button>
+        <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
+          <div class="hidden md:block text-right">
+            <div class="text-sm font-semibold text-navy" id="adminName">Admin</div>
+            <div class="text-xs text-gray-500">Administrator</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-gold flex items-center justify-center text-white font-bold" id="adminInitial">A</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-6 lg:p-8">
+    <div id="loading" class="text-center py-24">
+      <div class="spinner mx-auto"></div>
+      <p class="text-gray-500 mt-4">Loading vehicles...</p>
+    </div>
+
+    <div id="content" class="hidden">
+      <!-- STATS -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total</div><div class="stat-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-car"></i></div></div><div class="font-serif text-3xl font-bold text-navy" id="statTotal">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Available</div><div class="stat-icon bg-green-50 text-green-600"><i class="fa-solid fa-circle-check"></i></div></div><div class="font-serif text-3xl font-bold text-green-600" id="statAvailable">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Booked</div><div class="stat-icon bg-red-50 text-red-600"><i class="fa-solid fa-clock"></i></div></div><div class="font-serif text-3xl font-bold text-red-500" id="statBooked">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Maintenance</div><div class="stat-icon bg-yellow-50 text-yellow-600"><i class="fa-solid fa-wrench"></i></div></div><div class="font-serif text-3xl font-bold text-yellow-600" id="statMaintenance">0</div></div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="card mb-6">
+        <div class="grid md:grid-cols-12 gap-4">
+          <div class="md:col-span-5 relative">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by number, brand or model...">
+          </div>
+          <div class="md:col-span-3">
+            <select id="typeFilter" class="filter-select w-full">
+              <option value="">All Types</option>
+              <option value="Car">Car</option>
+              <option value="SUV">SUV</option>
+              <option value="Microbus">Microbus</option>
+              <option value="Hiace">Hiace</option>
+              <option value="Bus">Bus</option>
+            </select>
+          </div>
+          <div class="md:col-span-4">
+            <select id="statusFilter" class="filter-select w-full">
+              <option value="">All Status</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="BOOKED">Booked</option>
+              <option value="MAINTENANCE">Maintenance</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- VEHICLES GRID -->
+      <div id="vehiclesGrid" class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+
+      <div id="emptyState" class="hidden text-center py-16">
+        <i class="fa-solid fa-car text-4xl text-gray-300 mb-3"></i>
+        <h3 class="font-serif text-xl font-semibold text-gray-500 mb-2">No vehicles found</h3>
+        <p class="text-gray-400 text-sm">Try changing filters or add a new vehicle</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div id="vehicleModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-serif text-2xl font-semibold" id="modalTitle">Add Vehicle</h3>
+      <button onclick="closeModal()" class="icon-btn" style="background:#f1f5f9;color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div id="modalError" class="hidden mb-4 p-3 rounded-xl text-sm" style="background:#fee2e2;color:#991b1b;border-left:4px solid #dc2626;"><span id="modalErrorMsg"></span></div>
+
+    <form id="vehicleForm" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Vehicle Number *</label><input type="text" id="vehicleNumber" required class="form-input" placeholder="DHK-1001"></div>
+        <div><label class="form-label">Type *</label>
+          <select id="vehicleType" required class="form-input">
+            <option value="">Select</option>
+            <option value="Car">Car</option>
+            <option value="SUV">SUV</option>
+            <option value="Microbus">Microbus</option>
+            <option value="Hiace">Hiace</option>
+            <option value="Bus">Bus</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Brand</label><input type="text" id="brand" class="form-input" placeholder="Toyota"></div>
+        <div><label class="form-label">Model</label><input type="text" id="model" class="form-input" placeholder="Premio"></div>
+      </div>
+      <div class="grid grid-cols-3 gap-4">
+        <div><label class="form-label">Seats *</label><input type="number" id="seatCapacity" required min="1" max="50" class="form-input" placeholder="4"></div>
+        <div><label class="form-label">AC Type</label>
+          <select id="acType" class="form-input">
+            <option value="AC">AC</option>
+            <option value="Non-AC">Non-AC</option>
+          </select>
+        </div>
+        <div><label class="form-label">Per Day ৳ *</label><input type="number" id="perDayPrice" required min="0" step="100" class="form-input" placeholder="5500"></div>
+      </div>
+      <div>
+        <label class="form-label">Per Hour ৳ (Optional)</label>
+        <input type="number" id="perHourPrice" min="0" step="50" class="form-input" placeholder="800">
+      </div>
+      <div><label class="form-label">Image URL</label><input type="url" id="imageUrl" class="form-input" placeholder="https://..."></div>
+      <div><label class="form-label">Description</label><textarea id="description" rows="2" class="form-input" placeholder="Vehicle description..."></textarea></div>
+
+      <div class="flex gap-3 pt-4 border-t border-gray-100">
+        <button type="button" onclick="closeModal()" class="flex-1 border-2 border-navy text-navy hover:bg-navy hover:text-white py-3 rounded-xl font-semibold transition">Cancel</button>
+        <button type="submit" id="saveBtn" class="btn-gold flex-1 py-3 rounded-xl font-semibold"><i class="fa-solid fa-save mr-2"></i>Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div id="deleteModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i></div>
+      <h3 class="font-serif text-2xl font-semibold mb-2">Delete Vehicle?</h3>
+      <p class="text-gray-500 text-sm" id="deleteMsg">This action cannot be undone.</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeDeleteModal()" class="flex-1 border-2 border-navy text-navy hover:bg-navy hover:text-white py-3 rounded-xl font-semibold transition">Cancel</button>
+      <button id="confirmDeleteBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold border-0">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+const API = "http://localhost:8080/api";
+const api = axios.create({ baseURL: API });
+const token = localStorage.getItem("accessToken");
+if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+else window.location.href = "login.html";
+
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (!user || user.role !== "ADMIN") window.location.href = "index.html";
+document.getElementById("adminName").textContent = user.name;
+document.getElementById("adminInitial").textContent = user.name.charAt(0).toUpperCase();
+
+let allVehicles = [];
+let editingId = null;
+let deleteId = null;
+
+function logout() { localStorage.clear(); window.location.href = "index.html"; }
+function showToast(msg, type = "info") {
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+async function loadVehicles() {
+  try {
+    const r = await api.get("/admin/vehicles");
+    allVehicles = r.data.data || [];
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("content").classList.remove("hidden");
+    updateStats();
+    render();
+  } catch (e) {
+    document.getElementById("loading").innerHTML = `<div class="text-center"><i class="fa-solid fa-circle-exclamation text-red-500 text-5xl mb-4"></i><button onclick="location.reload()" class="btn-navy px-5 py-2 rounded-lg text-sm mt-2">Retry</button></div>`;
+  }
+}
+
+function updateStats() {
+  document.getElementById("statTotal").textContent = allVehicles.length;
+  document.getElementById("statAvailable").textContent = allVehicles.filter(v => v.status === "AVAILABLE").length;
+  document.getElementById("statBooked").textContent = allVehicles.filter(v => v.status === "BOOKED").length;
+  document.getElementById("statMaintenance").textContent = allVehicles.filter(v => v.status === "MAINTENANCE").length;
+}
+
+["searchInput"].forEach(id => document.getElementById(id).addEventListener("input", render));
+["typeFilter","statusFilter"].forEach(id => document.getElementById(id).addEventListener("change", render));
+
+function filtered() {
+  const s = document.getElementById("searchInput").value.toLowerCase().trim();
+  const t = document.getElementById("typeFilter").value;
+  const st = document.getElementById("statusFilter").value;
+  return allVehicles.filter(v => {
+    if (s && !((v.vehicleNumber||"").toLowerCase().includes(s) || (v.brand||"").toLowerCase().includes(s) || (v.model||"").toLowerCase().includes(s))) return false;
+    if (t && v.vehicleType !== t) return false;
+    if (st && v.status !== st) return false;
+    return true;
+  });
+}
+
+const vehicleImages = {
+  Car: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=600&q=85",
+  SUV: "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=600&q=85",
+  Microbus: "https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?w=600&q=85",
+  Hiace: "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=600&q=85",
+  Bus: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600&q=85"
+};
+
+function render() {
+  const list = filtered();
+  const grid = document.getElementById("vehiclesGrid");
+  const em = document.getElementById("emptyState");
+
+  if (!list.length) { grid.innerHTML = ""; em.classList.remove("hidden"); return; }
+  em.classList.add("hidden");
+
+  grid.innerHTML = list.map(v => {
+    const img = v.imageUrl || vehicleImages[v.vehicleType] || vehicleImages.Car;
+    return `
+      <div class="vehicle-card">
+        <div class="relative">
+          <img src="${img}" class="vehicle-image" alt="${v.model||v.vehicleType}">
+          <div class="absolute top-3 left-3"><span class="type-badge">${v.vehicleType}</span></div>
+          <div class="absolute top-3 right-3"><span class="status-badge status-${v.status}">${v.status}</span></div>
+        </div>
+        <div class="p-5">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <h3 class="font-serif text-xl font-bold text-navy">${v.vehicleNumber}</h3>
+              <div class="text-xs text-gray-500">${v.brand||''} ${v.model||''}</div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs text-gray-600 my-3">
+            <span><i class="fa-solid fa-user text-gold mr-1"></i>${v.seatCapacity} seats</span>
+            <span><i class="fa-solid fa-snowflake text-gold mr-1"></i>${v.acType}</span>
+          </div>
+          <div class="flex items-end justify-between pt-4 border-t border-gray-100">
+            <div>
+              <div class="text-2xl font-bold text-navy">৳${parseFloat(v.perDayPrice).toLocaleString()}</div>
+              <div class="text-[10px] text-gray-400">per day</div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="editVehicle(${v.id})" class="icon-btn icon-btn-blue" title="Edit"><i class="fa-solid fa-pen text-xs"></i></button>
+              <button onclick="openDeleteModal(${v.id})" class="icon-btn icon-btn-red" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById("modalTitle").textContent = "Add Vehicle";
+  document.getElementById("vehicleForm").reset();
+  document.getElementById("modalError").classList.add("hidden");
+  document.getElementById("vehicleModal").classList.add("active");
+}
+
+function editVehicle(id) {
+  const v = allVehicles.find(x => x.id === id);
+  if (!v) return;
+  editingId = id;
+  document.getElementById("modalTitle").textContent = "Edit Vehicle";
+  document.getElementById("vehicleNumber").value = v.vehicleNumber;
+  document.getElementById("vehicleType").value = v.vehicleType;
+  document.getElementById("brand").value = v.brand || "";
+  document.getElementById("model").value = v.model || "";
+  document.getElementById("seatCapacity").value = v.seatCapacity;
+  document.getElementById("acType").value = v.acType || "AC";
+  document.getElementById("perDayPrice").value = v.perDayPrice;
+  document.getElementById("perHourPrice").value = v.perHourPrice || "";
+  document.getElementById("imageUrl").value = v.imageUrl || "";
+  document.getElementById("description").value = v.description || "";
+  document.getElementById("modalError").classList.add("hidden");
+  document.getElementById("vehicleModal").classList.add("active");
+}
+
+function closeModal() { document.getElementById("vehicleModal").classList.remove("active"); editingId = null; }
+
+document.getElementById("vehicleForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...';
+  const p = {
+    vehicleNumber: document.getElementById("vehicleNumber").value.trim(),
+    vehicleType: document.getElementById("vehicleType").value,
+    brand: document.getElementById("brand").value.trim(),
+    model: document.getElementById("model").value.trim(),
+    seatCapacity: parseInt(document.getElementById("seatCapacity").value),
+    acType: document.getElementById("acType").value,
+    perHourPrice: document.getElementById("perHourPrice").value ? parseFloat(document.getElementById("perHourPrice").value) : null,
+    perDayPrice: parseFloat(document.getElementById("perDayPrice").value),
+    imageUrl: document.getElementById("imageUrl").value.trim(),
+    description: document.getElementById("description").value.trim()
+  };
+  try {
+    if (editingId) await api.put(`/admin/vehicles/${editingId}`, p);
+    else await api.post("/admin/vehicles", p);
+    showToast(editingId ? "Vehicle updated" : "Vehicle added", "success");
+    closeModal();
+    await loadVehicles();
+  } catch (err) {
+    document.getElementById("modalErrorMsg").textContent = err.response?.data?.message || "Save failed";
+    document.getElementById("modalError").classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-save mr-2"></i>Save';
+  }
+});
+
+function openDeleteModal(id) {
+  const v = allVehicles.find(x => x.id === id);
+  deleteId = id;
+  document.getElementById("deleteMsg").textContent = `Delete "${v.vehicleNumber}"? This cannot be undone.`;
+  document.getElementById("deleteModal").classList.add("active");
+}
+function closeDeleteModal() { document.getElementById("deleteModal").classList.remove("active"); deleteId = null; }
+
+document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+  if (!deleteId) return;
+  const btn = document.getElementById("confirmDeleteBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    await api.delete(`/admin/vehicles/${deleteId}`);
+    showToast("Vehicle deleted", "success");
+    closeDeleteModal();
+    await loadVehicles();
+  } catch (err) {
+    showToast(err.response?.data?.message || "Delete failed", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Yes, Delete";
+  }
+});
+
+document.getElementById("vehicleModal").addEventListener("click", e => { if (e.target.id === "vehicleModal") closeModal(); });
+document.getElementById("deleteModal").addEventListener("click", e => { if (e.target.id === "deleteModal") closeDeleteModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); closeDeleteModal(); } });
+
+loadVehicles();
+</script>
+</body>
+</html>

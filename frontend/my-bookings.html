@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Bookings — HotelReserve</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7", teal:"#1E8A8A" },
+        fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] }
+      }}
+    }
+  </script>
+  <style>
+    body { font-family:"DM Sans",sans-serif; color:#0B1F33; background:#F8F6F1; }
+    .font-serif { font-family:"Playfair Display",serif; }
+    .glass-dark { background: rgba(11,31,51,.88); backdrop-filter: blur(18px); border-bottom:1px solid rgba(255,255,255,.08); }
+    .nav-link-custom { position:relative; transition:.25s ease; }
+    .nav-link-custom::after { content:""; position:absolute; left:0; bottom:-8px; width:0; height:2px; background:#C7A46A; transition: width .3s ease; }
+    .nav-link-custom:hover::after, .nav-link-custom.active::after { width:100%; }
+    .hero-bg { background: linear-gradient(90deg, rgba(7,21,33,.92), rgba(7,21,33,.65), rgba(7,21,33,.35)), url("https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=1800&q=85") center/cover; }
+    .stat-card { background:#fff; border:1px solid rgba(11,31,51,.07); transition: all .3s ease; border-radius:16px; padding:22px; }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px rgba(11,31,51,.10); }
+    .tab-btn { padding:10px 20px; border-radius:12px; font-weight:600; font-size:14px; transition:all .25s ease; cursor:pointer; border:1px solid rgba(11,31,51,.08); background:#fff; color:#64748b; }
+    .tab-btn.active { background:#0B1F33; color:#fff; border-color:#0B1F33; box-shadow:0 8px 20px rgba(11,31,51,.15); }
+    .tab-btn:not(.active):hover { background:#F8F6F1; color:#0B1F33; }
+    .booking-card { background:#fff; border:1px solid rgba(11,31,51,.07); transition: all .35s ease; overflow:hidden; border-radius:1.5rem; }
+    .booking-card:hover { transform: translateY(-4px); box-shadow: 0 30px 70px rgba(11,31,51,.12); }
+    .status-badge { padding:7px 14px; border-radius:999px; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; }
+    .status-PENDING   { background:#fef3c7; color:#92400e; }
+    .status-CONFIRMED { background:#d1fae5; color:#065f46; }
+    .status-CANCELLED { background:#fee2e2; color:#991b1b; }
+    .status-COMPLETED { background:#dbeafe; color:#1e40af; }
+    .btn-gold { background:#C7A46A; color:#fff; transition:.25s ease; border:none; }
+    .btn-gold:hover { background:#aa884e; color:#fff; transform:translateY(-1px); }
+    .btn-outline-navy { border:1px solid #0B1F33; color:#0B1F33; transition:.25s ease; background:#fff; }
+    .btn-outline-navy:hover { background:#0B1F33; color:#fff; }
+    .spinner { display:inline-block; width:45px; height:45px; border:4px solid rgba(199,164,106,.25); border-top-color:#C7A46A; border-radius:50%; animation:spin .8s linear infinite; }
+    .spinner-sm { display:inline-block; width:14px; height:14px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin .6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .fade-up { animation: fadeUp .6s ease both; }
+    @keyframes fadeUp { from { opacity:0; transform: translateY(18px); } to { opacity:1; transform: translateY(0); } }
+    .modal-overlay { position:fixed; inset:0; background:rgba(11,31,51,.75); backdrop-filter: blur(6px); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; }
+    .modal-overlay.active { display:flex; }
+    .modal-box { background:#fff; border-radius:1.5rem; max-width:440px; width:100%; padding:32px; animation: modalIn .3s ease; }
+    @keyframes modalIn { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } }
+    .detail-row { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f1f5f9; font-size:14px; }
+    .detail-row:last-child { border-bottom:none; }
+    .detail-row .label { color:#64748b; }
+    .detail-row .value { font-weight:600; color:#0B1F33; }
+    .empty-box { border:1px dashed #ccd4db; background:rgba(255,255,255,.65); border-radius:2rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass-dark text-white">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="h-20 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-3 text-white no-underline">
+        <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center"><i class="fa-solid fa-hotel text-xl"></i></div>
+        <div>
+          <div class="text-xl font-bold tracking-wide">Hotel<span class="text-gold">Reserve</span></div>
+          <div class="text-[10px] tracking-[3px] uppercase text-gray-300">Hospitality</div>
+        </div>
+      </a>
+      <div class="hidden lg:flex items-center justify-center flex-1 gap-8">
+        <a href="index.html" class="nav-link-custom text-white no-underline text-sm">Home</a>
+        <a href="rooms.html" class="nav-link-custom text-white no-underline text-sm">Rooms</a>
+          <a href="vehicles.html" class="nav-link-custom text-white no-underline text-sm">Travel</a>
+        <a href="my-bookings.html" class="nav-link-custom active text-white no-underline text-sm">My Bookings</a>
+      </div>
+      <div class="flex items-center gap-4">
+                <div id="navAuth" class="flex items-center gap-3"></div>
+                <button id="hamburgerBtn" class="lg:hidden text-white text-2xl bg-transparent border-0 cursor-pointer z-50">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+        
+              
+                
+    </div>
+  </div>
+
+        <!-- 📱 Mobile Hamburger -->
+        
+
+</nav>
+
+<!-- HERO -->
+<section class="hero-bg pt-32 pb-20 text-white">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="max-w-3xl">
+      <div class="text-gold uppercase tracking-[4px] text-xs font-bold mb-5">Your Reservations</div>
+      <h1 class="font-serif text-5xl md:text-6xl lg:text-7xl leading-tight font-semibold mb-6">My <span class="text-gold">Bookings.</span></h1>
+      <p class="text-gray-200 text-lg md:text-xl max-w-2xl leading-relaxed">Manage all your reservations, view details and track your upcoming stays in one place.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="py-10 -mt-12 relative z-10">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="stat-card shadow-soft">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-[#f7f0e4] flex items-center justify-center text-gold"><i class="fa-solid fa-calendar-check"></i></div>
+          <div class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Total</div>
+        </div>
+        <div class="font-serif text-3xl font-bold text-navy" id="statTotal">0</div>
+        <div class="text-xs text-gray-500 mt-1">All bookings</div>
+      </div>
+      <div class="stat-card shadow-soft">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Active</div>
+        </div>
+        <div class="font-serif text-3xl font-bold text-green-600" id="statConfirmed">0</div>
+        <div class="text-xs text-gray-500 mt-1">Confirmed</div>
+      </div>
+      <div class="stat-card shadow-soft">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600"><i class="fa-solid fa-clock"></i></div>
+          <div class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Pending</div>
+        </div>
+        <div class="font-serif text-3xl font-bold text-yellow-600" id="statPending">0</div>
+        <div class="text-xs text-gray-500 mt-1">Awaiting approval</div>
+      </div>
+      <div class="stat-card shadow-soft">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-[#f7f0e4] flex items-center justify-center text-gold"><i class="fa-solid fa-wallet"></i></div>
+          <div class="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Spent</div>
+        </div>
+        <div class="font-serif text-2xl font-bold text-navy">৳<span id="statSpent">0</span></div>
+        <div class="text-xs text-gray-500 mt-1">Total amount</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TABS -->
+<section class="pt-6 pb-4">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div class="flex flex-wrap gap-3">
+      <button class="tab-btn active" data-filter="ALL" onclick="filterBookings('ALL', this)">All <span class="ml-1 opacity-70" id="countAll">0</span></button>
+      <button class="tab-btn" data-filter="PENDING" onclick="filterBookings('PENDING', this)">Pending <span class="ml-1 opacity-70" id="countPending">0</span></button>
+      <button class="tab-btn" data-filter="CONFIRMED" onclick="filterBookings('CONFIRMED', this)">Confirmed <span class="ml-1 opacity-70" id="countConfirmed">0</span></button>
+      <button class="tab-btn" data-filter="CANCELLED" onclick="filterBookings('CANCELLED', this)">Cancelled <span class="ml-1 opacity-70" id="countCancelled">0</span></button>
+      <button class="tab-btn" data-filter="COMPLETED" onclick="filterBookings('COMPLETED', this)">Completed <span class="ml-1 opacity-70" id="countCompleted">0</span></button>
+    </div>
+  </div>
+</section>
+
+<!-- BOOKINGS LIST -->
+<section class="pb-20">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8">
+    <div id="loading" class="text-center py-24">
+      <div class="spinner mx-auto"></div>
+      <p class="text-gray-500 mt-5 font-medium">Loading your bookings...</p>
+    </div>
+    <div id="bookingsList" class="space-y-5"></div>
+    <div id="empty" class="hidden empty-box text-center py-20 px-6">
+      <div class="w-24 h-24 bg-[#f7f0e4] rounded-full mx-auto flex items-center justify-center mb-6">
+        <i class="fa-solid fa-calendar-xmark text-4xl text-gold"></i>
+      </div>
+      <h3 class="font-serif text-3xl font-semibold text-navy mb-3">No bookings yet</h3>
+      <p class="text-gray-500 mb-8 max-w-md mx-auto">Start exploring our beautiful rooms and book your stay for an unforgettable experience.</p>
+      <a href="rooms.html" class="btn-gold inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-bold no-underline">
+        <i class="fa-solid fa-bed"></i> Browse Rooms
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- CANCEL MODAL -->
+<div id="cancelModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i>
+      </div>
+      <h3 class="font-serif text-2xl font-semibold mb-2">Cancel Booking?</h3>
+      <p class="text-gray-500 text-sm">Are you sure you want to cancel this reservation? This action cannot be undone.</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeCancelModal()" class="btn-outline-navy flex-1 py-3 rounded-xl font-semibold transition">Keep Booking</button>
+      <button id="confirmCancelBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold transition border-0">Yes, Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAILS MODAL -->
+<div id="detailsModal" class="modal-overlay">
+  <div class="modal-box" style="max-width: 560px;">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-serif text-2xl font-semibold">Booking Details</h3>
+      <button onclick="closeDetailsModal()" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center border-0"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="detailsContent"></div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="bg-[#071521] text-white">
+  <div class="max-w-7xl mx-auto px-5 lg:px-8 py-14">
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
+
+      <!-- Brand -->
+      <div>
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center">
+            <i class="fa-solid fa-hotel text-xl"></i>
+          </div>
+          <div>
+            <div class="text-xl font-bold">Hotel<span class="text-gold">Reserve</span></div>
+            <div class="text-[10px] tracking-[3px] uppercase text-gray-500">Hospitality</div>
+          </div>
+        </div>
+        <p class="text-gray-400 text-sm leading-7">
+          A modern hotel reservation experience designed to make finding and booking your perfect room simple.
+        </p>
+        <div class="flex gap-3 mt-6">
+          <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:bg-gold hover:text-white transition">
+            <i class="fa-brands fa-facebook-f"></i>
+          </a>
+          <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:bg-gold hover:text-white transition">
+            <i class="fa-brands fa-instagram"></i>
+          </a>
+          <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-300 hover:bg-gold hover:text-white transition">
+            <i class="fa-brands fa-linkedin-in"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Explore -->
+      <div>
+        <h4 class="font-semibold mb-5">Explore</h4>
+        <div class="flex flex-col gap-3 text-sm">
+          <a href="index.html" class="text-gray-400 hover:text-gold no-underline">Home</a>
+          <a href="rooms.html" class="text-gray-400 hover:text-gold no-underline">Rooms</a>
+          <a href="my-bookings.html" class="text-gray-400 hover:text-gold no-underline">My Bookings</a>
+          <a href="index.html#faq" class="text-gray-400 hover:text-gold no-underline">FAQ</a>
+        </div>
+      </div>
+
+      <!-- Guest Services -->
+      <div>
+        <h4 class="font-semibold mb-5">Guest Services</h4>
+        <div class="flex flex-col gap-3 text-sm text-gray-400">
+          <span>24/7 Guest Support</span>
+          <span>Secure Booking</span>
+          <span>Free Wi-Fi</span>
+          <span>Free Cancellation</span>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h4 class="font-semibold mb-5">Contact</h4>
+        <div class="flex flex-col gap-4 text-sm text-gray-400">
+          <div class="flex gap-3">
+            <i class="fa-solid fa-location-dot text-gold mt-1"></i>
+            <span>Dhaka, Bangladesh</span>
+          </div>
+          <div class="flex gap-3">
+            <i class="fa-solid fa-envelope text-gold mt-1"></i>
+            <span>support@hotelreserve.com</span>
+          </div>
+          <div class="flex gap-3">
+            <i class="fa-solid fa-phone text-gold mt-1"></i>
+            <span>+880 1XXX-XXXXXX</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="border-t border-white/10 mt-12 pt-7 flex flex-col md:flex-row justify-between gap-4">
+      <p class="text-gray-500 text-sm mb-0">© 2026 HotelReserve. All rights reserved.</p>
+      <div class="flex gap-6">
+        <a href="#" class="text-gray-500 hover:text-white text-sm no-underline">Privacy Policy</a>
+        <a href="#" class="text-gray-500 hover:text-white text-sm no-underline">Terms</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+  const API_BASE_URL = "http://localhost:8080/api";
+  const api = axios.create({ baseURL: API_BASE_URL });
+  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+
+  console.log("my-bookings.html Token:", token ? "FOUND" : "MISSING");
+    if (token) {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    window.location.href = "login.html?redirect=my-bookings.html";
+  }
+
+  let allBookings = [];
+  let currentFilter = "ALL";
+  let cancelBookingId = null;
+
+  function loadNavAuth() {
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const navAuth = document.getElementById("navAuth");
+    if (user) {
+      const firstName = user.name ? user.name.split(" ")[0] : "Guest";
+      navAuth.innerHTML = `
+        <a href="rooms.html" class="hidden md:inline text-white text-sm no-underline hover:text-gold"><i class="fa-solid fa-bed mr-1"></i> Rooms</a>
+        ${user.role === "ADMIN" ? `<a href="admin.html" class="hidden md:inline text-white text-sm no-underline hover:text-gold"><i class="fa-solid fa-gauge mr-1"></i> Admin</a>` : ""}
+        <div class="hidden md:flex items-center gap-3 pl-3 border-l border-white/20">
+          <span class="text-white text-sm">Hi, ${firstName}</span>
+          <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm border-0"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>`;
+    }
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+
+  async function loadBookings() {
+    try {
+      const response = await api.get("/bookings/my");
+      allBookings = response.data.data || [];
+      document.getElementById("loading").classList.add("hidden");
+      updateStats();
+      renderBookings(allBookings);
+    } catch (error) {
+      console.error("Booking loading error:", error);
+      document.getElementById("loading").innerHTML = `
+        <div class="max-w-md mx-auto">
+          <div class="w-20 h-20 bg-red-50 rounded-full mx-auto flex items-center justify-center mb-5"><i class="fa-solid fa-server text-red-400 text-2xl"></i></div>
+          <h3 class="font-serif text-2xl font-semibold text-navy mb-2">Unable to load bookings</h3>
+          <p class="text-gray-500 text-sm">Backend running?</p>
+        </div>`;
+    }
+  }
+
+  function updateStats() {
+    const total = allBookings.length;
+    const confirmed = allBookings.filter(b => b.status === "CONFIRMED").length;
+    const pending = allBookings.filter(b => b.status === "PENDING").length;
+    const cancelled = allBookings.filter(b => b.status === "CANCELLED").length;
+    const completed = allBookings.filter(b => b.status === "COMPLETED").length;
+    const spent = allBookings.filter(b => b.status === "CONFIRMED" || b.status === "COMPLETED").reduce((sum, b) => sum + parseFloat(b.totalPrice), 0);
+
+    document.getElementById("statTotal").textContent = total;
+    document.getElementById("statConfirmed").textContent = confirmed;
+    document.getElementById("statPending").textContent = pending;
+    document.getElementById("statSpent").textContent = spent.toLocaleString("en-BD");
+    document.getElementById("countAll").textContent = total;
+    document.getElementById("countPending").textContent = pending;
+    document.getElementById("countConfirmed").textContent = confirmed;
+    document.getElementById("countCancelled").textContent = cancelled;
+    document.getElementById("countCompleted").textContent = completed;
+  }
+
+  function filterBookings(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const filtered = filter === "ALL" ? allBookings : allBookings.filter(b => b.status === filter);
+    renderBookings(filtered);
+  }
+
+  function renderBookings(bookings) {
+    const list = document.getElementById("bookingsList");
+    const empty = document.getElementById("empty");
+
+    if (bookings.length === 0) {
+      list.innerHTML = "";
+      if (allBookings.length === 0) {
+        empty.classList.remove("hidden");
+      } else {
+        list.innerHTML = `<div class="text-center py-20"><i class="fa-solid fa-search text-4xl text-gray-300 mb-3"></i><p class="text-gray-500">No ${currentFilter.toLowerCase()} bookings</p></div>`;
+      }
+      return;
+    }
+
+    empty.classList.add("hidden");
+
+    const images = {
+      Single: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=900&q=85",
+      Double: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=900&q=85",
+      Deluxe: "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=900&q=85",
+      Suite: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=900&q=85"
+    };
+
+    list.innerHTML = bookings.map((b, index) => {
+      const image = b.roomImageUrl || images[b.roomType] || images.Single;
+      const canCancel = b.status === "PENDING" || b.status === "CONFIRMED";
+
+      return `
+        <article class="booking-card fade-up" style="animation-delay:${index * 60}ms">
+          <div class="grid md:grid-cols-12">
+            <div class="md:col-span-3 relative h-56 md:h-auto">
+              <img src="${image}" alt="${b.roomType}" class="w-full h-full object-cover">
+              <div class="absolute top-4 left-4"><span class="badge-room bg-gold text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full">${b.roomType}</span></div>
+              <div class="absolute top-4 right-4"><span class="status-badge status-${b.status}">${b.status}</span></div>
+            </div>
+            <div class="md:col-span-6 p-6 md:p-7">
+              <div class="flex items-center gap-3 mb-4">
+                <h3 class="font-serif text-2xl font-semibold">Room ${b.roomNumber}</h3>
+                <span class="text-xs text-gray-400">#${b.id}</span>
+              </div>
+              <div class="grid grid-cols-2 gap-4 text-sm mb-5">
+                <div>
+                  <div class="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1.5">Check-in</div>
+                  <div class="font-semibold text-navy flex items-center gap-2"><i class="fa-solid fa-calendar-check text-gold"></i>${formatDate(b.checkIn)}</div>
+                </div>
+                <div>
+                  <div class="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1.5">Check-out</div>
+                  <div class="font-semibold text-navy flex items-center gap-2"><i class="fa-solid fa-calendar-xmark text-gold"></i>${formatDate(b.checkOut)}</div>
+                </div>
+                <div>
+                  <div class="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1.5">Nights</div>
+                  <div class="font-semibold text-navy flex items-center gap-2"><i class="fa-solid fa-moon text-gold"></i>${b.nights} ${b.nights === 1 ? "night" : "nights"}</div>
+                </div>
+                <div>
+                  <div class="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1.5">Guests</div>
+                  <div class="font-semibold text-navy flex items-center gap-2"><i class="fa-solid fa-user text-gold"></i>${b.guestCount}</div>
+                </div>
+              </div>
+              ${b.specialRequest ? `<div class="bg-cream rounded-xl p-3 mb-4 text-xs text-gray-600"><i class="fa-solid fa-comment-dots text-gold mr-2"></i>${b.specialRequest}</div>` : ""}
+              <div class="flex flex-wrap gap-4 text-[11px] text-gray-400">
+                <span><i class="fa-solid fa-clock mr-1"></i>Booked ${formatDate(b.createdAt)}</span>
+                ${b.loyaltyPointsEarned > 0 ? `<span class="text-gold font-semibold"><i class="fa-solid fa-star mr-1"></i>+${b.loyaltyPointsEarned} points</span>` : ""}
+              </div>
+            </div>
+            <div class="md:col-span-3 p-6 md:p-7 bg-cream flex flex-col justify-between">
+              <div>
+                <div class="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-1.5">Total Amount</div>
+                <div class="font-serif text-3xl font-bold text-navy mb-2">৳${parseFloat(b.totalPrice).toLocaleString("en-BD")}</div>
+                <div class="text-xs text-gray-500 flex items-center gap-2"><i class="fa-solid fa-credit-card text-gold"></i>${b.paymentStatus}</div>
+              </div>
+              <div class="space-y-2 mt-5">
+                ${b.paymentStatus === 'PENDING' ? `
+                  <button onclick="payNow(${b.id}, ${b.totalPrice})" class="w-full bg-green-500 hover:bg-green-600 text-white py-2.5 rounded-xl font-bold transition text-xs border-0 shadow-lg shadow-green-500/30 mb-2">
+                    <i class="fa-solid fa-credit-card mr-2"></i>Pay Now (bKash)
+                  </button>
+                ` : ''}
+                <button onclick="viewDetails(${b.id})" class="w-full btn-outline-navy py-2.5 rounded-xl font-semibold transition text-xs">
+                  <i class="fa-solid fa-eye mr-2"></i>View Details
+                </button>
+                ${canCancel ? `<button onclick="openCancelModal(${b.id})" class="w-full border border-red-500 text-red-500 hover:bg-red-500 hover:text-white py-2.5 rounded-xl font-semibold transition text-xs bg-white"><i class="fa-solid fa-xmark mr-2"></i>Cancel Booking</button>` : ""}
+              </div>
+            </div>
+          </div>
+        </article>`;
+    }).join("");
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  function viewDetails(id) {
+    const b = allBookings.find(x => x.id === id);
+    if (!b) return;
+
+    const statusColor = {
+      PENDING: "text-yellow-600 bg-yellow-50",
+      CONFIRMED: "text-green-600 bg-green-50",
+      CANCELLED: "text-red-600 bg-red-50",
+      COMPLETED: "text-blue-600 bg-blue-50"
+    }[b.status];
+
+    document.getElementById("detailsContent").innerHTML = `
+      <div class="text-center mb-6 pb-6 border-b border-gray-100">
+        <span class="inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${statusColor}">${b.status}</span>
+        <div class="font-serif text-3xl font-bold text-navy mt-3">৳${parseFloat(b.totalPrice).toLocaleString("en-BD")}</div>
+        <div class="text-xs text-gray-400 mt-1">Booking #${b.id}</div>
+      </div>
+      <div class="detail-row"><span class="label">Room</span><span class="value">${b.roomNumber} · ${b.roomType}</span></div>
+      <div class="detail-row"><span class="label">Check-in</span><span class="value">${formatDate(b.checkIn)}</span></div>
+      <div class="detail-row"><span class="label">Check-out</span><span class="value">${formatDate(b.checkOut)}</span></div>
+      <div class="detail-row"><span class="label">Nights</span><span class="value">${b.nights}</span></div>
+      <div class="detail-row"><span class="label">Guests</span><span class="value">${b.guestCount}</span></div>
+      <div class="detail-row"><span class="label">Payment</span><span class="value">${b.paymentStatus}</span></div>
+      ${b.loyaltyPointsEarned > 0 ? `<div class="detail-row"><span class="label">Loyalty Points</span><span class="value text-gold">+${b.loyaltyPointsEarned}</span></div>` : ""}
+      ${b.specialRequest ? `<div class="pt-4"><div class="text-[10px] text-gray-400 uppercase tracking-wider font-bold mb-2">Special Request</div><div class="bg-cream rounded-xl p-3 text-sm text-gray-600">${b.specialRequest}</div></div>` : ""}`;
+
+    document.getElementById("detailsModal").classList.add("active");
+  }
+
+  function closeDetailsModal() {
+    document.getElementById("detailsModal").classList.remove("active");
+  }
+
+  function openCancelModal(id) {
+    cancelBookingId = id;
+    document.getElementById("cancelModal").classList.add("active");
+  }
+
+  function closeCancelModal() {
+    cancelBookingId = null;
+    document.getElementById("cancelModal").classList.remove("active");
+  }
+
+  document.getElementById("confirmCancelBtn").addEventListener("click", async () => {
+    if (!cancelBookingId) return;
+    const btn = document.getElementById("confirmCancelBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-sm"></span> Cancelling...';
+    try {
+      await api.put(`/bookings/${cancelBookingId}/cancel`);
+      closeCancelModal();
+      await loadBookings();
+    } catch (err) {
+      alert("Failed: " + (err.response?.data?.message || err.message));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Yes, Cancel";
+    }
+  });
+
+  document.getElementById("cancelModal").addEventListener("click", (e) => { if (e.target.id === "cancelModal") closeCancelModal(); });
+  document.getElementById("detailsModal").addEventListener("click", (e) => { if (e.target.id === "detailsModal") closeDetailsModal(); });
+
+  loadNavAuth();
+  loadBookings();
+</script>
+  <script src="js/promo-popup.js">
+  &amount=${amount}`;
+  }
+
+</script>
+
+  <script>
+    // 🚀 Global function for bKash Payment
+    ;
+  
+  );
+      
+      // Check if bKash URL is present in response
+      if (res.data && res.data.bkashURL) {
+        window.location.href = res.data.bkashURL; // Redirect to Real bKash Gateway
+      } else {
+        alert("Failed to generate bKash payment URL. Check backend logs.");
+        console.error("Response:", res.data);
+      }
+    } catch (error) {
+      console.error("bKash API Error:", error);
+      alert("Error connecting to bKash. Please try again.");
+    }
+  }
+
+
+  // 🚀 Real bKash API Call
+  );
+      
+      if (res.data && res.data.bkashURL) {
+        console.log("Redirecting to bKash:", res.data.bkashURL);
+        window.location.href = res.data.bkashURL; // Real bKash Gateway
+      } else {
+        alert("Failed to generate bKash payment URL. Check backend logs.");
+      }
+    } catch (error) {
+      console.error("bKash API Error:", error);
+      alert("Error connecting to bKash. Please try again.");
+    }
+  }
+
+</script>
+
+  <script>
+    // 🚀 Global bKash API Function
+    window.payNow = async function(id, amount) {
+      console.log("1. Pay Now clicked. Booking ID:", id);
+      try {
+        console.log("2. Calling backend API...");
+        
+        const res = await api.post("/payments/bkash/create", { 
+          bookingId: id 
+        });
+        
+        console.log("3. Backend Response:", res.data);
+        
+        if (res.data && res.data.bkashURL) {
+          console.log("4. Redirecting to bKash Gateway...");
+          window.location.href = res.data.bkashURL;
+        } else {
+          console.error("5. bkashURL not found in response:", res.data);
+          alert("bKash URL generation failed. Please check backend logs.");
+        }
+      } catch (error) {
+        console.error("API Error:", error.response || error);
+        alert("Error connecting to bKash API. Check Console (F12) for details.");
+      }
+    };
+  </script>
+
+    
+
+
+    <!-- 📱 Mobile Menu Overlay -->
+    
+
+
+    
+
+
+    <!-- 📱 Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="hidden fixed inset-0 bg-[#0B1F33] z-[9999] flex-col items-center justify-center text-xl gap-6 text-white">
+        <button onclick="closeMobileMenu()" class="absolute top-6 right-6 text-3xl text-gray-400 hover:text-white bg-transparent border-0 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+        <a href="index.html" class="text-white no-underline hover:text-gold transition font-semibold">Home</a>
+        <a href="rooms.html" class="text-white no-underline hover:text-gold transition font-semibold">Rooms</a>
+        <a href="vehicles.html" class="text-white no-underline hover:text-gold transition font-semibold">Travel</a>
+        <a href="my-bookings.html" class="text-white no-underline hover:text-gold transition font-semibold">My Bookings</a>
+        <a href="my-vehicle-bookings.html" class="text-white no-underline hover:text-gold transition font-semibold">Travel Bookings</a>
+        <button onclick="localStorage.clear(); window.location.href='index.html'" class="mt-4 text-red-400 hover:text-red-300 font-bold bg-transparent border-0 cursor-pointer">Logout</button>
+    </div>
+
+
+    <script>
+        function openMobileMenu() {
+            const menu = document.getElementById("mobileMenuOverlay");
+            menu.classList.remove("hidden");
+            menu.classList.add("flex");
+            document.body.style.overflow = "hidden";
+        }
+        function closeMobileMenu() {
+            const menu = document.getElementById("mobileMenuOverlay");
+            menu.classList.add("hidden");
+            menu.classList.remove("flex");
+            document.body.style.overflow = "auto";
+        }
+        document.addEventListener("DOMContentLoaded", () => {
+            const btn = document.getElementById("hamburgerBtn");
+            if(btn) btn.addEventListener("click", openMobileMenu);
+        });
+    </script>
+
+</body>
+</html>

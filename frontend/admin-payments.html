@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payments — Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7" },
+    fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] }
+  }}
+}
+</script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:"DM Sans",sans-serif;background:#F3F5F7;color:#0B1F33}.font-serif{font-family:"Playfair Display",serif}
+.sidebar{width:260px;background:linear-gradient(180deg,#0B1F33 0%,#102A43 100%);min-height:100vh;position:fixed;left:0;top:0;z-index:40;transition:transform .3s ease}
+.sidebar-link{display:flex;align-items:center;gap:14px;padding:13px 22px;color:#94a3b8;text-decoration:none;font-size:14px;font-weight:500;border-left:3px solid transparent;transition:all .25s ease}
+.sidebar-link:hover{color:#fff;background:rgba(255,255,255,.05)}.sidebar-link.active{color:#fff;background:rgba(199,164,106,.15);border-left-color:#C7A46A}.sidebar-link.active i{color:#C7A46A}.sidebar-link i{width:20px;text-align:center;font-size:16px}
+.sidebar-section-label{padding:20px 22px 8px;color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px}
+.main-content{margin-left:260px;min-height:100vh}@media(max-width:1023px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main-content{margin-left:0}}
+.topbar{background:#fff;border-bottom:1px solid #e5e7eb;padding:16px 28px;position:sticky;top:0;z-index:30}
+.card{background:#fff;border-radius:18px;padding:24px;border:1px solid #eef2f7}
+.stat-card{background:#fff;border-radius:18px;padding:20px;border:1px solid #eef2f7;transition:all .3s ease}.stat-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(11,31,51,.08)}
+.stat-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.badge{padding:6px 12px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.badge-PENDING{background:#fef3c7;color:#92400e}.badge-PAID{background:#dcfce7;color:#15803d}.badge-REFUNDED{background:#fee2e2;color:#be123c}.badge-FAILED{background:#f1f5f9;color:#475569}
+.spinner{display:inline-block;width:40px;height:40px;border:4px solid rgba(199,164,106,.25);border-top-color:#C7A46A;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.btn-pay{background:#0B1F33;color:#fff;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;border:none;cursor:pointer;transition:all .2s}
+.btn-pay:hover{background:#102A43}
+.btn-refund{background:#dc2626;color:#fff;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:700;border:none;cursor:pointer;transition:all .2s}
+.btn-refund:hover{background:#b91c1c}
+</style>
+</head>
+<body>
+
+<aside id="sidebar" class="sidebar">
+  <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+    <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center text-white"><i class="fa-solid fa-hotel text-xl"></i></div>
+    <div>
+      <div class="text-lg font-bold text-white">Hotel<span class="text-gold">Reserve</span></div>
+      <div class="text-[9px] tracking-[3px] uppercase text-gray-400">Admin Panel</div>
+    </div>
+  </div>
+  <div class="py-3 overflow-y-auto" style="height:calc(100vh - 90px);">
+    <div class="sidebar-section-label">Main</div>
+    <a href="admin.html" class="sidebar-link"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
+    <a href="admin-bookings.html" class="sidebar-link"><i class="fa-solid fa-calendar-check"></i><span>Bookings</span></a>
+    <a href="admin-rooms.html" class="sidebar-link"><i class="fa-solid fa-bed"></i><span>Rooms</span></a>
+    <a href="admin-guests.html" class="sidebar-link"><i class="fa-solid fa-users"></i><span>Guests</span></a>
+    <a href="admin-checkin.html" class="sidebar-link"><i class="fa-solid fa-door-open"></i><span>Check-in / Check-out</span></a>
+    <div class="sidebar-section-label">Operations</div>
+    <a href="admin-payments.html" class="sidebar-link active"><i class="fa-solid fa-credit-card"></i><span>Payments</span></a>
+    <a href="admin-housekeeping.html" class="sidebar-link"><i class="fa-solid fa-broom"></i><span>Housekeeping</span></a>
+    <a href="admin-reports.html" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></a>
+    <div class="sidebar-section-label">Travel Management</div>
+    <a href="admin-vehicles.html" class="sidebar-link"><i class="fa-solid fa-car"></i><span>Vehicles</span></a>
+    <a href="admin-drivers.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i><span>Drivers</span></a>
+    <a href="admin-destinations.html" class="sidebar-link"><i class="fa-solid fa-map-location-dot"></i><span>Destinations</span></a>
+    <a href="admin-packages.html" class="sidebar-link"><i class="fa-solid fa-suitcase-rolling"></i><span>Travel Packages</span></a>
+    <a href="admin-promo-codes.html" class="sidebar-link"><i class="fa-solid fa-tags"></i><span>Promo Codes</span></a>
+    <a href="admin-vehicle-bookings.html" class="sidebar-link"><i class="fa-solid fa-route"></i><span>Vehicle Bookings</span></a>
+    <div class="sidebar-section-label">System</div>
+    <a href="admin-settings.html" class="sidebar-link"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    <a href="#" onclick="logout()" class="sidebar-link text-red-400"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="lg:hidden text-navy text-xl"><i class="fa-solid fa-bars"></i></button>
+        <div>
+          <h1 class="text-xl font-bold text-navy mb-0">Payments</h1>
+          <p class="text-xs text-gray-500 mb-0">Manage all guest transactions and invoices</p>
+        </div>
+      </div>
+      <div class="w-10 h-10 rounded-xl bg-gold flex items-center justify-center text-white font-bold" id="adminInitial">A</div>
+    </div>
+  </div>
+
+  <div class="p-6 lg:p-8">
+    <!-- STATS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-7">
+      <div class="stat-card">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Revenue</div>
+          <div class="stat-icon bg-green-50 text-green-600"><i class="fa-solid fa-money-bill"></i></div>
+        </div>
+        <div class="font-serif text-3xl font-bold text-navy" id="statRevenue">৳0</div>
+      </div>
+      <div class="stat-card">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pending</div>
+          <div class="stat-icon bg-yellow-50 text-yellow-600"><i class="fa-solid fa-clock"></i></div>
+        </div>
+        <div class="font-serif text-3xl font-bold text-yellow-600" id="statPending">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Paid</div>
+          <div class="stat-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-check-circle"></i></div>
+        </div>
+        <div class="font-serif text-3xl font-bold text-blue-600" id="statPaid">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Refunded</div>
+          <div class="stat-icon bg-red-50 text-red-600"><i class="fa-solid fa-rotate-left"></i></div>
+        </div>
+        <div class="font-serif text-3xl font-bold text-red-500" id="statRefunded">0</div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="card mb-6">
+      <div class="grid md:grid-cols-12 gap-4">
+        <div class="md:col-span-6 relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-gray-400"></i>
+          <input type="text" id="searchInput" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl outline-none text-sm" placeholder="Search by guest name or booking ID...">
+        </div>
+        <div class="md:col-span-3">
+          <select id="statusFilter" class="w-full px-4 py-2.5 border border-gray-200 rounded-xl outline-none text-sm text-gray-600">
+            <option value="">All Status</option>
+            <option value="PENDING">Pending</option>
+            <option value="PAID">Paid</option>
+            <option value="REFUNDED">Refunded</option>
+          </select>
+        </div>
+        <div class="md:col-span-3 flex items-end">
+          <button onclick="resetAndLoad()" class="w-full bg-navy text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-opacity-90 border-0"><i class="fa-solid fa-rotate-right mr-2"></i> Refresh</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
+              <th class="p-4 font-bold border-b border-gray-100">Booking ID</th>
+              <th class="p-4 font-bold border-b border-gray-100">Guest Name</th>
+              <th class="p-4 font-bold border-b border-gray-100">Room</th>
+              <th class="p-4 font-bold border-b border-gray-100">Date</th>
+              <th class="p-4 font-bold border-b border-gray-100">Amount</th>
+              <th class="p-4 font-bold border-b border-gray-100">Payment Status</th>
+              <th class="p-4 font-bold border-b border-gray-100 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody id="paymentTable">
+            <tr><td colspan="7" class="p-8 text-center text-gray-400">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+const API = "http://localhost:8080/api";
+const api = axios.create({ baseURL: API });
+const token = localStorage.getItem("accessToken");
+if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+else window.location.href = "login.html";
+
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (!user || user.role !== "ADMIN") window.location.href = "index.html";
+document.getElementById("adminInitial").textContent = user.name.charAt(0).toUpperCase();
+
+let allPayments = [];
+
+function logout() { localStorage.clear(); window.location.href = "index.html"; }
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—'; }
+
+
+    // 🚀 নতুন ফাংশন: ফিল্টার ক্লিয়ার করে ডেটা লোড করবে
+    function resetAndLoad() {
+        document.getElementById("searchInput").value = "";
+        document.getElementById("statusFilter").value = "";
+        loadData();
+    }
+    
+
+async function loadData() {
+  try {
+    const res = await api.get("/admin/payments");
+    allPayments = res.data.data || [];
+    updateStats();
+    render();
+  } catch (e) {
+    document.getElementById("paymentTable").innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500">Failed to load payments.</td></tr>`;
+  }
+}
+
+function updateStats() {
+  const totalRev = allPayments.filter(p => p.paymentStatus === 'PAID').reduce((s, p) => s + parseFloat(p.amount || 0), 0);
+  document.getElementById("statRevenue").textContent = `৳${totalRev.toLocaleString()}`;
+  document.getElementById("statPending").textContent = allPayments.filter(p => p.paymentStatus === 'PENDING').length;
+  document.getElementById("statPaid").textContent = allPayments.filter(p => p.paymentStatus === 'PAID').length;
+  document.getElementById("statRefunded").textContent = allPayments.filter(p => p.paymentStatus === 'REFUNDED').length;
+}
+
+function filtered() {
+  const s = document.getElementById("searchInput").value.toLowerCase().trim();
+  const st = document.getElementById("statusFilter").value;
+  
+  return allPayments.filter(p => {
+    const guestName = (p.guestName || "").toLowerCase();
+    const bookingId = (p.id || "").toString();
+    
+    const matchS = !s || guestName.includes(s) || bookingId.includes(s);
+    const matchSt = !st || (p.paymentStatus || "").toUpperCase() === st.toUpperCase();
+    return matchS && matchSt;
+  });
+}
+
+function render() {
+  const list = filtered();
+  const tbody = document.getElementById("paymentTable");
+  
+  if (list.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-400">No payments found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(p => {
+    let actionBtn = '';
+    if (p.paymentStatus === 'PENDING') {
+      actionBtn = `<button onclick="updateStatus(${p.id}, 'PAID')" class="btn-pay"><i class="fa-solid fa-check mr-1"></i>Mark Paid</button>`;
+    } else if (p.paymentStatus === 'PAID') {
+      actionBtn = `<button onclick="updateStatus(${p.id}, 'REFUNDED')" class="btn-refund"><i class="fa-solid fa-rotate-left mr-1"></i>Refund</button>`;
+    }
+
+    return `
+      <tr class="border-b border-gray-50 hover:bg-gray-50 transition">
+        <td class="p-4 text-sm font-semibold text-navy">#BK${p.id.toString().padStart(4, '0')}</td>
+        <td class="p-4 text-sm font-semibold">${p.guestName}</td>
+        <td class="p-4 text-sm">Room ${p.roomNumber}</td>
+        <td class="p-4 text-sm text-gray-500">${fmtDate(p.bookingDate)}</td>
+        <td class="p-4 text-sm font-bold">৳${parseFloat(p.amount).toLocaleString()}</td>
+        <td class="p-4"><span class="badge badge-${p.paymentStatus}">${p.paymentStatus}</span></td>
+        <td class="p-4 text-right">${actionBtn}</td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function updateStatus(id, status) {
+  if (!confirm(`Are you sure you want to mark this payment as ${status}?`)) return;
+  try {
+    await api.patch(`/admin/payments/${id}/status?status=${status}`);
+    await loadData();
+  } catch (err) {
+    alert("Failed to update payment status.");
+  }
+}
+
+document.getElementById("searchInput").addEventListener("input", render);
+document.getElementById("statusFilter").addEventListener("change", render);
+
+loadData();
+</script>
+</body>
+</html>

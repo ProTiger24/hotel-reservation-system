@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookings — Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7", teal:"#1E8A8A" },
+        fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] }
+      }}
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:"DM Sans",sans-serif; background:#F3F5F7; color:#0B1F33; }
+    .font-serif { font-family:"Playfair Display",serif; }
+
+    .sidebar { width:260px; background:linear-gradient(180deg,#0B1F33 0%,#102A43 100%); min-height:100vh; position:fixed; left:0; top:0; z-index:40; transition:transform .3s ease; }
+    .sidebar-link { display:flex; align-items:center; gap:14px; padding:13px 22px; color:#94a3b8; text-decoration:none; font-size:14px; font-weight:500; border-left:3px solid transparent; transition:all .25s ease; }
+    .sidebar-link:hover { color:#fff; background:rgba(255,255,255,.05); }
+    .sidebar-link.active { color:#fff; background:rgba(199,164,106,.15); border-left-color:#C7A46A; }
+    .sidebar-link.active i { color:#C7A46A; }
+    .sidebar-link i { width:20px; text-align:center; font-size:16px; }
+    .sidebar-section-label { padding:20px 22px 8px; color:#64748b; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; }
+
+    .main-content { margin-left:260px; min-height:100vh; }
+    @media (max-width:1023px) {
+      .sidebar { transform:translateX(-100%); }
+      .sidebar.open { transform:translateX(0); }
+      .main-content { margin-left:0; }
+    }
+
+    .topbar { background:#fff; border-bottom:1px solid #e5e7eb; padding:16px 28px; position:sticky; top:0; z-index:30; }
+
+    .stat-card { background:#fff; border-radius:18px; padding:20px; border:1px solid #eef2f7; transition:all .3s ease; }
+    .stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(11,31,51,.08); }
+    .stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+
+    .card { background:#fff; border-radius:18px; padding:24px; border:1px solid #eef2f7; }
+
+    .admin-table { width:100%; border-collapse:separate; border-spacing:0; }
+    .admin-table th { text-align:left; padding:14px 18px; background:#f8fafc; color:#64748b; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; border-bottom:1px solid #eef2f7; }
+    .admin-table td { padding:16px 18px; border-bottom:1px solid #f1f5f9; font-size:14px; color:#334155; vertical-align:middle; }
+    .admin-table tr:hover td { background:#fafbfc; }
+    .admin-table tr:last-child td { border-bottom:none; }
+
+    .badge { padding:5px 12px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; display:inline-block; }
+    .badge-PENDING { background:#fef3c7; color:#92400e; }
+    .badge-CONFIRMED { background:#d1fae5; color:#065f46; }
+    .badge-CANCELLED { background:#fee2e2; color:#991b1b; }
+    .badge-COMPLETED { background:#dbeafe; color:#1e40af; }
+
+    .tab-btn { padding:9px 18px; border-radius:10px; font-weight:600; font-size:13px; transition:all .25s ease; cursor:pointer; border:1px solid #e5e7eb; background:#fff; color:#64748b; }
+    .tab-btn.active { background:#0B1F33; color:#fff; border-color:#0B1F33; }
+    .tab-btn:not(.active):hover { background:#F8F6F1; color:#0B1F33; }
+
+    .btn-gold { background:#C7A46A; color:#fff; transition:.25s ease; border:none; }
+    .btn-gold:hover { background:#aa884e; color:#fff; }
+    .btn-navy { background:#0B1F33; color:#fff; transition:.25s ease; border:none; }
+    .btn-navy:hover { background:#102A43; color:#fff; }
+
+    .icon-btn { width:34px; height:34px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; transition:all .2s ease; border:none; cursor:pointer; }
+    .icon-btn-green { background:#dcfce7; color:#16a34a; }
+    .icon-btn-green:hover { background:#16a34a; color:#fff; }
+    .icon-btn-red { background:#fee2e2; color:#dc2626; }
+    .icon-btn-red:hover { background:#dc2626; color:#fff; }
+    .icon-btn-blue { background:#dbeafe; color:#2563eb; }
+    .icon-btn-blue:hover { background:#2563eb; color:#fff; }
+
+    .search-input { padding:11px 16px 11px 42px; border:2px solid #e5e7eb; border-radius:12px; outline:none; transition:all .25s ease; font-size:14px; width:100%; }
+    .search-input:focus { border-color:#C7A46A; box-shadow:0 0 0 4px rgba(199,164,106,.12); }
+    .search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#9ca3af; }
+
+    .spinner { display:inline-block; width:40px; height:40px; border:4px solid rgba(199,164,106,.25); border-top-color:#C7A46A; border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .modal-overlay { position:fixed; inset:0; background:rgba(11,31,51,.75); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; }
+    .modal-overlay.active { display:flex; }
+    .modal-box { background:#fff; border-radius:20px; max-width:560px; width:100%; padding:32px; max-height:90vh; overflow-y:auto; animation:modalIn .3s ease; }
+    @keyframes modalIn { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } }
+
+    .detail-row { display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid #f1f5f9; font-size:14px; }
+    .detail-row:last-child { border-bottom:none; }
+    .detail-row .label { color:#64748b; }
+    .detail-row .value { font-weight:600; color:#0B1F33; }
+
+    .fade-up { animation:fadeUp .5s ease both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(15px);} to{opacity:1;transform:translateY(0);} }
+
+    .custom-scroll::-webkit-scrollbar { width:6px; height:6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:6px; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="sidebar">
+  <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+    <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center text-white">
+      <i class="fa-solid fa-hotel text-xl"></i>
+    </div>
+    <div>
+      <div class="text-lg font-bold text-white">Hotel<span class="text-gold">Reserve</span></div>
+      <div class="text-[9px] tracking-[3px] uppercase text-gray-400">Admin Panel</div>
+    </div>
+  </div>
+
+  <div class="py-3 overflow-y-auto custom-scroll" style="height:calc(100vh - 90px);">
+    <div class="sidebar-section-label">Main</div>
+    <a href="admin.html" class="sidebar-link"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
+    <a href="admin-bookings.html" class="sidebar-link active"><i class="fa-solid fa-calendar-check"></i><span>Bookings</span></a>
+    <a href="admin-rooms.html" class="sidebar-link"><i class="fa-solid fa-bed"></i><span>Rooms</span></a>
+    <a href="admin-guests.html" class="sidebar-link"><i class="fa-solid fa-users"></i><span>Guests</span></a>
+    <a href="admin-checkin.html" class="sidebar-link"><i class="fa-solid fa-door-open"></i><span>Check-in / Check-out</span></a>
+
+    <div class="sidebar-section-label">Operations</div>
+    <a href="admin-payments.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i><span>Payments</span></a>
+    <a href="admin-housekeeping.html" class="sidebar-link"><i class="fa-solid fa-broom"></i><span>Housekeeping</span></a>
+    <a href="admin-reports.html" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></a>
+
+    <div class="sidebar-section-label">Travel Management</div>
+    <a href="admin-vehicles.html" class="sidebar-link"><i class="fa-solid fa-car"></i><span>Vehicles</span></a>
+    <a href="admin-drivers.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i><span>Drivers</span></a>
+    <a href="admin-destinations.html" class="sidebar-link"><i class="fa-solid fa-map-location-dot"></i><span>Destinations</span></a>
+    <a href="admin-packages.html" class="sidebar-link"><i class="fa-solid fa-suitcase-rolling"></i><span>Travel Packages</span></a>
+    <a href="admin-vehicle-bookings.html" class="sidebar-link"><i class="fa-solid fa-route"></i><span>Vehicle Bookings</span></a>
+    <div class="sidebar-section-label">System</div>
+    <a href="admin-settings.html" class="sidebar-link"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    <a href="#" onclick="logout()" class="sidebar-link text-red-400 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main-content">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button onclick="toggleSidebar()" class="lg:hidden text-navy text-xl"><i class="fa-solid fa-bars"></i></button>
+        <div>
+          <h1 class="text-xl font-bold text-navy mb-0">Bookings Management</h1>
+          <p class="text-xs text-gray-500 mb-0">Manage all hotel reservations</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
+          <div class="hidden md:block text-right">
+            <div class="text-sm font-semibold text-navy" id="adminName">Admin</div>
+            <div class="text-xs text-gray-500">Administrator</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-gold flex items-center justify-center text-white font-bold" id="adminInitial">A</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="p-6 lg:p-8">
+
+    <div id="loading" class="text-center py-24">
+      <div class="spinner mx-auto"></div>
+      <p class="text-gray-500 mt-4">Loading bookings...</p>
+    </div>
+
+    <div id="content" class="hidden">
+
+      <!-- STATS CARDS -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6 fade-up">
+        <div class="stat-card cursor-pointer hover:border-gold" onclick="filterByStatus('ALL')">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total</div>
+            <div class="stat-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-calendar-check"></i></div>
+          </div>
+          <div class="font-serif text-3xl font-bold text-navy" id="statTotal">0</div>
+        </div>
+
+        <div class="stat-card cursor-pointer hover:border-yellow-500" onclick="filterByStatus('PENDING')">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pending</div>
+            <div class="stat-icon bg-yellow-50 text-yellow-600"><i class="fa-solid fa-clock"></i></div>
+          </div>
+          <div class="font-serif text-3xl font-bold text-yellow-600" id="statPending">0</div>
+        </div>
+
+        <div class="stat-card cursor-pointer hover:border-green-500" onclick="filterByStatus('CONFIRMED')">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Confirmed</div>
+            <div class="stat-icon bg-green-50 text-green-600"><i class="fa-solid fa-circle-check"></i></div>
+          </div>
+          <div class="font-serif text-3xl font-bold text-green-600" id="statConfirmed">0</div>
+        </div>
+
+        <div class="stat-card cursor-pointer hover:border-red-500" onclick="filterByStatus('CANCELLED')">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Cancelled</div>
+            <div class="stat-icon bg-red-50 text-red-600"><i class="fa-solid fa-xmark"></i></div>
+          </div>
+          <div class="font-serif text-3xl font-bold text-red-500" id="statCancelled">0</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Revenue</div>
+            <div class="stat-icon bg-[#f7f0e4] text-gold"><i class="fa-solid fa-money-bill-wave"></i></div>
+          </div>
+          <div class="font-serif text-xl font-bold text-navy">৳<span id="statRevenue">0</span></div>
+        </div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="card mb-6 fade-up">
+        <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+
+          <!-- Search -->
+          <div class="relative flex-1 max-w-md">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by guest name, email, or booking ID...">
+          </div>
+
+          <!-- Filter Tabs -->
+          <div class="flex flex-wrap gap-2">
+            <button class="tab-btn active" data-filter="ALL" onclick="filterByStatus('ALL')">All</button>
+            <button class="tab-btn" data-filter="PENDING" onclick="filterByStatus('PENDING')">Pending</button>
+            <button class="tab-btn" data-filter="CONFIRMED" onclick="filterByStatus('CONFIRMED')">Confirmed</button>
+            <button class="tab-btn" data-filter="CANCELLED" onclick="filterByStatus('CANCELLED')">Cancelled</button>
+            <button class="tab-btn" data-filter="COMPLETED" onclick="filterByStatus('COMPLETED')">Completed</button>
+          </div>
+
+          <!-- Refresh -->
+          <button onclick="resetAndLoad()" class="btn-navy px-4 py-2.5 rounded-lg text-sm font-semibold ml-auto">
+            <i class="fa-solid fa-rotate mr-1"></i>Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card fade-up" style="padding:0; overflow:hidden;">
+        <div class="overflow-x-auto custom-scroll">
+          <table class="admin-table" style="min-width:1100px;">
+            <thead>
+              <tr>
+                <th>Booking ID</th>
+                <th>Guest</th>
+                <th>Room</th>
+                <th>Check-in</th>
+                <th>Check-out</th>
+                <th>Nights</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bookingsBody">
+              <tr><td colspan="9" class="text-center py-12 text-gray-400">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="emptyState" class="hidden text-center py-16">
+          <i class="fa-solid fa-calendar-xmark text-4xl text-gray-300 mb-3"></i>
+          <h3 class="font-serif text-xl font-semibold text-gray-500 mb-2">No bookings found</h3>
+          <p class="text-gray-400 text-sm" id="emptyMsg">Try changing your search or filter</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- BOOKING DETAILS MODAL -->
+<div id="detailsModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-serif text-2xl font-semibold">Booking Details</h3>
+      <button onclick="closeDetailsModal()" class="icon-btn" style="background:#f1f5f9;color:#64748b;">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div id="detailsContent"></div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div id="actionModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="text-center mb-6">
+      <div id="actionIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i class="fa-solid fa-question text-2xl"></i>
+      </div>
+      <h3 class="font-serif text-2xl font-semibold mb-2" id="actionTitle">Confirm?</h3>
+      <p class="text-gray-500 text-sm" id="actionMsg">Are you sure?</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeActionModal()" class="flex-1 border-2 border-navy text-navy hover:bg-navy hover:text-white py-3 rounded-xl font-semibold transition">
+        Cancel
+      </button>
+      <button id="actionConfirmBtn" class="flex-1 py-3 rounded-xl font-semibold transition">
+        Confirm
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+  const API_BASE_URL = "http://localhost:8080/api";
+  const api = axios.create({ baseURL: API_BASE_URL });
+  const token = localStorage.getItem("accessToken");
+
+  if (token) {
+    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+  } else {
+    window.location.href = "login.html";
+  }
+
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+  if (!user || user.role !== "ADMIN") {
+    window.location.href = "index.html";
+  }
+
+  document.getElementById("adminName").textContent = user.name;
+  document.getElementById("adminInitial").textContent = user.name.charAt(0).toUpperCase();
+
+  let allBookings = [];
+  let currentFilter = "ALL";
+  let currentSearch = "";
+
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = "index.html";
+  }
+
+  // Load bookings
+  async function loadBookings() {
+    try {
+      const response = await api.get("/admin/bookings");
+      allBookings = response.data.data || [];
+      document.getElementById("loading").classList.add("hidden");
+      document.getElementById("content").classList.remove("hidden");
+      updateStats();
+      renderBookings();
+    } catch (error) {
+      console.error("Bookings load error:", error);
+      document.getElementById("loading").innerHTML = `
+        <div class="text-center">
+          <i class="fa-solid fa-circle-exclamation text-red-500 text-5xl mb-4"></i>
+          <h3 class="font-serif text-2xl font-semibold mb-2">Unable to load bookings</h3>
+          <p class="text-gray-500 text-sm mb-4">Backend may be offline</p>
+          <button onclick="location.reload()" class="btn-navy px-5 py-2 rounded-lg text-sm">Retry</button>
+        </div>`;
+    }
+  }
+
+  // Reset and load
+  function resetAndLoad() {
+    document.getElementById("searchInput").value = "";
+    currentSearch = "";
+    currentFilter = "ALL";
+    
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.filter === "ALL");
+    });
+    
+    loadBookings();
+  }
+
+  // Update stats
+  function updateStats() {
+    document.getElementById("statTotal").textContent = allBookings.length;
+    document.getElementById("statPending").textContent = allBookings.filter(b => b.status === "PENDING").length;
+    document.getElementById("statConfirmed").textContent = allBookings.filter(b => b.status === "CONFIRMED").length;
+    document.getElementById("statCancelled").textContent = allBookings.filter(b => b.status === "CANCELLED").length;
+    
+    const revenue = allBookings
+      .filter(b => b.status === "CONFIRMED" || b.status === "COMPLETED")
+      .reduce((sum, b) => sum + parseFloat(b.totalPrice), 0);
+    document.getElementById("statRevenue").textContent = revenue.toLocaleString("en-BD");
+  }
+
+  // Filter
+  function filterByStatus(status) {
+    currentFilter = status;
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.filter === status);
+    });
+    renderBookings();
+  }
+
+  // Search input
+  document.getElementById("searchInput").addEventListener("input", (e) => {
+    currentSearch = e.target.value.toLowerCase().trim();
+    renderBookings();
+  });
+
+  // Render bookings
+  function renderBookings() {
+    const tbody = document.getElementById("bookingsBody");
+    const emptyState = document.getElementById("emptyState");
+
+    let filtered = allBookings;
+
+    if (currentFilter !== "ALL") {
+      filtered = filtered.filter(b => b.status === currentFilter);
+    }
+
+    if (currentSearch) {
+      filtered = filtered.filter(b => 
+        b.userName.toLowerCase().includes(currentSearch) ||
+        b.userEmail.toLowerCase().includes(currentSearch) ||
+        b.id.toString().includes(currentSearch) ||
+        b.roomNumber.toLowerCase().includes(currentSearch)
+      );
+    }
+
+    if (!filtered.length) {
+      tbody.innerHTML = "";
+      emptyState.classList.remove("hidden");
+      document.getElementById("emptyMsg").textContent = currentSearch 
+        ? `No bookings match "${currentSearch}"` 
+        : `No ${currentFilter.toLowerCase()} bookings`;
+      return;
+    }
+
+    emptyState.classList.add("hidden");
+
+    tbody.innerHTML = filtered.map(b => `
+      <tr>
+        <td><span class="font-semibold text-navy">#${b.id}</span></td>
+        <td>
+          <div class="font-semibold text-navy">${b.userName}</div>
+          <div class="text-xs text-gray-400">${b.userEmail}</div>
+        </td>
+        <td>
+          <div class="font-semibold">${b.roomNumber}</div>
+          <div class="text-xs text-gray-400">${b.roomType}</div>
+        </td>
+        <td>${formatDate(b.checkIn)}</td>
+        <td>${formatDate(b.checkOut)}</td>
+        <td><span class="font-semibold">${b.nights}</span></td>
+        <td class="font-semibold text-navy">৳${parseFloat(b.totalPrice).toLocaleString("en-BD")}</td>
+        <td><span class="badge badge-${b.status}">${b.status}</span></td>
+        <td class="text-right">
+          <div class="flex justify-end gap-2">
+            <button onclick="viewDetails(${b.id})" class="icon-btn icon-btn-blue" title="View Details">
+              <i class="fa-solid fa-eye text-xs"></i>
+            </button>
+            ${b.status === "PENDING" ? `
+              <button onclick="confirmAction(${b.id}, 'confirm')" class="icon-btn icon-btn-green" title="Confirm">
+                <i class="fa-solid fa-check text-xs"></i>
+              </button>
+            ` : ""}
+            ${(b.status === "PENDING" || b.status === "CONFIRMED") ? `
+              <button onclick="confirmAction(${b.id}, 'cancel')" class="icon-btn icon-btn-red" title="Cancel">
+                <i class="fa-solid fa-xmark text-xs"></i>
+              </button>
+            ` : ""}
+          </div>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  // View details
+  function viewDetails(id) {
+    const b = allBookings.find(x => x.id === id);
+    if (!b) return;
+
+    const statusColor = {
+      PENDING: "text-yellow-600 bg-yellow-50",
+      CONFIRMED: "text-green-600 bg-green-50",
+      CANCELLED: "text-red-600 bg-red-50",
+      COMPLETED: "text-blue-600 bg-blue-50"
+    }[b.status];
+
+    document.getElementById("detailsContent").innerHTML = `
+      <div class="text-center mb-6 pb-6 border-b border-gray-100">
+        <span class="inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${statusColor}">${b.status}</span>
+        <div class="font-serif text-3xl font-bold text-navy mt-3">৳${parseFloat(b.totalPrice).toLocaleString("en-BD")}</div>
+        <div class="text-xs text-gray-400 mt-1">Booking #${b.id}</div>
+      </div>
+
+      <div class="detail-row">
+        <span class="label">Guest Name</span>
+        <span class="value">${b.userName}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Email</span>
+        <span class="value text-sm">${b.userEmail}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Room</span>
+        <span class="value">${b.roomNumber} · ${b.roomType}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Check-in</span>
+        <span class="value">${formatDate(b.checkIn)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Check-out</span>
+        <span class="value">${formatDate(b.checkOut)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Nights</span>
+        <span class="value">${b.nights}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Guests</span>
+        <span class="value">${b.guestCount}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Payment Status</span>
+        <span class="value">${b.paymentStatus}</span>
+      </div>
+      <div class="detail-row">
+        <span class="label">Loyalty Points</span>
+        <span class="value text-gold">+${b.loyaltyPointsEarned || 0}</span>
+      </div>
+      ${b.specialRequest ? `
+        <div class="pt-4">
+          <div class="text-xs text-gray-400 uppercase tracking-wider font-bold mb-2">Special Request</div>
+          <div class="bg-cream rounded-xl p-3 text-sm text-gray-600">${b.specialRequest}</div>
+        </div>
+      ` : ""}
+
+      <div class="mt-6 pt-6 border-t border-gray-100 flex gap-3">
+        ${b.status === "PENDING" ? `
+          <button onclick="closeDetailsModal(); confirmAction(${b.id}, 'confirm')" class="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 rounded-xl font-semibold transition">
+            <i class="fa-solid fa-check mr-2"></i>Confirm
+          </button>
+        ` : ""}
+        ${(b.status === "PENDING" || b.status === "CONFIRMED") ? `
+          <button onclick="closeDetailsModal(); confirmAction(${b.id}, 'cancel')" class="flex-1 border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white py-3 rounded-xl font-semibold transition">
+            <i class="fa-solid fa-xmark mr-2"></i>Cancel
+          </button>
+        ` : ""}
+      </div>
+    `;
+
+    document.getElementById("detailsModal").classList.add("active");
+  }
+
+  function closeDetailsModal() {
+    document.getElementById("detailsModal").classList.remove("active");
+  }
+
+  // Action confirm
+  let pendingAction = null;
+
+  function confirmAction(id, action) {
+    pendingAction = { id, action };
+    const isConfirm = action === "confirm";
+
+    document.getElementById("actionIcon").className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isConfirm ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`;
+    document.getElementById("actionIcon").innerHTML = `<i class="fa-solid ${isConfirm ? "fa-check" : "fa-triangle-exclamation"} text-2xl"></i>`;
+    document.getElementById("actionTitle").textContent = isConfirm ? "Confirm Booking?" : "Cancel Booking?";
+    document.getElementById("actionMsg").textContent = isConfirm 
+      ? "This will confirm the reservation and mark the room as booked."
+      : "This will cancel the reservation and free the room. This action cannot be undone.";
+
+    const btn = document.getElementById("actionConfirmBtn");
+    btn.className = `flex-1 py-3 rounded-xl font-semibold transition ${isConfirm ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"} text-white`;
+    btn.textContent = isConfirm ? "Yes, Confirm" : "Yes, Cancel";
+
+    document.getElementById("actionModal").classList.add("active");
+  }
+
+  function closeActionModal() {
+    document.getElementById("actionModal").classList.remove("active");
+    pendingAction = null;
+  }
+
+  // 🚀 API Call handling
+  document.getElementById("actionConfirmBtn").addEventListener("click", async () => {
+    if (!pendingAction) return;
+
+    const btn = document.getElementById("actionConfirmBtn");
+    const originalText = btn.textContent;
+    
+    // 🚀 ভ্যালুগুলো আগে সেভ করে রাখছি, কারণ closeActionModal() এটি null করে দেয়
+    const currentAction = pendingAction.action;
+    const currentId = pendingAction.id;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
+
+    try {
+      if (currentAction === "confirm") {
+        await api.patch(`/admin/bookings/${currentId}/confirm`);
+      } else {
+        await api.patch(`/admin/bookings/${currentId}/cancel`);
+      }
+      
+      closeActionModal();
+      alert("✅ Success! Booking has been " + (currentAction === "confirm" ? "confirmed" : "cancelled") + ".");
+      await loadBookings();
+    } catch (err) {
+      console.error("Action failed:", err);
+      alert("❌ Failed: " + (err.response?.data?.message || err.message || "Backend error"));
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+  });
+
+  // Modal close on overlay
+  document.getElementById("detailsModal").addEventListener("click", (e) => {
+    if (e.target.id === "detailsModal") closeDetailsModal();
+  });
+  document.getElementById("actionModal").addEventListener("click", (e) => {
+    if (e.target.id === "actionModal") closeActionModal();
+  });
+
+  // Keyboard ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeDetailsModal();
+      closeActionModal();
+    }
+  });
+
+  // Init
+  loadBookings();
+</script>
+
+</body>
+</html>

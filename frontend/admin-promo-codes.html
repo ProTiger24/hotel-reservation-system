@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Promo Codes — Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7", teal:"#1E8A8A" },
+    fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] }
+  }}
+}
+</script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:"DM Sans",sans-serif;background:#f5f7fa;color:#0b1f33}.font-serif{font-family:"Playfair Display",serif}
+.sidebar{width:260px;background:linear-gradient(180deg,#071827 0%,#102d46 100%);min-height:100vh;position:fixed;left:0;top:0;z-index:40;transition:transform .3s ease;box-shadow:8px 0 30px rgba(7,24,39,.12)}
+.sidebar-link{display:flex;align-items:center;gap:14px;padding:13px 22px;color:#91a4b8;text-decoration:none;font-size:14px;font-weight:500;border-left:3px solid transparent;transition:.25s}.sidebar-link:hover{color:#fff;background:rgba(255,255,255,.06)}.sidebar-link.active{color:#fff;background:linear-gradient(90deg,rgba(199,164,106,.18),rgba(199,164,106,.04));border-left-color:#d7b77d}.sidebar-link.active i{color:#d7b77d}.sidebar-link i{width:20px;text-align:center;font-size:16px}.sidebar-section-label{padding:20px 22px 8px;color:#60758a;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:2px}.main-content{margin-left:260px;min-height:100vh}
+.topbar{background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid #e8edf3;padding:16px 30px;position:sticky;top:0;z-index:30}.page-title{font-family:"Playfair Display",serif;font-size:26px;font-weight:700;color:#0b1f33;letter-spacing:-.3px}.page-subtitle{color:#8492a3;font-size:13px;margin-top:3px}
+.card{background:#fff;border-radius:20px;padding:22px;border:1px solid #e9eef4;box-shadow:0 8px 30px rgba(11,31,51,.035)}
+.stat-card{position:relative;background:#fff;border:1px solid #e8edf3;border-radius:18px;padding:20px;overflow:hidden;transition:.3s;box-shadow:0 5px 20px rgba(11,31,51,.035)}.stat-card:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-35px;bottom:-40px;background:rgba(199,164,106,.06)}.stat-card:hover{transform:translateY(-4px);box-shadow:0 15px 35px rgba(11,31,51,.09)}.stat-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px}.stat-number{font-family:"Playfair Display",serif;font-size:29px;font-weight:700;line-height:1.1}
+.btn-gold{background:linear-gradient(135deg,#c7a46a,#aa884e);color:#fff;transition:.25s;border:none;cursor:pointer;box-shadow:0 7px 18px rgba(199,164,106,.22)}.btn-gold:hover{background:linear-gradient(135deg,#d2b47c,#b18d52);color:#fff;transform:translateY(-1px)}.btn-navy{background:#0b1f33;color:#fff;transition:.25s;border:none;cursor:pointer}.btn-navy:hover{background:#173653;color:#fff}
+.search-input{padding:12px 16px 12px 43px;border:1px solid #e1e7ee;border-radius:13px;outline:none;font-size:14px;width:100%;background:#fbfcfd;transition:.2s}.search-input:focus{border-color:#c7a46a;box-shadow:0 0 0 4px rgba(199,164,106,.1);background:#fff}.search-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#9aa8b7}.filter-select{border:1px solid #e1e7ee;border-radius:13px;padding:12px 38px 12px 14px;background:#fbfcfd;color:#445568;font-size:13px;outline:none}.filter-select:focus{border-color:#c7a46a}.icon-btn{width:38px;height:38px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;transition:.2s;border:none;cursor:pointer}.icon-btn-blue{background:#eaf2ff;color:#2563eb}.icon-btn-blue:hover{background:#2563eb;color:#fff}.icon-btn-red{background:#fff0f0;color:#dc2626}.icon-btn-red:hover{background:#dc2626;color:#fff}.icon-btn-green{background:#ecfdf3;color:#16a34a}.icon-btn-green:hover{background:#16a34a;color:#fff}
+.promo-table{width:100%;border-collapse:separate;border-spacing:0}.promo-table th{text-align:left;padding:14px 18px;background:#f8fafc;color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #eef2f7}.promo-table td{padding:16px 18px;border-bottom:1px solid #f1f5f9;font-size:14px;color:#334155;vertical-align:middle}.promo-table tr:hover td{background:#fafbfc}.promo-table tr:last-child td{border-bottom:none}
+.promo-code-badge{font-family:monospace;background:#f1f5f9;color:#0b1f33;padding:6px 12px;border-radius:8px;font-weight:700;font-size:13px;border:1px dashed #cbd5e1}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}.status-active{background:#ecfdf3;color:#15803d}.status-inactive{background:#f1f5f9;color:#64748b}.status-expired{background:#fff1f2;color:#be123c}
+.spinner{display:inline-block;width:42px;height:42px;border:4px solid rgba(199,164,106,.22);border-top-color:#c7a46a;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.modal-overlay{position:fixed;inset:0;background:rgba(5,20,32,.72);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:100;padding:20px;overflow-y:auto}.modal-overlay.active{display:flex}.modal-box{background:#fff;border-radius:24px;max-width:600px;width:100%;padding:30px;max-height:92vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.2)}.form-input{width:100%;padding:12px 15px;border:1px solid #dfe6ee;border-radius:12px;outline:none;font-size:14px;background:#fbfcfd;transition:.2s}.form-input:focus{border-color:#c7a46a;box-shadow:0 0 0 4px rgba(199,164,106,.1);background:#fff}.form-label{display:block;font-size:11px;font-weight:800;color:#415367;margin-bottom:7px;text-transform:uppercase;letter-spacing:.6px}.custom-scroll::-webkit-scrollbar{width:6px}.custom-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px}.toast{position:fixed;bottom:28px;right:28px;padding:15px 20px;border-radius:13px;box-shadow:0 15px 35px rgba(11,31,51,.18);font-weight:600;font-size:14px;z-index:9999;max-width:400px}.toast-success{background:#ecfdf3;border-left:4px solid #16a34a;color:#166534}.toast-error{background:#fff1f2;border-left:4px solid #dc2626;color:#991b1b}
+@media(max-width:1023px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main-content{margin-left:0}}@media(max-width:640px){.topbar{padding:14px 16px}.page-title{font-size:22px}.main-content>.p-6{padding:16px}.card{padding:16px}.modal-box{padding:22px}}
+</style>
+</head>
+<body>
+
+<aside id="sidebar" class="sidebar">
+  <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+    <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center text-white"><i class="fa-solid fa-hotel text-xl"></i></div>
+    <div>
+      <div class="text-lg font-bold text-white">Hotel<span class="text-gold">Reserve</span></div>
+      <div class="text-[9px] tracking-[3px] uppercase text-gray-400">Admin Panel</div>
+    </div>
+  </div>
+  <div class="py-3 overflow-y-auto custom-scroll" style="height:calc(100vh - 90px);">
+    <div class="sidebar-section-label">Main</div>
+    <a href="admin.html" class="sidebar-link"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
+    <a href="admin-bookings.html" class="sidebar-link"><i class="fa-solid fa-calendar-check"></i><span>Bookings</span></a>
+    <a href="admin-rooms.html" class="sidebar-link"><i class="fa-solid fa-bed"></i><span>Rooms</span></a>
+    <a href="admin-guests.html" class="sidebar-link"><i class="fa-solid fa-users"></i><span>Guests</span></a>
+    <a href="admin-checkin.html" class="sidebar-link"><i class="fa-solid fa-door-open"></i><span>Check-in / Check-out</span></a>
+    <div class="sidebar-section-label">Operations</div>
+    <a href="admin-payments.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i><span>Payments</span></a>
+    <a href="admin-housekeeping.html" class="sidebar-link"><i class="fa-solid fa-broom"></i><span>Housekeeping</span></a>
+    <a href="admin-reports.html" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></a>
+    <div class="sidebar-section-label">Travel Management</div>
+    <a href="admin-vehicles.html" class="sidebar-link"><i class="fa-solid fa-car"></i><span>Vehicles</span></a>
+    <a href="admin-drivers.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i><span>Drivers</span></a>
+    <a href="admin-destinations.html" class="sidebar-link"><i class="fa-solid fa-map-location-dot"></i><span>Destinations</span></a>
+    <a href="admin-packages.html" class="sidebar-link"><i class="fa-solid fa-suitcase-rolling"></i><span>Travel Packages</span></a>
+    <a href="admin-promo-codes.html" class="sidebar-link active"><i class="fa-solid fa-tags"></i><span>Promo Codes</span></a>
+    <a href="admin-vehicle-bookings.html" class="sidebar-link"><i class="fa-solid fa-route"></i><span>Vehicle Bookings</span></a>
+    <div class="sidebar-section-label">System</div>
+    <a href="admin-settings.html" class="sidebar-link"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    <a href="#" onclick="logout()" class="sidebar-link text-red-400 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+</aside>
+
+<div class="main-content">
+  <div class="topbar">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="lg:hidden text-navy text-xl"><i class="fa-solid fa-bars"></i></button>
+        <div>
+          <h1 class="text-xl font-bold text-navy mb-0">Promo Codes</h1>
+          <p class="text-xs text-gray-500 mb-0">Manage discount coupons</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openAddModal()" class="btn-gold px-5 py-2.5 rounded-lg text-sm font-semibold"><i class="fa-solid fa-plus mr-2"></i>Create Promo</button>
+        <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
+          <div class="hidden md:block text-right">
+            <div class="text-sm font-semibold text-navy" id="adminName">Admin</div>
+            <div class="text-xs text-gray-500">Administrator</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-gold flex items-center justify-center text-white font-bold" id="adminInitial">A</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-6 lg:p-8">
+    <div id="loading" class="text-center py-24">
+      <div class="spinner mx-auto"></div>
+      <p class="text-gray-500 mt-4">Loading promo codes...</p>
+    </div>
+
+    <div id="content" class="hidden">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total</div><div class="stat-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-tags"></i></div></div><div class="stat-number text-navy" id="statTotal">0</div><div class="text-xs text-gray-400 mt-1">All promos</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Active</div><div class="stat-icon bg-green-50 text-green-600"><i class="fa-solid fa-circle-check"></i></div></div><div class="stat-number text-green-600" id="statActive">0</div><div class="text-xs text-gray-400 mt-1">Currently running</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Usage</div><div class="stat-icon bg-purple-50 text-purple-600"><i class="fa-solid fa-chart-simple"></i></div></div><div class="stat-number text-purple-600" id="statUsed">0</div><div class="text-xs text-gray-400 mt-1">Times used</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Expired</div><div class="stat-icon bg-red-50 text-red-600"><i class="fa-solid fa-clock-rotate-left"></i></div></div><div class="stat-number text-red-500" id="statExpired">0</div><div class="text-xs text-gray-400 mt-1">Expired promos</div></div>
+      </div>
+
+      <div class="card mb-6">
+        <div class="grid md:grid-cols-12 gap-4">
+          <div class="md:col-span-6 relative">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by code or description...">
+          </div>
+          <div class="md:col-span-3">
+            <select id="typeFilter" class="filter-select w-full">
+              <option value="">All Types</option>
+              <option value="PERCENTAGE">Percentage</option>
+              <option value="FIXED">Fixed Amount</option>
+            </select>
+          </div>
+          <div class="md:col-span-3">
+            <select id="statusFilter" class="filter-select w-full">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="overflow-x-auto custom-scroll">
+          <table class="promo-table" style="min-width:900px;">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Type & Value</th>
+                <th>Applies To</th>
+                <th>Validity</th>
+                <th>Usage</th>
+                <th>Status</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="promoBody">
+              <tr><td colspan="7" class="text-center py-12 text-gray-400">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="emptyState" class="hidden text-center py-16">
+          <i class="fa-solid fa-ticket-simple text-4xl text-gray-300 mb-3"></i>
+          <h3 class="font-serif text-xl font-semibold text-gray-500 mb-2">No promo codes yet</h3>
+          <p class="text-gray-400 text-sm">Create your first promo code</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="promoModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-serif text-2xl font-semibold" id="modalTitle">Create Promo Code</h3>
+      <button onclick="closeModal()" class="icon-btn" style="background:#f1f5f9;color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div id="modalError" class="hidden mb-4 p-3 rounded-xl text-sm" style="background:#fee2e2;color:#991b1b;border-left:4px solid #dc2626;"><span id="modalErrorMsg"></span></div>
+
+    <form id="promoForm" class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Code *</label><input type="text" id="code" required class="form-input" style="text-transform:uppercase;" placeholder="SUMMER20"></div>
+        <div><label class="form-label">Applies To *</label>
+          <select id="appliesTo" required class="form-input">
+            <option value="ALL">All Bookings</option>
+            <option value="ROOM">Room Only</option>
+            <option value="TRAVEL">Travel Only</option>
+          </select>
+        </div>
+      </div>
+
+      <div><label class="form-label">Description</label><input type="text" id="description" class="form-input" placeholder="Summer special discount..."></div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Discount Type *</label>
+          <select id="discountType" required class="form-input">
+            <option value="PERCENTAGE">Percentage (%)</option>
+            <option value="FIXED">Fixed Amount (৳)</option>
+          </select>
+        </div>
+        <div><label class="form-label">Discount Value *</label><input type="number" id="discountValue" required min="0" step="0.01" class="form-input" placeholder="10"></div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Max Discount ৳</label><input type="number" id="maxDiscount" min="0" class="form-input" placeholder="Optional"></div>
+        <div><label class="form-label">Min Order ৳</label><input type="number" id="minOrderAmount" min="0" class="form-input" placeholder="0"></div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Valid From</label><input type="date" id="validFrom" class="form-input"></div>
+        <div><label class="form-label">Valid Until</label><input type="date" id="validUntil" class="form-input"></div>
+      </div>
+
+      <div><label class="form-label">Usage Limit</label><input type="number" id="usageLimit" min="0" class="form-input" placeholder="Unlimited if empty"></div>
+
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="isActive" checked class="w-4 h-4">
+        <label for="isActive" class="text-sm font-medium">Active (visible to users)</label>
+      </div>
+
+      <div class="flex gap-3 pt-4 border-t border-gray-100">
+        <button type="button" onclick="closeModal()" class="flex-1 border-2 border-navy text-navy hover:bg-navy hover:text-white py-3 rounded-xl font-semibold transition">Cancel</button>
+        <button type="submit" id="saveBtn" class="btn-gold flex-1 py-3 rounded-xl font-semibold"><i class="fa-solid fa-save mr-2"></i>Save Promo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="deleteModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i></div>
+      <h3 class="font-serif text-2xl font-semibold mb-2">Delete Promo Code?</h3>
+      <p class="text-gray-500 text-sm" id="deleteMsg">This action cannot be undone.</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeDeleteModal()" class="flex-1 border-2 border-navy text-navy hover:bg-navy hover:text-white py-3 rounded-xl font-semibold transition">Cancel</button>
+      <button id="confirmDeleteBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold border-0">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+const API = "http://localhost:8080/api";
+const api = axios.create({ baseURL: API });
+const token = localStorage.getItem("accessToken");
+if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+else window.location.href = "login.html";
+
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (!user || user.role !== "ADMIN") window.location.href = "index.html";
+document.getElementById("adminName").textContent = user.name;
+document.getElementById("adminInitial").textContent = user.name.charAt(0).toUpperCase();
+
+let allPromos = [];
+let editingId = null;
+let deleteId = null;
+
+function logout() { localStorage.clear(); window.location.href = "index.html"; }
+function showToast(msg, type = "info") {
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+function fmtDate(s) { if (!s) return '—'; return new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+
+async function loadData() {
+  try {
+    const r = await api.get("/admin/promo-codes");
+    allPromos = r.data.data || [];
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("content").classList.remove("hidden");
+    updateStats();
+    render();
+  } catch (e) {
+    document.getElementById("loading").innerHTML = `<div class="text-center"><i class="fa-solid fa-circle-exclamation text-red-500 text-5xl mb-4"></i><button onclick="location.reload()" class="btn-navy px-5 py-2 rounded-lg text-sm mt-2">Retry</button></div>`;
+  }
+}
+
+function updateStats() {
+  document.getElementById("statTotal").textContent = allPromos.length;
+  document.getElementById("statActive").textContent = allPromos.filter(p => p.isActive && !p.isExpired).length;
+  document.getElementById("statUsed").textContent = allPromos.reduce((s, p) => s + (p.usedCount || 0), 0);
+  document.getElementById("statExpired").textContent = allPromos.filter(p => p.isExpired).length;
+}
+
+document.getElementById("searchInput").addEventListener("input", render);
+document.getElementById("typeFilter").addEventListener("change", render);
+document.getElementById("statusFilter").addEventListener("change", render);
+
+function filtered() {
+  const s = document.getElementById("searchInput").value.toLowerCase().trim();
+  const type = document.getElementById("typeFilter").value;
+  const status = document.getElementById("statusFilter").value;
+  return allPromos.filter(p => {
+    const matchSearch = !s || (p.code || "").toLowerCase().includes(s) || (p.description || "").toLowerCase().includes(s);
+    const matchType = !type || p.discountType === type;
+    const matchStatus = !status || (status === "active" ? p.isActive : !p.isActive);
+    return matchSearch && matchType && matchStatus;
+  }).sort((a, b) => b.id - a.id); // ✅ Sort by ID DESC (latest first)
+}
+
+function render() {
+  const list = filtered();
+  const tb = document.getElementById("promoBody");
+  const em = document.getElementById("emptyState");
+
+  if (!list.length) { tb.innerHTML = ""; em.classList.remove("hidden"); return; }
+  em.classList.add("hidden");
+
+  tb.innerHTML = list.map(p => {
+    let statusHtml = '';
+    if (p.isExpired) {
+      statusHtml = '<span class="status-badge status-expired"><i class="fa-solid fa-clock"></i> Expired</span>';
+    } else if (p.isActive) {
+      statusHtml = '<span class="status-badge status-active"><i class="fa-solid fa-circle" style="font-size:6px;"></i> Active</span>';
+    } else {
+      statusHtml = '<span class="status-badge status-inactive"><i class="fa-solid fa-circle" style="font-size:6px;"></i> Inactive</span>';
+    }
+
+    const discountDisplay = p.discountType === 'PERCENTAGE' 
+      ? `${p.discountValue}%` 
+      : `৳${parseFloat(p.discountValue).toLocaleString()}`;
+
+    const appliesText = p.appliesTo === 'ALL' ? 'All' : p.appliesTo === 'ROOM' ? 'Rooms' : 'Travel';
+
+    return `
+      <tr>
+        <td><div class="promo-code-badge">${p.code}</div><div class="text-xs text-gray-400 mt-1">${p.description || ''}</div></td>
+        <td><span class="font-bold text-navy">${discountDisplay}</span><div class="text-xs text-gray-400">${p.discountType === 'PERCENTAGE' ? 'Percentage' : 'Fixed'}</div></td>
+        <td><span class="text-xs font-semibold px-2 py-1 rounded" style="background:#f1f5f9;color:#475569;">${appliesText}</span></td>
+        <td class="text-xs text-gray-600">${fmtDate(p.validFrom)}<br><span class="text-gray-400">to</span> ${fmtDate(p.validUntil)}</td>
+        <td><div class="text-sm font-semibold text-navy">${p.usedCount} / ${p.usageLimit || '∞'}</div></td>
+        <td>${statusHtml}</td>
+        <td class="text-right">
+          <div class="flex justify-end gap-2">
+            <button onclick="event.stopPropagation(); toggleStatus(${p.id})" class="icon-btn icon-btn-green" title="Toggle Status"><i class="fa-solid fa-power-off text-xs"></i></button>
+            <button onclick="editPromo(${p.id})" class="icon-btn icon-btn-blue" title="Edit"><i class="fa-solid fa-pen text-xs"></i></button>
+            <button onclick="openDeleteModal(${p.id})" class="icon-btn icon-btn-red" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById("modalTitle").textContent = "Create Promo Code";
+  document.getElementById("promoForm").reset();
+  document.getElementById("isActive").checked = true;
+  document.getElementById("modalError").classList.add("hidden");
+  document.getElementById("promoModal").classList.add("active");
+}
+
+function editPromo(id) {
+  const p = allPromos.find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  document.getElementById("modalTitle").textContent = "Edit Promo Code";
+  document.getElementById("code").value = p.code;
+  document.getElementById("description").value = p.description || "";
+  document.getElementById("discountType").value = p.discountType;
+  document.getElementById("discountValue").value = p.discountValue;
+  document.getElementById("maxDiscount").value = p.maxDiscount || "";
+  document.getElementById("minOrderAmount").value = p.minOrderAmount || 0;
+  document.getElementById("appliesTo").value = p.appliesTo;
+  document.getElementById("validFrom").value = p.validFrom || "";
+  document.getElementById("validUntil").value = p.validUntil || "";
+  document.getElementById("usageLimit").value = p.usageLimit || "";
+  document.getElementById("isActive").checked = p.isActive;
+  document.getElementById("modalError").classList.add("hidden");
+  document.getElementById("promoModal").classList.add("active");
+}
+
+function closeModal() { document.getElementById("promoModal").classList.remove("active"); editingId = null; }
+
+document.getElementById("promoForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...';
+
+  const payload = {
+    code: document.getElementById("code").value.trim().toUpperCase(),
+    description: document.getElementById("description").value.trim(),
+    discountType: document.getElementById("discountType").value,
+    discountValue: parseFloat(document.getElementById("discountValue").value),
+    maxDiscount: document.getElementById("maxDiscount").value ? parseFloat(document.getElementById("maxDiscount").value) : null,
+    minOrderAmount: parseFloat(document.getElementById("minOrderAmount").value) || 0,
+    appliesTo: document.getElementById("appliesTo").value,
+    validFrom: document.getElementById("validFrom").value || null,
+    validUntil: document.getElementById("validUntil").value || null,
+    usageLimit: document.getElementById("usageLimit").value ? parseInt(document.getElementById("usageLimit").value) : null,
+    isActive: document.getElementById("isActive").checked
+  };
+
+  try {
+    if (editingId) await api.put(`/admin/promo-codes/${editingId}`, payload);
+    else await api.post("/admin/promo-codes", payload);
+    showToast(editingId ? "Promo updated" : "Promo created", "success");
+    closeModal();
+    await loadData();
+  } catch (err) {
+    document.getElementById("modalErrorMsg").textContent = err.response?.data?.message || "Save failed";
+    document.getElementById("modalError").classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-save mr-2"></i>Save Promo';
+  }
+});
+
+async function toggleStatus(id) {
+  try {
+    await api.patch(`/admin/promo-codes/${id}/status`);
+    showToast("Status updated", "success");
+    await loadData();
+  } catch (err) {
+    showToast("Failed", "error");
+  }
+}
+
+function openDeleteModal(id) {
+  const p = allPromos.find(x => x.id === id);
+  deleteId = id;
+  document.getElementById("deleteMsg").textContent = `Delete promo "${p.code}"? This cannot be undone.`;
+  document.getElementById("deleteModal").classList.add("active");
+}
+function closeDeleteModal() { document.getElementById("deleteModal").classList.remove("active"); deleteId = null; }
+
+document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+  if (!deleteId) return;
+  const btn = document.getElementById("confirmDeleteBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    await api.delete(`/admin/promo-codes/${deleteId}`);
+    showToast("Promo deleted", "success");
+    closeDeleteModal();
+    await loadData();
+  } catch (err) {
+    showToast(err.response?.data?.message || "Delete failed", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Yes, Delete";
+  }
+});
+
+document.getElementById("promoModal").addEventListener("click", e => { if (e.target.id === "promoModal") closeModal(); });
+document.getElementById("deleteModal").addEventListener("click", e => { if (e.target.id === "deleteModal") closeDeleteModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); closeDeleteModal(); } });
+
+loadData();
+</script>
+</body>
+</html>

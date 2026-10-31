@@ -1,0 +1,1999 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HotelReserve | Admin Settings</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
+    rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: "#0B1F33",
+            navy2: "#102A43",
+            gold: "#C7A46A",
+            cream: "#F8F6F1",
+            soft: "#F3F5F7"
+          },
+          fontFamily: {
+            sans: ["DM Sans", "sans-serif"],
+            serif: ["Playfair Display", "serif"]
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "DM Sans", sans-serif;
+      background: #F3F5F7;
+      color: #0B1F33;
+    }
+
+    .font-serif {
+      font-family: "Playfair Display", serif;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(180deg, #0B1F33 0%, #102A43 100%);
+      min-height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 40;
+      transition: transform .3s ease;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 13px 22px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-left: 3px solid transparent;
+      transition: all .25s ease;
+    }
+
+    .sidebar-link:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, .05);
+    }
+
+    .sidebar-link.active {
+      color: #fff;
+      background: rgba(199, 164, 106, .15);
+      border-left-color: #C7A46A;
+    }
+
+    .sidebar-link.active i {
+      color: #C7A46A;
+    }
+
+    .sidebar-link i {
+      width: 20px;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .sidebar-section-label {
+      padding: 20px 22px 8px;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .main-content {
+      margin-left: 260px;
+      min-height: 100vh;
+    }
+
+    @media(max-width:1023px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+    }
+
+    .topbar {
+      background: #fff;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 16px 28px;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 28px;
+      border: 1px solid #eef2f7;
+      box-shadow: 0 5px 20px rgba(11, 31, 51, .03);
+    }
+
+    /* Settings Navigation */
+
+    .settings-nav {
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid #eef2f7;
+      overflow: hidden;
+      position: sticky;
+      top: 100px;
+    }
+
+    .settings-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      color: #64748b;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      border-left: 3px solid transparent;
+      transition: all .2s;
+      cursor: pointer;
+    }
+
+    .settings-nav-item:hover {
+      background: #F8F6F1;
+      color: #0B1F33;
+    }
+
+    .settings-nav-item.active {
+      background: #F8F6F1;
+      color: #0B1F33;
+      border-left-color: #C7A46A;
+      font-weight: 600;
+    }
+
+    .settings-nav-item i {
+      width: 18px;
+      text-align: center;
+      color: #94a3b8;
+    }
+
+    .settings-nav-item.active i {
+      color: #C7A46A;
+    }
+
+    .settings-panel {
+      display: none;
+    }
+
+    .settings-panel.active {
+      display: block;
+      animation: fadeIn .3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Form */
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0B1F33;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      outline: none;
+      font-size: 14px;
+      background: #fff;
+      transition: .2s;
+    }
+
+    .form-input:focus {
+      border-color: #C7A46A;
+      box-shadow: 0 0 0 4px rgba(199, 164, 106, .1);
+    }
+
+    .form-help {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    /* Toggle */
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 26px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      transition: .3s;
+      border-radius: 34px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked+.toggle-slider {
+      background-color: #10b981;
+    }
+
+    .toggle-switch input:checked+.toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Buttons */
+
+    .btn-gold {
+      background: #C7A46A;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .btn-gold:hover {
+      background: #aa884e;
+      transform: translateY(-1px);
+    }
+
+    .btn-navy {
+      background: #0B1F33;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .btn-navy:hover {
+      background: #102A43;
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 2px solid #e5e7eb;
+      color: #64748b;
+      cursor: pointer;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .btn-outline:hover {
+      border-color: #0B1F33;
+      color: #0B1F33;
+    }
+
+    /* Toast */
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      padding: 16px 22px;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(11, 31, 51, .15);
+      font-weight: 600;
+      font-size: 14px;
+      z-index: 9999;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast-success {
+      background: #dcfce7;
+      border-left: 4px solid #16a34a;
+      color: #166534;
+    }
+
+    .toast-error {
+      background: #fee2e2;
+      border-left: 4px solid #dc2626;
+      color: #991b1b;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(199, 164, 106, .25);
+      border-top-color: #C7A46A;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* Professional Settings Workspace */
+
+    .settings-hero {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px 32px;
+      border-radius: 20px;
+      background: linear-gradient(115deg, #0B1F33 0%, #173b59 72%, #244763 100%);
+      color: #fff;
+      box-shadow: 0 12px 28px rgba(11, 31, 51, .10);
+    }
+
+    .settings-hero:after {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border: 1px solid rgba(199, 164, 106, .22);
+      border-radius: 50%;
+      right: 13%;
+      top: -155px;
+      box-shadow: 0 0 0 28px rgba(199, 164, 106, .035),
+        0 0 0 58px rgba(199, 164, 106, .025);
+    }
+
+    .settings-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #d8bd91;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2.2px;
+      margin-bottom: 9px;
+    }
+
+    .eyebrow-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #C7A46A;
+      box-shadow: 0 0 0 4px rgba(199, 164, 106, .15);
+    }
+
+    .settings-hero h2 {
+      font-family: "Playfair Display", serif;
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight: 700;
+      margin: 0 0 7px;
+      color: #fff;
+    }
+
+    .settings-hero p {
+      font-size: 13px;
+      color: #c3cfda;
+      margin: 0;
+      max-width: 560px;
+    }
+
+    .hero-meta {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 16px;
+      border: 1px solid rgba(255, 255, 255, .14);
+      background: rgba(255, 255, 255, .07);
+      border-radius: 14px;
+      min-width: 210px;
+    }
+
+    .hero-meta-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      background: rgba(199, 164, 106, .18);
+      color: #dfc18f;
+      display: grid;
+      place-items: center;
+    }
+
+    .hero-meta strong,
+    .hero-meta span {
+      display: block;
+    }
+
+    .hero-meta strong {
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .hero-meta span {
+      font-size: 10px;
+      color: #b8c5d1;
+      margin-top: 3px;
+    }
+
+    .settings-quick-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .quick-stat {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      border: 1px solid #e9edf2;
+      border-radius: 15px;
+      padding: 14px 17px;
+      box-shadow: 0 4px 14px rgba(11, 31, 51, .025);
+    }
+
+    .quick-stat-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: #f7f1e7;
+      color: #b28d53;
+    }
+
+    .quick-stat strong,
+    .quick-stat small {
+      display: block;
+    }
+
+    .quick-stat strong {
+      font-size: 14px;
+      color: #102a43;
+    }
+
+    .quick-stat small {
+      font-size: 10px;
+      color: #8794a3;
+      margin-top: 2px;
+    }
+
+    .settings-nav {
+      box-shadow: 0 5px 22px rgba(11, 31, 51, .035);
+      padding: 8px 0;
+    }
+
+    .settings-nav:before {
+      content: "SETTINGS MENU";
+      display: block;
+      padding: 12px 20px 9px;
+      color: #9aa6b2;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.8px;
+    }
+
+    .settings-nav-item {
+      padding: 13px 19px;
+      margin: 2px 8px;
+      border-radius: 9px;
+      border-left: 0;
+    }
+
+    .settings-nav-item.active {
+      background: #f8f5ef;
+      box-shadow: inset 3px 0 #C7A46A;
+    }
+
+    .settings-nav-item.active span {
+      color: #102a43;
+    }
+
+    .card {
+      box-shadow: 0 7px 26px rgba(11, 31, 51, .045);
+      border-color: #e9edf2;
+    }
+
+    .form-input {
+      min-height: 43px;
+    }
+
+    .form-label {
+      letter-spacing: .65px;
+      font-size: 10px;
+      color: #536477;
+    }
+
+    .btn-gold,
+    .btn-navy,
+    .btn-outline {
+      font-size: 12px;
+      letter-spacing: .15px;
+    }
+
+    .settings-panel .card>div:first-child h3 {
+      letter-spacing: -.3px;
+    }
+
+    .settings-panel .card {
+      padding: 30px;
+    }
+
+    @media(max-width:767px) {
+      .settings-hero {
+        padding: 23px;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .hero-meta {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .settings-quick-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .settings-panel .card {
+        padding: 20px;
+      }
+
+      .settings-nav {
+        position: static;
+      }
+
+      .settings-nav-item {
+        display: inline-flex;
+        margin: 3px;
+      }
+
+      .settings-nav {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 8px;
+      }
+
+      .settings-nav:before {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+
+  <aside id="sidebar" class="sidebar">
+
+    <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+
+      <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center text-white">
+        <i class="fa-solid fa-hotel text-xl"></i>
+      </div>
+
+      <div>
+        <div class="text-lg font-bold text-white">
+          Hotel<span class="text-gold">Reserve</span>
+        </div>
+
+        <div class="text-[9px] tracking-[3px] uppercase text-gray-400">
+          Admin Panel
+        </div>
+      </div>
+
+    </div>
+
+    <div class="py-3 overflow-y-auto" style="height:calc(100vh - 90px);">
+
+      <div class="sidebar-section-label">Main</div>
+
+      <a href="admin.html" class="sidebar-link">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="admin-bookings.html" class="sidebar-link">
+        <i class="fa-solid fa-calendar-check"></i>
+        <span>Bookings</span>
+      </a>
+
+      <a href="admin-rooms.html" class="sidebar-link">
+        <i class="fa-solid fa-bed"></i>
+        <span>Rooms</span>
+      </a>
+
+      <a href="admin-guests.html" class="sidebar-link">
+        <i class="fa-solid fa-users"></i>
+        <span>Guests</span>
+      </a>
+
+      <a href="admin-checkin.html" class="sidebar-link">
+        <i class="fa-solid fa-door-open"></i>
+        <span>Check-in / Check-out</span>
+      </a>
+
+      <div class="sidebar-section-label">Operations</div>
+
+      <a href="admin-payments.html" class="sidebar-link">
+        <i class="fa-solid fa-credit-card"></i>
+        <span>Payments</span>
+      </a>
+
+      <a href="admin-housekeeping.html" class="sidebar-link">
+        <i class="fa-solid fa-broom"></i>
+        <span>Housekeeping</span>
+      </a>
+
+      <a href="admin-reports.html" class="sidebar-link">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Reports</span>
+      </a>
+
+      <div class="sidebar-section-label">Travel Management</div>
+
+      <a href="admin-vehicles.html" class="sidebar-link">
+        <i class="fa-solid fa-car"></i>
+        <span>Vehicles</span>
+      </a>
+
+      <a href="admin-drivers.html" class="sidebar-link">
+        <i class="fa-solid fa-id-card"></i>
+        <span>Drivers</span>
+      </a>
+
+      <a href="admin-destinations.html" class="sidebar-link">
+        <i class="fa-solid fa-map-location-dot"></i>
+        <span>Destinations</span>
+      </a>
+
+      <a href="admin-packages.html" class="sidebar-link">
+        <i class="fa-solid fa-suitcase-rolling"></i>
+        <span>Travel Packages</span>
+      </a>
+
+      <a href="admin-promo-codes.html" class="sidebar-link">
+        <i class="fa-solid fa-tags"></i>
+        <span>Promo Codes</span>
+      </a>
+
+      <a href="admin-vehicle-bookings.html" class="sidebar-link">
+        <i class="fa-solid fa-route"></i>
+        <span>Vehicle Bookings</span>
+      </a>
+
+      <div class="sidebar-section-label">System</div>
+
+      <a href="admin-settings.html" class="sidebar-link active">
+        <i class="fa-solid fa-gear"></i>
+        <span>Settings</span>
+      </a>
+
+      <a href="#" onclick="logout()" class="sidebar-link text-red-400">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>Logout</span>
+      </a>
+
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+
+  <div class="main-content">
+
+    <div class="topbar">
+
+      <div class="flex items-center justify-between gap-4">
+
+        <div class="flex items-center gap-4">
+
+          <button onclick="document.getElementById('sidebar').classList.toggle('open')"
+            class="lg:hidden text-navy text-xl">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+
+          <div>
+            <h1 class="text-xl font-bold text-navy mb-0">
+              Settings
+            </h1>
+
+            <p class="text-xs text-gray-500 mb-0">
+              Manage hotel configuration & preferences
+            </p>
+          </div>
+
+        </div>
+
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gold flex items-center justify-center text-white font-bold"
+            id="adminInitial">A</div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="p-6 lg:p-8">
+
+      <div id="loading" class="text-center py-20">
+        <div class="spinner mx-auto"></div>
+        <p class="text-gray-500 mt-4">Loading settings...</p>
+      </div>
+
+      <!-- INTRO -->
+
+      <section id="settingsIntro" class="mb-6">
+
+        <div class="settings-hero">
+
+          <div>
+            <div class="settings-eyebrow">
+              <span class="eyebrow-dot"></span>
+              CONTROL CENTER
+            </div>
+
+            <h2>Hotel configuration</h2>
+
+            <p>
+              Manage your property, reservations, payments and system preferences from one place.
+            </p>
+          </div>
+
+          <div class="hero-meta">
+
+            <div class="hero-meta-icon">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+
+            <div>
+              <strong>Admin workspace</strong>
+              <span>Changes are saved securely</span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="settings-quick-stats">
+
+          <div class="quick-stat">
+            <span class="quick-stat-icon">
+              <i class="fa-solid fa-sliders"></i>
+            </span>
+            <div>
+              <strong>11</strong>
+              <small>Configuration areas</small>
+            </div>
+          </div>
+
+          <div class="quick-stat">
+            <span class="quick-stat-icon">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </span>
+            <div>
+              <strong>Live</strong>
+              <small>Connected to your system</small>
+            </div>
+          </div>
+
+          <div class="quick-stat">
+            <span class="quick-stat-icon">
+              <i class="fa-solid fa-user-shield"></i>
+            </span>
+            <div>
+              <strong>Protected</strong>
+              <small>Admin-only access</small>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <div id="settingsContainer" class="hidden grid lg:grid-cols-4 gap-6">
+
+        <!-- LEFT NAV -->
+
+        <div class="lg:col-span-1">
+
+          <div class="settings-nav">
+
+            <div class="settings-nav-item active" data-tab="GENERAL" onclick="switchTab('GENERAL')">
+              <i class="fa-solid fa-hotel"></i>
+              <span>General</span>
+            </div>
+
+            <div class="settings-nav-item" data-tab="BOOKING" onclick="switchTab('BOOKING')">
+              <i class="fa-solid fa-calendar-check"></i>
+              <span>Booking</span>
+            </div>
+
+            <div class="settings-nav-item" data-tab="HOTEL_OPERATIONS" onclick="switchTab('HOTEL_OPERATIONS')">
+              <i class="fa-solid fa-concierge-bell"></i>
+              <span>Hotel Operations</span>
+            </div>
+
+            <div class="settings-nav-item" data-tab="PAYMENT" onclick="switchTab('PAYMENT')">
+              <i class="fa-solid fa-credit-card"></i>
+              <span>Payment</span>
+            </div>
+
+            <div class="settings-nav-item" data-tab="NOTIFICATION" onclick="switchTab('NOTIFICATION')">
+              <i class="fa-solid fa-bell"></i>
+              <span>Notifications</span>
+            </div>
+
+            <div class="settings-nav-item" data-tab="SECURITY" onclick="switchTab('SECURITY')">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>Security</span>
+            </div>
+
+            <div class="settings-nav-item" data-tab="INVOICE" onclick="switchTab('INVOICE')">
+              <i class="fa-solid fa-file-invoice"></i>
+              <span>Invoice & Tax</span>
+            </div>
+
+            <div class="settings-nav-item" data-tab="APPEARANCE" onclick="switchTab('APPEARANCE')">
+              <i class="fa-solid fa-palette"></i>
+              <span>Appearance</span>
+            </div>
+
+            <div class="settings-nav-item" data-tab="INTEGRATIONS" onclick="switchTab('INTEGRATIONS')">
+              <i class="fa-solid fa-plug"></i>
+              <span>Integrations</span>
+            </div>
+
+            <div class="settings-nav-item" data-tab="SYSTEM" onclick="switchTab('SYSTEM')">
+              <i class="fa-solid fa-server"></i>
+              <span>System</span>
+            </div>
+
+            <div class="settings-nav-item" data-tab="PROFILE" onclick="switchTab('PROFILE')">
+              <i class="fa-solid fa-user"></i>
+              <span>My Profile</span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- RIGHT PANEL -->
+
+        <div class="lg:col-span-3">
+          <div id="panelsContainer"></div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+
+  <script>
+
+    const API = "http://localhost:8080/api";
+
+    const api = axios.create({
+      baseURL: API
+    });
+
+    const token = localStorage.getItem("accessToken");
+
+    if (token) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      window.location.href = "login.html";
+    }
+
+    let isDirty = false;
+    let allSettings = {};
+    let userProfile = {};
+    let originalSettings = {};
+
+    /* Unsaved Changes Warning */
+
+    window.addEventListener("beforeunload", (e) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "You have unsaved changes.";
+      }
+    });
+
+    /* Logout */
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
+
+    /* Toast */
+
+    function showToast(msg, type = "success") {
+      // 🚀 আপনার রিকোয়েস্ট অনুযায়ী সরাসরি অ্যালার্ট (Alert) দেখানো হচ্ছে
+      alert(type === "success" ? "✅ " + msg : "❌ " + msg);
+
+      const t = document.createElement("div");
+      t.className = `toast toast-${type}`;
+      t.innerHTML = `
+    <i class="fa-solid ${type === "success" ? "fa-check-circle" : "fa-exclamation-circle"}"></i>
+    ${msg}
+  `;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3000);
+    }
+
+    /* Load Data */
+
+    async function loadData() {
+
+      try {
+
+        const [settingsRes, profileRes] = await Promise.all([
+          api.get("/admin/settings/all"),
+          api.get("/admin/settings/profile")
+        ]);
+
+        allSettings = settingsRes.data.data;
+
+        originalSettings = JSON.parse(
+          JSON.stringify(allSettings)
+        );
+
+        userProfile = profileRes.data.data;
+
+        document.getElementById("adminInitial").textContent =
+          (userProfile.name || "A").charAt(0).toUpperCase();
+
+        renderPanels();
+
+        document.getElementById("loading").classList.add("hidden");
+
+        document.getElementById("settingsContainer").classList.remove("hidden");
+
+      } catch (err) {
+
+        document.getElementById("loading").innerHTML = `
+      <p class="text-red-500">Failed to load settings.</p>
+    `;
+
+        console.error(err);
+      }
+    }
+
+    /* Payment Panel */
+
+    function renderPaymentPanel(items) {
+
+      const bkashMode =
+        items.find(i => i.key === "bkash_mode")?.value || "SANDBOX";
+
+      const enableBkash =
+        items.find(i => i.key === "enable_bkash")?.value === "true";
+
+      const enableCash =
+        items.find(i => i.key === "enable_cash")?.value === "true";
+
+      const otherItems = items.filter(i =>
+        !["bkash_mode", "enable_bkash", "enable_cash"].includes(i.key)
+      );
+
+      return `
+    <div class="settings-panel" id="panel-PAYMENT">
+
+      <div class="card mb-6">
+
+        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+
+          <div class="w-11 h-11 rounded-xl bg-[#f7f0e4] text-gold flex items-center justify-center text-lg">
+            <i class="fa-solid fa-credit-card"></i>
+          </div>
+
+          <div>
+            <h3 class="font-serif text-2xl font-bold text-navy mb-0">
+              Payment Settings
+            </h3>
+            <p class="text-xs text-gray-500 mb-0">
+              Manage payment gateways and processing
+            </p>
+          </div>
+
+        </div>
+
+        <!-- bKash -->
+
+        <div class="border border-gray-200 rounded-xl p-5 mb-4 bg-white hover:shadow-md transition">
+
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+            <div class="flex items-start gap-4">
+
+              <div class="w-14 h-14 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center text-2xl font-bold">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+              </div>
+
+              <div>
+
+                <div class="flex items-center gap-2 mb-1">
+                  <h4 class="text-lg font-bold text-gray-800 m-0">bKash</h4>
+
+                  <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                    Connected
+                  </span>
+
+                  <span class="bg-yellow-100 text-yellow-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                    ${bkashMode} Mode
+                  </span>
+                </div>
+
+                <p class="text-sm text-gray-500 m-0">
+                  Accept payments via bKash Sandbox or Live.
+                </p>
+
+              </div>
+
+            </div>
+
+            <div class="flex items-center gap-4">
+
+              <select id="field-bkash_mode"
+                      data-key="bkash_mode"
+                      data-type="STRING"
+                      class="form-input text-sm w-32">
+
+                <option value="SANDBOX" ${bkashMode === "SANDBOX" ? "selected" : ""}>
+                  Sandbox
+                </option>
+
+                <option value="LIVE" ${bkashMode === "LIVE" ? "selected" : ""}>
+                  Live
+                </option>
+
+              </select>
+
+              <label class="toggle-switch">
+                <input type="checkbox"
+                       id="field-enable_bkash"
+                       data-key="enable_bkash"
+                       data-type="BOOLEAN"
+                       ${enableBkash ? "checked" : ""}>
+                <span class="toggle-slider"></span>
+              </label>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Cash Payment -->
+
+        <div class="border border-gray-200 rounded-xl p-5 mb-6 bg-white hover:shadow-md transition">
+
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+            <div class="flex items-start gap-4">
+
+              <div class="w-14 h-14 rounded-lg bg-green-50 text-green-600 flex items-center justify-center text-2xl font-bold">
+                <i class="fa-solid fa-money-bill-wave"></i>
+              </div>
+
+              <div>
+
+                <div class="flex items-center gap-2 mb-1">
+                  <h4 class="text-lg font-bold text-gray-800 m-0">
+                    Cash Payment
+                  </h4>
+
+                  <span class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
+                    Offline
+                  </span>
+                </div>
+
+                <p class="text-sm text-gray-500 m-0">
+                  Allow guests to pay with cash at the hotel.
+                </p>
+
+              </div>
+
+            </div>
+
+            <div class="flex items-center gap-4">
+
+              <label class="toggle-switch">
+                <input type="checkbox"
+                       id="field-enable_cash"
+                       data-key="enable_cash"
+                       data-type="BOOLEAN"
+                       ${enableCash ? "checked" : ""}>
+                <span class="toggle-slider"></span>
+              </label>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-gray-100">
+
+          <h4 class="text-sm font-bold text-gray-700 mb-4 uppercase tracking-wider">
+            Additional Payment Rules
+          </h4>
+
+          <div class="grid md:grid-cols-2 gap-5">
+            ${otherItems.map(item => renderField(item)).join("")}
+          </div>
+
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+
+          <button onclick="saveCategory('PAYMENT')" class="btn-gold">
+            <i class="fa-solid fa-save mr-2"></i>
+            Save Payment Settings
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  `;
+    }
+
+    /* Render All Panels */
+
+    function renderPanels() {
+
+      const container = document.getElementById("panelsContainer");
+
+      let html = "";
+
+      const categories = [
+        "GENERAL",
+        "BOOKING",
+        "HOTEL_OPERATIONS",
+        "PAYMENT",
+        "NOTIFICATION",
+        "SECURITY",
+        "INVOICE",
+        "APPEARANCE",
+        "INTEGRATIONS",
+        "SYSTEM"
+      ];
+
+      const titles = {
+
+        GENERAL: {
+          icon: "fa-hotel",
+          title: "General Settings",
+          desc: "Hotel identity and basic information"
+        },
+
+        BOOKING: {
+          icon: "fa-calendar-check",
+          title: "Booking Settings",
+          desc: "Reservation rules and policies"
+        },
+
+        HOTEL_OPERATIONS: {
+          icon: "fa-concierge-bell",
+          title: "Hotel Operations",
+          desc: "Check-in/out & housekeeping rules"
+        },
+
+        PAYMENT: {
+          icon: "fa-credit-card",
+          title: "Payment Settings",
+          desc: "Payment methods, currency and gateway"
+        },
+
+        NOTIFICATION: {
+          icon: "fa-bell",
+          title: "Notification Settings",
+          desc: "Email, SMS and alert preferences"
+        },
+
+        SECURITY: {
+          icon: "fa-shield-halved",
+          title: "Security Settings",
+          desc: "Password policy and session management"
+        },
+
+        INVOICE: {
+          icon: "fa-file-invoice",
+          title: "Invoice & Tax",
+          desc: "Invoice numbering and tax configuration"
+        },
+
+        APPEARANCE: {
+          icon: "fa-palette",
+          title: "Appearance",
+          desc: "Theme, colors and date formats"
+        },
+
+        INTEGRATIONS: {
+          icon: "fa-plug",
+          title: "Integrations",
+          desc: "Third-party APIs and services"
+        },
+
+        SYSTEM: {
+          icon: "fa-server",
+          title: "System",
+          desc: "Maintenance mode and system info"
+        }
+
+      };
+
+      categories.forEach((cat, idx) => {
+
+        const items = allSettings[cat] || [];
+
+        const meta = titles[cat];
+
+        if (cat === "PAYMENT") {
+
+          let paymentHtml = renderPaymentPanel(items);
+
+          if (idx === 0) {
+            paymentHtml = paymentHtml.replace(
+              'class="settings-panel"',
+              'class="settings-panel active"'
+            );
+          }
+
+          html += paymentHtml;
+
+          return;
+        }
+
+        html += `
+      <div class="settings-panel ${idx === 0 ? "active" : ""}"
+           id="panel-${cat}">
+
+        <div class="card">
+
+          <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+
+            <div class="flex items-center gap-3">
+
+              <div class="w-11 h-11 rounded-xl bg-[#f7f0e4] text-gold flex items-center justify-center text-lg">
+                <i class="fa-solid ${meta.icon}"></i>
+              </div>
+
+              <div>
+                <h3 class="font-serif text-2xl font-bold text-navy mb-0">
+                  ${meta.title}
+                </h3>
+
+                <p class="text-xs text-gray-500 mb-0">
+                  ${meta.desc}
+                </p>
+              </div>
+
+            </div>
+
+            <button onclick="resetCategory('${cat}')"
+                    class="btn-outline text-xs px-3 py-1.5">
+              <i class="fa-solid fa-rotate-left mr-1"></i>
+              Reset
+            </button>
+
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-5">
+
+            ${items.map(item => renderField(item)).join("")}
+
+          </div>
+
+          <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+
+            <button onclick="saveCategory('${cat}')" class="btn-gold">
+              <i class="fa-solid fa-save mr-2"></i>
+              Save ${meta.title}
+            </button>
+
+          </div>
+
+        </div>
+      </div>
+    `;
+
+      });
+
+      /* Profile Panel */
+
+      html += `
+    <div class="settings-panel" id="panel-PROFILE">
+
+      <div class="card mb-6">
+
+        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+
+          <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-user"></i>
+          </div>
+
+          <div>
+            <h3 class="font-serif text-2xl font-bold text-navy mb-0">
+              My Profile
+            </h3>
+
+            <p class="text-xs text-gray-500 mb-0">
+              Update your account details
+            </p>
+          </div>
+
+        </div>
+
+        <form id="profileForm" class="grid md:grid-cols-2 gap-5">
+
+          <div>
+            <label class="form-label">Full Name</label>
+            <input type="text" id="pName" required class="form-input">
+          </div>
+
+          <div>
+            <label class="form-label">Email</label>
+            <input type="email" id="pEmail" required class="form-input">
+          </div>
+
+          <div>
+            <label class="form-label">Phone</label>
+            <input type="tel" id="pPhone" class="form-input">
+          </div>
+
+          <div class="md:col-span-2 flex justify-end mt-2">
+
+            <button type="submit" id="profileBtn" class="btn-navy">
+              <i class="fa-solid fa-save mr-2"></i>
+              Update Profile
+            </button>
+
+          </div>
+
+        </form>
+
+      </div>
+
+      <div class="card">
+
+        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+
+          <div class="w-11 h-11 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+
+          <div>
+            <h3 class="font-serif text-2xl font-bold text-navy mb-0">
+              Security
+            </h3>
+
+            <p class="text-xs text-gray-500 mb-0">
+              Change your password
+            </p>
+          </div>
+
+        </div>
+
+        <form id="passwordForm" class="grid md:grid-cols-3 gap-5">
+
+          <div>
+            <label class="form-label">Current Password</label>
+            <input type="password" id="currentPassword" required class="form-input">
+          </div>
+
+          <div>
+            <label class="form-label">New Password</label>
+            <input type="password" id="newPassword" required class="form-input">
+          </div>
+
+          <div>
+            <label class="form-label">Confirm Password</label>
+            <input type="password" id="confirmPassword" required class="form-input">
+          </div>
+
+          <div class="md:col-span-3 flex justify-end mt-2">
+
+            <button type="submit" id="passwordBtn" class="btn-gold">
+              <i class="fa-solid fa-key mr-2"></i>
+              Update Password
+            </button>
+
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+  `;
+
+      container.innerHTML = html;
+
+      /* Profile Values */
+
+      setTimeout(() => {
+
+        document.getElementById("pName").value =
+          userProfile.name || "";
+
+        document.getElementById("pEmail").value =
+          userProfile.email || "";
+
+        document.getElementById("pPhone").value =
+          userProfile.phone || "";
+
+        document.getElementById("profileForm")
+          .addEventListener("submit", updateProfile);
+
+        document.getElementById("passwordForm")
+          .addEventListener("submit", updatePassword);
+
+        document.querySelectorAll(
+          ".form-input, input[type='checkbox'], input[type='color']"
+        ).forEach(input => {
+
+          input.addEventListener("input", () => {
+            isDirty = true;
+          });
+
+          input.addEventListener("change", () => {
+            isDirty = true;
+          });
+
+        });
+
+      }, 100);
+
+    }
+
+    /* Render Individual Field */
+
+    function renderField(item) {
+
+      const id = `field-${item.key}`;
+
+      if (item.dataType === "BOOLEAN") {
+
+        const checked = item.value === "true" ? "checked" : "";
+
+        return `
+      <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+
+        <div>
+          <div class="font-semibold text-sm text-navy">
+            ${item.label}
+          </div>
+
+          ${item.description
+            ? `<div class="text-xs text-gray-500 mt-1">${item.description}</div>`
+            : ""}
+        </div>
+
+        <label class="toggle-switch">
+
+          <input type="checkbox"
+                 id="${id}"
+                 data-key="${item.key}"
+                 data-type="BOOLEAN"
+                 ${checked}>
+
+          <span class="toggle-slider"></span>
+
+        </label>
+
+      </div>
+    `;
+      }
+
+      if (item.dataType === "TEXT") {
+
+        return `
+      <div class="md:col-span-2">
+
+        <label class="form-label">
+          ${item.label}
+        </label>
+
+        <textarea id="${id}"
+                  data-key="${item.key}"
+                  data-type="TEXT"
+                  rows="3"
+                  class="form-input">${item.value || ""}</textarea>
+
+        ${item.description
+            ? `<div class="form-help">${item.description}</div>`
+            : ""}
+
+      </div>
+    `;
+      }
+
+      /* Color Picker */
+
+      if (item.key === "primary_color") {
+
+        return `
+      <div>
+
+        <label class="form-label">
+          ${item.label}
+        </label>
+
+        <div class="flex items-center gap-3">
+
+          <input type="color"
+                 id="${id}"
+                 data-key="${item.key}"
+                 data-type="STRING"
+                 value="${item.value || "#C7A46A"}"
+                 class="w-12 h-12 rounded cursor-pointer border border-gray-200 p-1">
+
+          <input type="text"
+                 value="${item.value || "#C7A46A"}"
+                 class="form-input flex-1"
+                 oninput="document.getElementById('${id}').value = this.value; isDirty = true;">
+
+        </div>
+
+      </div>
+    `;
+      }
+
+      /* Dropdown Fields */
+
+      const dropdownOptions = {
+
+        currency: ["BDT", "USD", "EUR"],
+
+        timezone: [
+          "Asia/Dhaka",
+          "Asia/Kolkata",
+          "UTC"
+        ],
+
+        default_language: [
+          "en",
+          "bn",
+          "ar"
+        ],
+
+        theme_mode: [
+          "LIGHT",
+          "DARK"
+        ],
+
+        booking_confirmation_mode: [
+          "AUTO",
+          "MANUAL"
+        ],
+
+        bkash_mode: [
+          "SANDBOX",
+          "LIVE"
+        ],
+
+        currency_format: [
+          "BDT (৳)",
+          "USD ($)",
+          "EUR (€)"
+        ],
+
+        time_format: [
+          "12H",
+          "24H"
+        ],
+
+        sidebar_style: [
+          "EXPANDED",
+          "COLLAPSED"
+        ]
+
+      };
+
+      if (dropdownOptions[item.key]) {
+
+        const options = dropdownOptions[item.key];
+
+        return `
+      <div>
+
+        <label class="form-label">
+          ${item.label}
+        </label>
+
+        <select id="${id}"
+                data-key="${item.key}"
+                data-type="STRING"
+                class="form-input">
+
+          ${options.map(o => `
+            <option value="${o}"
+              ${item.value === o ? "selected" : ""}>
+              ${o}
+            </option>
+          `).join("")}
+
+        </select>
+
+      </div>
+    `;
+      }
+
+      /* Default Input */
+
+      const inputType =
+        item.dataType === "NUMBER" ? "number" : "text";
+
+      return `
+    <div>
+
+      <label class="form-label">
+        ${item.label}
+      </label>
+
+      <input type="${inputType}"
+             id="${id}"
+             data-key="${item.key}"
+             data-type="${item.dataType}"
+             value="${item.value || ""}"
+             class="form-input">
+
+      ${item.description
+          ? `<div class="form-help">${item.description}</div>`
+          : ""}
+
+    </div>
+  `;
+    }
+
+    /* Switch Tab */
+
+    function switchTab(cat) {
+
+      document.querySelectorAll(".settings-nav-item")
+        .forEach(n => n.classList.remove("active"));
+
+      document.querySelector(
+        `.settings-nav-item[data-tab="${cat}"]`
+      ).classList.add("active");
+
+      document.querySelectorAll(".settings-panel")
+        .forEach(p => p.classList.remove("active"));
+
+      document.getElementById(`panel-${cat}`)
+        .classList.add("active");
+
+    }
+
+    /* Reset Category */
+
+    function resetCategory(cat) {
+
+      if (!confirm(
+        "Are you sure you want to reset changes? (You still need to click Save)"
+      )) return;
+
+      const items = originalSettings[cat] || [];
+
+      items.forEach(item => {
+
+        const input = document.getElementById(`field-${item.key}`);
+
+        if (input) {
+
+          if (item.dataType === "BOOLEAN") {
+            input.checked = item.value === "true";
+          } else {
+            input.value = item.value;
+          }
+
+        }
+
+      });
+
+      showToast("Changes reset to last saved values.", "success");
+
+      isDirty = true;
+
+    }
+
+    /* Save Category */
+
+    async function saveCategory(cat) {
+
+      const panel = document.getElementById(`panel-${cat}`);
+
+      const inputs = panel.querySelectorAll("[data-key]");
+
+      const updates = {};
+
+      inputs.forEach(input => {
+
+        if (input.dataset.type === "BOOLEAN") {
+
+          updates[input.dataset.key] =
+            input.checked ? "true" : "false";
+
+        } else {
+
+          updates[input.dataset.key] = input.value;
+
+        }
+
+      });
+
+      try {
+
+        const res = await api.put(
+          "/admin/settings/bulk",
+          updates
+        );
+
+        console.log("✅ Save success:", res.data);
+
+        showToast(
+          `${cat} settings saved successfully!`,
+          "success"
+        );
+
+        isDirty = false;
+
+        for (const [key, value] of Object.entries(updates)) {
+
+          for (const c in originalSettings) {
+
+            const setting = originalSettings[c].find(
+              s => s.key === key
+            );
+
+            if (setting) {
+              setting.value = value;
+              break;
+            }
+
+          }
+
+        }
+
+      } catch (err) {
+
+        console.error("Save Error:", err);
+
+        const msg =
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to save";
+
+        showToast(msg, "error");
+
+      }
+
+    }
+
+    /* Update Profile */
+
+    async function updateProfile(e) {
+
+      e.preventDefault();
+
+      const btn = document.getElementById("profileBtn");
+
+      btn.disabled = true;
+
+      btn.innerHTML = `
+    <i class="fa-solid fa-spinner fa-spin mr-2"></i>
+    Saving...
+  `;
+
+      try {
+
+        const payload = {
+
+          name: document.getElementById("pName").value,
+
+          email: document.getElementById("pEmail").value,
+
+          phone: document.getElementById("pPhone").value
+
+        };
+
+        await api.put(
+          "/admin/settings/profile",
+          payload
+        );
+
+        const currentUser = JSON.parse(
+          localStorage.getItem("user") || "{}"
+        );
+
+        currentUser.name = payload.name;
+        currentUser.email = payload.email;
+
+        localStorage.setItem(
+          "user",
+          JSON.stringify(currentUser)
+        );
+
+        showToast("Profile updated!", "success");
+
+        isDirty = false;
+
+      } catch (err) {
+
+        showToast(
+          err.response?.data?.message ||
+          "Failed to update",
+          "error"
+        );
+
+      } finally {
+
+        btn.disabled = false;
+
+        btn.innerHTML = `
+      <i class="fa-solid fa-save mr-2"></i>
+      Update Profile
+    `;
+
+      }
+
+    }
+
+    /* Update Password */
+
+    async function updatePassword(e) {
+
+      e.preventDefault();
+
+      const newPass =
+        document.getElementById("newPassword").value;
+
+      const confirmPass =
+        document.getElementById("confirmPassword").value;
+
+      if (newPass !== confirmPass) {
+
+        return showToast(
+          "Passwords do not match!",
+          "error"
+        );
+
+      }
+
+      const btn = document.getElementById("passwordBtn");
+
+      btn.disabled = true;
+
+      btn.innerHTML = `
+    <i class="fa-solid fa-spinner fa-spin mr-2"></i>
+    Updating...
+  `;
+
+      try {
+
+        await api.put(
+          "/admin/settings/password",
+          {
+            currentPassword:
+              document.getElementById("currentPassword").value,
+
+            newPassword: newPass
+          }
+        );
+
+        showToast(
+          "Password changed!",
+          "success"
+        );
+
+        document.getElementById("passwordForm").reset();
+
+        isDirty = false;
+
+      } catch (err) {
+
+        showToast(
+          err.response?.data?.message ||
+          "Failed to change password",
+          "error"
+        );
+
+      } finally {
+
+        btn.disabled = false;
+
+        btn.innerHTML = `
+      <i class="fa-solid fa-key mr-2"></i>
+      Update Password
+    `;
+
+      }
+
+    }
+
+    /* Initialize */
+
+    loadData();
+
+  </script>
+
+</body>
+
+</html>

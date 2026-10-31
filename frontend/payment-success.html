@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Successful - HotelReserve</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<!-- 🚀 PDF Generation Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  body { font-family: 'DM Sans', sans-serif; background: #f3f4f6; margin: 0; }
+</style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-10 px-4">
+
+  <!-- Success Message -->
+  <div class="text-center mb-8">
+    <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg shadow-green-500/20">
+      <i class="fa-solid fa-check"></i>
+    </div>
+    <h2 class="text-3xl font-bold text-gray-800 mb-2">Payment Successful!</h2>
+    <p class="text-gray-500">Your booking has been confirmed. You can download your receipt below.</p>
+  </div>
+
+  <!-- 🚀 THE INVOICE (This part will be converted to PDF) -->
+  <div id="invoice" class="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-8 border border-gray-100 relative overflow-hidden">
+    
+    <!-- Invoice Header -->
+    <div class="flex justify-between items-start border-b border-gray-200 pb-6 mb-6">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-10 h-10 rounded-xl bg-[#0B1F33] flex items-center justify-center text-[#C7A46A] text-xl"><i class="fa-solid fa-hotel"></i></div>
+          <div class="text-2xl font-bold text-[#0B1F33]">Hotel<span class="text-[#C7A46A]">Reserve</span></div>
+        </div>
+        <div class="text-sm text-gray-500">Dhaka, Bangladesh<br>support@hotelreserve.com</div>
+      </div>
+      <div class="text-right">
+        <div class="text-xl font-bold text-gray-800 uppercase tracking-widest">Receipt</div>
+        <div class="text-sm text-gray-500 mt-1">Invoice No: <span class="font-bold text-[#0B1F33]" id="invNumber">#0000</span></div>
+        <div class="text-sm text-gray-500">Date: <span class="font-bold" id="invDate">—</span></div>
+      </div>
+    </div>
+
+    <!-- Customer Info -->
+    <div class="grid grid-cols-2 gap-8 mb-8">
+      <div>
+        <div class="text-xs text-gray-400 uppercase tracking-wider font-bold mb-2">Billed To</div>
+        <div class="text-sm font-bold text-[#0B1F33]" id="invGuest">Guest Name</div>
+        <div class="text-sm text-gray-500" id="invEmail">email@example.com</div>
+      </div>
+      <div class="text-right">
+        <div class="text-xs text-gray-400 uppercase tracking-wider font-bold mb-2">Payment Method</div>
+        <div class="text-sm font-bold text-green-600"><i class="fa-solid fa-mobile-screen mr-1"></i> bKash</div>
+        <div class="text-sm text-gray-500 mt-1">Status: <span class="text-green-600 font-bold">PAID</span></div>
+      </div>
+    </div>
+
+    <!-- Booking Details -->
+    <div class="bg-gray-50 rounded-xl p-5 mb-8 border border-gray-100">
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <div class="text-xs text-gray-400 font-bold mb-1">Booking Type</div>
+          <div class="text-sm font-semibold text-[#0B1F33]" id="invType">Hotel Room</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-400 font-bold mb-1">Item Details</div>
+          <div class="text-sm font-semibold text-[#0B1F33]" id="invItem">Room 101</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-400 font-bold mb-1">Transaction ID</div>
+          <div class="text-sm font-semibold text-[#0B1F33]" id="invTrx">TR0011...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <table class="w-full mb-8">
+      <thead>
+        <tr class="border-b-2 border-gray-200 text-left text-xs text-gray-400 uppercase tracking-wider">
+          <th class="pb-3 font-bold">Description</th>
+          <th class="pb-3 font-bold text-right">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-gray-100">
+          <td class="py-4 text-sm text-gray-600" id="invDesc">Booking Charge</td>
+          <td class="py-4 text-sm font-semibold text-right" id="invBase">৳0</td>
+        </tr>
+        <tr class="border-b border-gray-100" id="discountRow" style="display:none;">
+          <td class="py-4 text-sm text-gray-600">Discount Applied</td>
+          <td class="py-4 text-sm font-semibold text-right text-red-500" id="invDiscount">-৳0</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Total -->
+    <div class="flex justify-end border-t-2 border-gray-200 pt-4">
+      <div class="w-1/2">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-500 font-semibold text-sm">Total Paid</span>
+          <span class="text-2xl font-bold text-[#0B1F33]" id="invTotal">৳0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="mt-12 text-center text-xs text-gray-400 border-t border-gray-100 pt-6">
+      Thank you for choosing HotelReserve. This is a computer-generated receipt.<br>
+      For any queries, contact support@hotelreserve.com
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="flex gap-4 mt-8 w-full max-w-3xl justify-center">
+    <button onclick="window.location.href='my-bookings.html'" class="px-6 py-3 rounded-xl font-bold text-gray-600 bg-white border border-gray-300 hover:bg-gray-50 transition">
+      Back to My Bookings
+    </button>
+    <button onclick="downloadPDF()" id="downloadBtn" class="px-8 py-3 rounded-xl font-bold text-white bg-[#0B1F33] hover:bg-[#102A43] shadow-lg shadow-[#0B1F33]/30 transition flex items-center gap-2">
+      <i class="fa-solid fa-download"></i> Download Pay Slip (PDF)
+    </button>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const bookingId = params.get('bookingId');
+  const type = params.get('type') || 'HOTEL'; // Default to HOTEL
+
+  const token = localStorage.getItem("accessToken");
+  const api = axios.create({ baseURL: "http://localhost:8080/api" });
+  if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+  // 🚀 Load Data to populate the Invoice
+  async function loadInvoiceData() {
+    try {
+      if (!bookingId) throw new Error("No Booking ID found.");
+      
+      let bookingData = {};
+      
+      // Fetch Hotel Booking
+      if (type === 'HOTEL' || type === null) {
+        const res = await api.get("/bookings/my");
+        const bookings = res.data.data || [];
+        bookingData = bookings.find(b => b.id == bookingId);
+        
+        if (bookingData) {
+          document.getElementById("invType").textContent = "Hotel Room";
+          document.getElementById("invItem").textContent = `Room ${bookingData.roomNumber} (${bookingData.roomType})`;
+          document.getElementById("invDesc").textContent = `Stay from ${bookingData.checkIn} to ${bookingData.checkOut} (${bookingData.nights} Nights)`;
+          document.getElementById("invGuest").textContent = bookingData.userName || "Guest";
+        }
+      } 
+      // Fetch Vehicle Booking
+      else if (type === 'VEHICLE') {
+        const res = await api.get("/vehicle-bookings/my");
+        const bookings = res.data.data || [];
+        bookingData = bookings.find(b => b.id == bookingId);
+        
+        if (bookingData) {
+          document.getElementById("invType").textContent = "Vehicle Rental / Package";
+          document.getElementById("invItem").textContent = bookingData.vehicleNumber ? `Vehicle: ${bookingData.vehicleNumber}` : bookingData.packageName;
+          document.getElementById("invDesc").textContent = `Trip from ${bookingData.pickupDate} to ${bookingData.returnDate}`;
+          document.getElementById("invGuest").textContent = bookingData.userName || "Guest";
+        }
+      }
+
+      if (!bookingData) throw new Error("Booking data not found.");
+
+      // Common Population
+      document.getElementById("invNumber").textContent = `#INV-${bookingData.id.toString().padStart(4, '0')}`;
+      document.getElementById("invDate").textContent = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      document.getElementById("invTrx").textContent = "BKASH-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+      document.getElementById("invBase").textContent = `৳${parseFloat(bookingData.basePrice || bookingData.totalPrice).toLocaleString()}`;
+      document.getElementById("invTotal").textContent = `৳${parseFloat(bookingData.totalPrice).toLocaleString()}`;
+
+      if (bookingData.discountAmount > 0) {
+        document.getElementById("discountRow").style.display = "table-row";
+        document.getElementById("invDiscount").textContent = `-৳${parseFloat(bookingData.discountAmount).toLocaleString()}`;
+      }
+
+    } catch (err) {
+      console.error("Error loading invoice:", err);
+      alert("Could not load invoice details. Redirecting to bookings.");
+      window.location.href = "my-bookings.html";
+    }
+  }
+
+  // 🚀 Download PDF Function
+  function downloadPDF() {
+    const element = document.getElementById('invoice');
+    const btn = document.getElementById('downloadBtn');
+    
+    // Button UI change
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+    btn.disabled = true;
+
+    const opt = {
+      margin:       0,
+      filename:     `HotelReserve_Receipt_${bookingId}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    // Generate PDF
+    html2pdf().set(opt).from(element).save().then(() => {
+      // Reset button UI
+      btn.innerHTML = '<i class="fa-solid fa-download"></i> Download Pay Slip (PDF)';
+      btn.disabled = false;
+    });
+  }
+
+  loadInvoiceData();
+</script>
+</body>
+</html>

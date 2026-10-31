@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Destinations Management — Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: { extend: {
+    colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7", teal:"#1E8A8A" },
+    fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] }
+  }}
+}
+</script>
+<style>
+* { box-sizing: border-box; }
+body { margin:0; font-family:"DM Sans",sans-serif; background:#F3F5F7; color:#0B1F33; }
+.font-serif { font-family:"Playfair Display",serif; }
+.sidebar { width:260px; background:linear-gradient(180deg,#0B1F33 0%,#102A43 100%); min-height:100vh; position:fixed; left:0; top:0; z-index:40; transition:transform .3s ease; }
+.sidebar-link { display:flex; align-items:center; gap:14px; padding:13px 22px; color:#94a3b8; text-decoration:none; font-size:14px; font-weight:500; border-left:3px solid transparent; transition:all .25s ease; }
+.sidebar-link:hover { color:#fff; background:rgba(255,255,255,.05); }
+.sidebar-link.active { color:#fff; background:rgba(199,164,106,.15); border-left-color:#C7A46A; }
+.sidebar-link.active i { color:#C7A46A; }
+.sidebar-link i { width:20px; text-align:center; font-size:16px; }
+.sidebar-section-label { padding:20px 22px 8px; color:#64748b; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:2px; }
+.main-content { margin-left:260px; min-height:100vh; }
+@media (max-width:1023px) { .sidebar { transform:translateX(-100%); } .sidebar.open { transform:translateX(0); } .main-content { margin-left:0; } }
+.topbar { background:#fff; border-bottom:1px solid #e5e7eb; padding:16px 28px; position:sticky; top:0; z-index:30; }
+.card { background:#fff; border-radius:18px; padding:24px; border:1px solid #eef2f7; }
+.stat-card { background:#fff; border-radius:18px; padding:20px; border:1px solid #eef2f7; transition:all .3s ease; }
+.stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px rgba(11,31,51,.08); }
+.stat-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.dest-card { background:#fff; border:1px solid #eef2f7; border-radius:18px; overflow:hidden; transition:all .3s ease; }
+.dest-card:hover { transform:translateY(-6px); box-shadow:0 20px 45px rgba(11,31,51,.12); }
+.dest-image { width:100%; height:200px; object-fit:cover; position:relative; }
+.dest-overlay { position:absolute; inset:0; background:linear-gradient(0deg, rgba(11,31,51,.7) 0%, transparent 50%); }
+.btn-gold { background:#C7A46A; color:#fff; transition:.25s ease; border:none; cursor:pointer; }
+.btn-gold:hover { background:#aa884e; color:#fff; }
+.btn-navy { background:#0B1F33; color:#fff; transition:.25s ease; border:none; cursor:pointer; }
+.btn-navy:hover { background:#102A43; color:#fff; }
+.search-input { padding:11px 16px 11px 42px; border:2px solid #e5e7eb; border-radius:12px; outline:none; font-size:14px; width:100%; }
+.search-input:focus { border-color:#C7A46A; box-shadow:0 0 0 4px rgba(199,164,106,.12); }
+.search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#9ca3af; }
+.icon-btn { width:36px; height:36px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; transition:all .2s ease; border:none; cursor:pointer; }
+.icon-btn-blue { background:#dbeafe; color:#2563eb; }
+.icon-btn-blue:hover { background:#2563eb; color:#fff; }
+.icon-btn-red { background:#fee2e2; color:#dc2626; }
+.icon-btn-red:hover { background:#dc2626; color:#fff; }
+.icon-btn-green { background:#dcfce7; color:#16a34a; }
+.spinner { display:inline-block; width:40px; height:40px; border:4px solid rgba(199,164,106,.25); border-top-color:#C7A46A; border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.modal-overlay { position:fixed; inset:0; background:rgba(11,31,51,.75); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:100; padding:20px; overflow-y:auto; }
+.modal-overlay.active { display:flex; }
+.modal-box { background:#fff; border-radius:20px; max-width:560px; width:100%; padding:32px; max-height:90vh; overflow-y:auto; margin:auto; }
+.form-input { width:100%; padding:12px 16px; border:2px solid #e5e7eb; border-radius:12px; outline:none; font-size:14px; background:#fff; }
+.form-input:focus { border-color:#C7A46A; box-shadow:0 0 0 4px rgba(199,164,106,.12); }
+.form-label { display:block; font-size:12px; font-weight:700; color:#0B1F33; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+.custom-scroll::-webkit-scrollbar { width:6px; }
+.custom-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:6px; }
+.toast { position:fixed; bottom:30px; right:30px; padding:16px 22px; border-radius:12px; box-shadow:0 10px 30px rgba(11,31,51,.15); font-weight:600; font-size:14px; z-index:9999; max-width:400px; }
+.toast-success { background:#dcfce7; border-left:4px solid #16a34a; color:#166534; }
+.toast-error { background:#fee2e2; border-left:4px solid #dc2626; color:#991b1b; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" class="sidebar">
+  <div class="flex items-center gap-3 px-6 py-6 border-b border-white/10">
+    <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center text-white"><i class="fa-solid fa-hotel text-xl"></i></div>
+    <div>
+      <div class="text-lg font-bold text-white">Hotel<span class="text-gold">Reserve</span></div>
+      <div class="text-[9px] tracking-[3px] uppercase text-gray-400">Admin Panel</div>
+    </div>
+  </div>
+  <div class="py-3 overflow-y-auto custom-scroll" style="height:calc(100vh - 90px);">
+    <div class="sidebar-section-label">Main</div>
+    <a href="admin.html" class="sidebar-link"><i class="fa-solid fa-chart-line"></i><span>Dashboard</span></a>
+    <a href="admin-bookings.html" class="sidebar-link"><i class="fa-solid fa-calendar-check"></i><span>Bookings</span></a>
+    <a href="admin-rooms.html" class="sidebar-link"><i class="fa-solid fa-bed"></i><span>Rooms</span></a>
+    <a href="admin-guests.html" class="sidebar-link"><i class="fa-solid fa-users"></i><span>Guests</span></a>
+    <a href="admin-checkin.html" class="sidebar-link"><i class="fa-solid fa-door-open"></i><span>Check-in / Check-out</span></a>
+    <div class="sidebar-section-label">Operations</div>
+    <a href="admin-payments.html" class="sidebar-link"><i class="fa-solid fa-credit-card"></i><span>Payments</span></a>
+    <a href="admin-housekeeping.html" class="sidebar-link"><i class="fa-solid fa-broom"></i><span>Housekeeping</span></a>
+    <a href="admin-reports.html" class="sidebar-link"><i class="fa-solid fa-chart-pie"></i><span>Reports</span></a>
+    <div class="sidebar-section-label">Travel Management</div>
+    <a href="admin-vehicles.html" class="sidebar-link"><i class="fa-solid fa-car"></i><span>Vehicles</span></a>
+    <a href="admin-drivers.html" class="sidebar-link"><i class="fa-solid fa-id-card"></i><span>Drivers</span></a>
+    <a href="admin-destinations.html" class="sidebar-link active"><i class="fa-solid fa-map-location-dot"></i><span>Destinations</span></a>
+    <a href="admin-packages.html" class="sidebar-link"><i class="fa-solid fa-suitcase-rolling"></i><span>Travel Packages</span></a>
+    <a href="admin-vehicle-bookings.html" class="sidebar-link"><i class="fa-solid fa-route"></i><span>Vehicle Bookings</span></a>
+    <div class="sidebar-section-label">System</div>
+    <a href="admin-settings.html" class="sidebar-link"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    <a href="#" onclick="logout()" class="sidebar-link text-red-400 hover:text-red-300"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main-content">
+  <div class="topbar">
+    <div class="flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="lg:hidden text-navy text-xl"><i class="fa-solid fa-bars"></i></button>
+        <div>
+          <h1 class="text-xl font-bold text-navy mb-0">Destinations Management</h1>
+          <p class="text-xs text-gray-500 mb-0">Manage travel destinations</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="openAddModal()" class="btn-gold px-5 py-2.5 rounded-lg text-sm font-semibold"><i class="fa-solid fa-plus mr-2"></i>Add Destination</button>
+        <div class="flex items-center gap-3 pl-3 border-l border-gray-200">
+          <div class="hidden md:block text-right">
+            <div class="text-sm font-semibold text-navy" id="adminName">Admin</div>
+            <div class="text-xs text-gray-500">Administrator</div>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-gold flex items-center justify-center text-white font-bold" id="adminInitial">A</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-6 lg:p-8">
+    <div id="loading" class="text-center py-24">
+      <div class="spinner mx-auto"></div>
+      <p class="text-gray-500 mt-4">Loading destinations...</p>
+    </div>
+
+    <div id="content" class="hidden">
+      <!-- STATS -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total</div><div class="stat-icon bg-blue-50 text-blue-600"><i class="fa-solid fa-map-location-dot"></i></div></div><div class="font-serif text-3xl font-bold text-navy" id="statTotal">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Active</div><div class="stat-icon bg-green-50 text-green-600"><i class="fa-solid fa-circle-check"></i></div></div><div class="font-serif text-3xl font-bold text-green-600" id="statActive">0</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Avg Distance</div><div class="stat-icon bg-purple-50 text-purple-600"><i class="fa-solid fa-road"></i></div></div><div class="font-serif text-2xl font-bold text-purple-600"><span id="statAvgDist">0</span> km</div></div>
+        <div class="stat-card"><div class="flex items-center justify-between mb-2"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider">Avg Fare</div><div class="stat-icon bg-[#f7f0e4] text-gold"><i class="fa-solid fa-money-bill"></i></div></div><div class="font-serif text-2xl font-bold text-navy">৳<span id="statAvgFare">0</span></div></div>
+      </div>
+
+      <!-- SEARCH -->
+      <div class="card mb-6">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search destinations...">
+        </div>
+      </div>
+
+      <!-- DESTINATIONS GRID -->
+      <div id="destGrid" class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+
+      <div id="emptyState" class="hidden text-center py-16">
+        <i class="fa-solid fa-map-location-dot text-4xl text-gray-300 mb-3"></i>
+        <h3 class="font-serif text-xl font-semibold text-gray-500 mb-2">No destinations found</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div id="destModal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="font-serif text-2xl font-semibold" id="modalTitle">Add Destination</h3>
+      <button onclick="closeModal()" class="icon-btn" style="background:#f1f5f9;color:#64748b;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div id="modalError" class="hidden mb-4 p-3 rounded-xl text-sm" style="background:#fee2e2;color:#991b1b;border-left:4px solid #dc2626;"><span id="modalErrorMsg"></span></div>
+
+    <form id="destForm" class="space-y-4">
+      <div><label class="form-label">Name *</label><input type="text" id="name" required class="form-input" placeholder="Cox's Bazar"></div>
+      <div><label class="form-label">Description</label><textarea id="description" rows="2" class="form-input" placeholder="World's longest natural sea beach..."></textarea></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="form-label">Distance (km)</label><input type="number" id="distanceKm" min="0" class="form-input" placeholder="400"></div>
+        <div><label class="form-label">Est. Hours</label><input type="number" id="estimatedHours" min="0" class="form-input" placeholder="8"></div>
+      </div>
+      <div><label class="form-label">Base Fare ৳</label><input type="number" id="baseFare" min="0" step="100" class="form-input" placeholder="8000"></div>
+      <div><label class="form-label">Image URL</label><input type="url" id="imageUrl" class="form-input" placeholder="https://..."></div>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="isActive" checked class="w-4 h-4">
+        <label for="isActive" class="text-sm font-medium">Active (visible to users)</label>
+      </div>
+
+      <div class="flex gap-3 pt-4 border-t border-gray-100">
+        <button type="button" onclick="closeModal()" class="flex-1 border-2 border-navy text-navy hover:bg-navy hover:text-white py-3 rounded-xl font-semibold transition">Cancel</button>
+        <button type="submit" id="saveBtn" class="btn-gold flex-1 py-3 rounded-xl font-semibold"><i class="fa-solid fa-save mr-2"></i>Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div id="deleteModal" class="modal-overlay">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i></div>
+      <h3 class="font-serif text-2xl font-semibold mb-2">Delete Destination?</h3>
+      <p class="text-gray-500 text-sm" id="deleteMsg">This action cannot be undone.</p>
+    </div>
+    <div class="flex gap-3">
+      <button onclick="closeDeleteModal()" class="flex-1 border-2 border-navy text-navy hover:bg-navy hover:text-white py-3 rounded-xl font-semibold transition">Cancel</button>
+      <button id="confirmDeleteBtn" class="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold border-0">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+<script>
+const API = "http://localhost:8080/api";
+const api = axios.create({ baseURL: API });
+const token = localStorage.getItem("accessToken");
+if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+else window.location.href = "login.html";
+
+const user = JSON.parse(localStorage.getItem("user") || "null");
+if (!user || user.role !== "ADMIN") window.location.href = "index.html";
+document.getElementById("adminName").textContent = user.name;
+document.getElementById("adminInitial").textContent = user.name.charAt(0).toUpperCase();
+
+let allDest = [];
+let editingId = null;
+let deleteId = null;
+
+function logout() { localStorage.clear(); window.location.href = "index.html"; }
+function showToast(msg, type = "info") {
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+async function load() {
+  try {
+    const r = await api.get("/admin/destinations");
+    allDest = r.data.data || [];
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("content").classList.remove("hidden");
+    updateStats();
+    render();
+  } catch (e) {
+    document.getElementById("loading").innerHTML = `<div class="text-center"><i class="fa-solid fa-circle-exclamation text-red-500 text-5xl mb-4"></i><button onclick="location.reload()" class="btn-navy px-5 py-2 rounded-lg text-sm mt-2">Retry</button></div>`;
+  }
+}
+
+function updateStats() {
+  document.getElementById("statTotal").textContent = allDest.length;
+  document.getElementById("statActive").textContent = allDest.filter(d => d.isActive).length;
+  const avgDist = allDest.length ? Math.round(allDest.reduce((s, d) => s + (d.distanceKm || 0), 0) / allDest.length) : 0;
+  const avgFare = allDest.length ? Math.round(allDest.reduce((s, d) => s + parseFloat(d.baseFare || 0), 0) / allDest.length) : 0;
+  document.getElementById("statAvgDist").textContent = avgDist;
+  document.getElementById("statAvgFare").textContent = avgFare.toLocaleString('en-BD');
+}
+
+document.getElementById("searchInput").addEventListener("input", render);
+
+function filtered() {
+  const s = document.getElementById("searchInput").value.toLowerCase().trim();
+  return allDest.filter(d => !s || (d.name || "").toLowerCase().includes(s) || (d.description || "").toLowerCase().includes(s));
+}
+
+const fallbackImages = [
+  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=85",
+  "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=600&q=85",
+  "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=600&q=85",
+  "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&q=85"
+];
+
+function render() {
+  const list = filtered();
+  const grid = document.getElementById("destGrid");
+  const em = document.getElementById("emptyState");
+
+  if (!list.length) { grid.innerHTML = ""; em.classList.remove("hidden"); return; }
+  em.classList.add("hidden");
+
+  grid.innerHTML = list.map((d, i) => {
+    const img = d.imageUrl || fallbackImages[i % fallbackImages.length];
+    return `
+      <div class="dest-card">
+        <div class="relative">
+          <img src="${img}" class="dest-image" alt="${d.name}" onerror="this.src='${fallbackImages[i % fallbackImages.length]}'">
+          <div class="dest-overlay"></div>
+          <div class="absolute bottom-4 left-4 right-4 text-white">
+            <h3 class="font-serif text-xl font-bold">${d.name}</h3>
+            <div class="flex items-center gap-3 text-xs mt-1">
+              ${d.distanceKm ? `<span><i class="fa-solid fa-road mr-1"></i>${d.distanceKm} km</span>` : ''}
+              ${d.estimatedHours ? `<span><i class="fa-regular fa-clock mr-1"></i>${d.estimatedHours}h</span>` : ''}
+            </div>
+          </div>
+          ${!d.isActive ? '<div class="absolute top-3 right-3"><span class="px-2 py-1 rounded-full text-xs font-bold" style="background:#fee2e2;color:#991b1b;">Inactive</span></div>' : ''}
+        </div>
+        <div class="p-5">
+          <p class="text-sm text-gray-500 mb-4 line-clamp-2" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${d.description || 'No description'}</p>
+          <div class="flex items-end justify-between pt-3 border-t border-gray-100">
+            <div>
+              <div class="text-2xl font-bold text-navy">৳${parseFloat(d.baseFare || 0).toLocaleString()}</div>
+              <div class="text-[10px] text-gray-400">base fare</div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="editDest(${d.id})" class="icon-btn icon-btn-blue" title="Edit"><i class="fa-solid fa-pen text-xs"></i></button>
+              <button onclick="openDeleteModal(${d.id})" class="icon-btn icon-btn-red" title="Delete"><i class="fa-solid fa-trash text-xs"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function openAddModal() {
+  editingId = null;
+  document.getElementById("modalTitle").textContent = "Add Destination";
+  document.getElementById("destForm").reset();
+  document.getElementById("isActive").checked = true;
+  document.getElementById("modalError").classList.add("hidden");
+  document.getElementById("destModal").classList.add("active");
+}
+
+function editDest(id) {
+  const d = allDest.find(x => x.id === id);
+  if (!d) return;
+  editingId = id;
+  document.getElementById("modalTitle").textContent = "Edit Destination";
+  document.getElementById("name").value = d.name;
+  document.getElementById("description").value = d.description || "";
+  document.getElementById("distanceKm").value = d.distanceKm || "";
+  document.getElementById("estimatedHours").value = d.estimatedHours || "";
+  document.getElementById("baseFare").value = d.baseFare || "";
+  document.getElementById("imageUrl").value = d.imageUrl || "";
+  document.getElementById("isActive").checked = d.isActive;
+  document.getElementById("modalError").classList.add("hidden");
+  document.getElementById("destModal").classList.add("active");
+}
+
+function closeModal() { document.getElementById("destModal").classList.remove("active"); editingId = null; }
+
+document.getElementById("destForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const btn = document.getElementById("saveBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...';
+
+  const p = {
+    name: document.getElementById("name").value.trim(),
+    description: document.getElementById("description").value.trim(),
+    distanceKm: document.getElementById("distanceKm").value ? parseInt(document.getElementById("distanceKm").value) : null,
+    estimatedHours: document.getElementById("estimatedHours").value ? parseInt(document.getElementById("estimatedHours").value) : null,
+    baseFare: document.getElementById("baseFare").value ? parseFloat(document.getElementById("baseFare").value) : null,
+    imageUrl: document.getElementById("imageUrl").value.trim(),
+    isActive: document.getElementById("isActive").checked
+  };
+
+  try {
+    if (editingId) await api.put(`/admin/destinations/${editingId}`, p);
+    else await api.post("/admin/destinations", p);
+    showToast(editingId ? "Destination updated" : "Destination added", "success");
+    closeModal();
+    await load();
+  } catch (err) {
+    document.getElementById("modalErrorMsg").textContent = err.response?.data?.message || "Save failed";
+    document.getElementById("modalError").classList.remove("hidden");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-save mr-2"></i>Save';
+  }
+});
+
+function openDeleteModal(id) {
+  const d = allDest.find(x => x.id === id);
+  deleteId = id;
+  document.getElementById("deleteMsg").textContent = `Delete "${d.name}"? This cannot be undone.`;
+  document.getElementById("deleteModal").classList.add("active");
+}
+function closeDeleteModal() { document.getElementById("deleteModal").classList.remove("active"); deleteId = null; }
+
+document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+  if (!deleteId) return;
+  const btn = document.getElementById("confirmDeleteBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+  try {
+    await api.delete(`/admin/destinations/${deleteId}`);
+    showToast("Destination deleted", "success");
+    closeDeleteModal();
+    await load();
+  } catch (err) {
+    showToast(err.response?.data?.message || "Delete failed", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Yes, Delete";
+  }
+});
+
+document.getElementById("destModal").addEventListener("click", e => { if (e.target.id === "destModal") closeModal(); });
+document.getElementById("deleteModal").addEventListener("click", e => { if (e.target.id === "deleteModal") closeDeleteModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeModal(); closeDeleteModal(); } });
+
+load();
+</script>
+</body>
+</html>

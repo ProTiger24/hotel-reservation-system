@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login & Register — HotelReserve</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { navy:"#0B1F33", navy2:"#102A43", gold:"#C7A46A", cream:"#F8F6F1", soft:"#F3F5F7", teal:"#1E8A8A" }, fontFamily: { sans:["DM Sans","sans-serif"], serif:["Playfair Display","serif"] } } }
+    }
+  </script>
+  <style>
+    body { font-family: "DM Sans", sans-serif; color: #0B1F33; background-color: #F8F6F1; }
+    .font-serif { font-family: "Playfair Display", serif; }
+    
+    /* 🚀 3D Flip Container using CSS Grid (Auto Height) */
+    .flip-container { perspective: 1500px; width: 100%; }
+    .flipper { display: grid; transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+    
+    /* Place both front and back in the same grid cell so container height is the max of both */
+    .front, .back { grid-area: 1 / 1; backface-visibility: hidden; display: grid; grid-template-columns: 1fr 1fr; border-radius: 32px; overflow: hidden; background: white; box-shadow: 0 20px 60px rgba(11, 31, 51, 0.08); }
+    
+    .back { transform: rotateY(180deg); z-index: 1; pointer-events: none; }
+    .front { z-index: 2; pointer-events: auto; }
+    .flip-container.flipped .flipper { transform: rotateY(180deg); }
+    .flip-container.flipped .front { z-index: 1; pointer-events: none; }
+    .flip-container.flipped .back { z-index: 2; pointer-events: auto; }
+    
+    /* Mobile Responsive */
+    @media (max-width: 1023px) {
+      .flipper { display: block; transform: none !important; }
+      .front, .back { grid-template-columns: 1fr; transform: none !important; }
+      .back { display: none; }
+      .flip-container.flipped .front { display: none; }
+      .flip-container.flipped .back { display: grid; }
+    }
+
+    /* Form Elements */
+    .form-input { width: 100%; padding: 14px 16px 14px 48px; border: 2px solid #e5e7eb; border-radius: 14px; outline: none; font-size: 15px; transition: all 0.3s ease; background: white; }
+    .form-input:focus { border-color: #C7A46A; box-shadow: 0 0 0 4px rgba(199, 164, 106, 0.15); }
+    .form-input-icon { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+    
+    .btn-gold { background: linear-gradient(135deg, #C7A46A 0%, #b28e55 100%); color: white; padding: 14px 24px; border-radius: 14px; font-weight: 700; width: 100%; transition: all 0.3s ease; border: none; font-size: 16px; }
+    .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(199, 164, 106, 0.4); color: white; }
+    .btn-gold:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .alert-error { background: #fee2e2; border-left: 4px solid #dc2626; color: #991b1b; padding: 14px 18px; border-radius: 12px; font-size: 14px; font-weight: 500; }
+    .glass { background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(18px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    .glass-dark { background: rgba(11, 31, 51, 0.72); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+    .nav-link-custom { position: relative; }
+    .nav-link-custom::after { content: ""; position: absolute; left: 0; bottom: -5px; width: 0; height: 2px; background: #C7A46A; transition: width 0.3s ease; }
+    .nav-link-custom:hover::after { width: 100%; }
+    .password-strength { height: 4px; border-radius: 4px; transition: all 0.3s ease; }
+  </style>
+</head>
+<body class="bg-cream min-h-screen">
+
+  <!-- NAVBAR -->
+  <nav class="fixed top-0 left-0 right-0 z-50 glass-dark text-white">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        <a href="index.html" class="flex items-center gap-3 text-white no-underline">
+          <div class="w-11 h-11 rounded-2xl bg-gold flex items-center justify-center"><i class="fa-solid fa-hotel text-xl"></i></div>
+          <div>
+            <div class="text-xl font-bold tracking-wide">Hotel<span class="text-gold">Reserve</span></div>
+            <div class="text-[10px] tracking-[3px] uppercase text-gray-300">Hospitality</div>
+          </div>
+        </a>
+        <div class="hidden lg:flex items-center justify-center flex-1 gap-8">
+          <a href="index.html" class="nav-link-custom text-white no-underline text-sm">Home</a>
+          <a href="index.html#rooms" class="nav-link-custom text-white no-underline text-sm">Rooms</a>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="#" onclick="flipToLogin(); return false;" class="hidden md:inline-flex items-center gap-2 text-white no-underline text-sm hover:text-gold transition"><i class="fa-regular fa-user"></i> Login</a>
+          <a href="#" onclick="flipToRegister(); return false;" class="bg-gold hover:bg-[#b28e55] text-white px-5 py-3 rounded-full font-semibold text-sm no-underline transition">Register</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <section class="min-h-screen flex items-center pt-24 pb-12">
+    <div class="max-w-7xl mx-auto px-5 lg:px-8 w-full">
+      
+      <!-- 🚀 3D FLIP CONTAINER -->
+      <div class="flip-container" id="flipContainer">
+        <div class="flipper">
+          
+          <!-- ================= FRONT: LOGIN ================= -->
+          <div class="front">
+            <!-- Left: Login Form -->
+            <div class="p-8 md:p-12 flex flex-col justify-center bg-white z-10">
+              <div class="fade-up">
+                <h2 class="font-serif text-4xl font-semibold mb-3">Sign In</h2>
+                <p class="text-gray-500 mb-8">Enter your credentials to continue</p>
+
+                <div id="loginErrorBox" class="hidden alert-error mb-6"><i class="fa-solid fa-circle-exclamation mr-2"></i><span id="loginErrorMsg"></span></div>
+
+                <form id="loginForm" class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-semibold text-navy mb-2">Email Address</label>
+                    <div class="relative">
+                      <span class="form-input-icon"><i class="fa-regular fa-envelope"></i></span>
+                      <input type="email" id="loginEmail" required class="form-input" placeholder="you@example.com">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-navy mb-2">Password</label>
+                    <div class="relative">
+                      <span class="form-input-icon"><i class="fa-solid fa-lock"></i></span>
+                      <input type="password" id="loginPassword" required class="form-input pr-12" placeholder="••••••••">
+                      <button type="button" onclick="togglePassword('loginPassword', this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-navy bg-transparent border-0 cursor-pointer">
+                        <i class="fa-regular fa-eye"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" id="rememberMe" class="rounded">
+                      <span class="text-gray-600">Remember me</span>
+                    </label>
+                    <a href="javascript:void(0)" onclick="openForgotModal()" class="text-gold font-semibold hover:underline">Forgot Password?</a>
+                  </div>
+                  <button type="submit" id="loginBtn" class="btn-gold mt-2">Sign In <i class="fa-solid fa-arrow-right ml-2"></i></button>
+                </form>
+
+                <div class="relative my-5">
+                  <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
+                  <div class="relative flex justify-center text-sm"><span class="px-4 bg-white text-gray-400">OR</span></div>
+                </div>
+                
+                <div id="g_id_onload" data-client_id="713645495799-h4vja6vn4nhpdnr2u2cjcdo3ljtd6svn.apps.googleusercontent.com" data-context="signin" data-ux_mode="popup" data-callback="handleGoogleLogin" data-auto_prompt="false"></div>
+                <div class="g_id_signin flex justify-center" data-type="standard" data-shape="rectangular" data-theme="outline" data-text="signin_with" data-size="large" data-logo_alignment="left"></div>
+
+                <div class="relative my-5">
+                  <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
+                  <div class="relative flex justify-center text-sm"><span class="px-4 bg-white text-gray-400">New to HotelReserve?</span></div>
+                </div>
+                
+                <button type="button" onclick="flipToRegister()" class="block w-full text-center border-2 border-navy text-navy hover:bg-navy hover:text-white font-semibold py-3 rounded-xl transition">Create an Account</button>
+              </div>
+            </div>
+
+            <!-- Right: Login Image & Features -->
+            <div class="relative bg-gradient-to-br from-navy to-navy2 p-8 md:p-12 flex flex-col justify-between hidden lg:flex">
+              <div class="absolute inset-0 opacity-10" style="background-image: url('https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center;"></div>
+              
+              <div class="relative z-10">
+                <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-8">
+                  <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                  <span class="text-sm text-white">Welcome Back</span>
+                </div>
+                <h1 class="font-serif text-4xl md:text-5xl lg:text-6xl font-semibold text-white leading-tight mb-6">Sign In<br><span class="text-gold">to Your Stay.</span></h1>
+                <p class="text-gray-300 text-lg leading-relaxed max-w-md">Access your bookings, manage reservations, and unlock exclusive member benefits.</p>
+              </div>
+
+              <div class="relative z-10 space-y-5">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center text-gold"><i class="fa-solid fa-star text-lg"></i></div>
+                  <div><div class="text-white font-semibold">Premium Comfort</div><div class="text-gray-400 text-sm">Handpicked rooms for every need</div></div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center text-gold"><i class="fa-solid fa-shield-halved text-lg"></i></div>
+                  <div><div class="text-white font-semibold">Secure Booking</div><div class="text-gray-400 text-sm">Your data is protected</div></div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center text-gold"><i class="fa-solid fa-bolt text-lg"></i></div>
+                  <div><div class="text-white font-semibold">Instant Confirmation</div><div class="text-gray-400 text-sm">Book in seconds</div></div>
+                </div>
+              </div>
+
+              <div class="relative z-10 text-gray-500 text-sm">© 2026 HotelReserve. All rights reserved.</div>
+            </div>
+          </div>
+
+          <!-- ================= BACK: REGISTER ================= -->
+          <div class="back">
+            <!-- Left: Register Form -->
+            <div class="p-8 md:p-12 flex flex-col justify-center bg-white z-10">
+              <div class="fade-up">
+                <h2 class="font-serif text-4xl font-semibold mb-3">Create Account</h2>
+                <p class="text-gray-500 mb-8">Fill in your details to get started</p>
+
+                <div id="registerErrorBox" class="hidden alert-error mb-6"><i class="fa-solid fa-circle-exclamation mr-2"></i><span id="registerErrorMsg"></span></div>
+
+                <form id="registerForm" class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-semibold text-navy mb-2">Full Name</label>
+                    <div class="relative">
+                      <span class="form-input-icon"><i class="fa-regular fa-user"></i></span>
+                      <input type="text" id="regName" required minlength="2" class="form-input" placeholder="Abdul Alim">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-navy mb-2">Email Address</label>
+                    <div class="relative">
+                      <span class="form-input-icon"><i class="fa-regular fa-envelope"></i></span>
+                      <input type="email" id="regEmail" required class="form-input" placeholder="you@example.com">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-navy mb-2">Phone Number</label>
+                    <div class="relative">
+                      <span class="form-input-icon"><i class="fa-solid fa-phone"></i></span>
+                      <input type="tel" id="regPhone" class="form-input" placeholder="01712345678">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-navy mb-2">Password</label>
+                    <div class="relative">
+                      <span class="form-input-icon"><i class="fa-solid fa-lock"></i></span>
+                      <input type="password" id="regPassword" required minlength="6" class="form-input pr-12" placeholder="Minimum 6 characters" oninput="checkStrength(this.value)">
+                      <button type="button" onclick="togglePassword('regPassword', this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-navy bg-transparent border-0 cursor-pointer">
+                        <i class="fa-regular fa-eye"></i>
+                      </button>
+                    </div>
+                    <div class="mt-2 flex gap-1">
+                      <div class="password-strength flex-1 bg-gray-200" id="strength1"></div>
+                      <div class="password-strength flex-1 bg-gray-200" id="strength2"></div>
+                      <div class="password-strength flex-1 bg-gray-200" id="strength3"></div>
+                      <div class="password-strength flex-1 bg-gray-200" id="strength4"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2" id="strengthText">Password strength</p>
+                  </div>
+
+                  <div class="flex items-start gap-2 text-sm pt-1">
+                    <input type="checkbox" id="terms" required class="mt-1">
+                    <label for="terms" class="text-gray-600">
+                      I agree to the <a href="#" class="text-gold font-semibold hover:underline">Terms</a> & <a href="#" class="text-gold font-semibold hover:underline">Privacy Policy</a>
+                    </label>
+                  </div>
+
+                  <button type="submit" id="registerBtn" class="btn-gold mt-2">Create Account <i class="fa-solid fa-arrow-right ml-2"></i></button>
+                </form>
+
+                <div class="relative my-5">
+                  <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200"></div></div>
+                  <div class="relative flex justify-center text-sm"><span class="px-4 bg-white text-gray-400">Already registered?</span></div>
+                </div>
+                
+                <button type="button" onclick="flipToLogin()" class="block w-full text-center border-2 border-navy text-navy hover:bg-navy hover:text-white font-semibold py-3 rounded-xl transition">Sign In Instead</button>
+              </div>
+            </div>
+
+            <!-- Right: Register Image & Features -->
+            <div class="relative bg-gradient-to-br from-navy to-navy2 p-8 md:p-12 flex flex-col justify-between hidden lg:flex">
+              <div class="absolute inset-0 opacity-10" style="background-image: url('https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=1200&q=80'); background-size: cover; background-position: center;"></div>
+              
+              <div class="relative z-10">
+                <div class="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-8">
+                  <span class="w-2 h-2 rounded-full bg-green-400"></span>
+                  <span class="text-sm text-white">Join HotelReserve</span>
+                </div>
+                <h1 class="font-serif text-4xl md:text-5xl lg:text-6xl font-semibold text-white leading-tight mb-6">Create<br><span class="text-gold">Your Account.</span></h1>
+                <p class="text-gray-300 text-lg leading-relaxed max-w-md">Sign up today and unlock exclusive discounts, priority bookings, and member-only offers.</p>
+              </div>
+
+              <div class="relative z-10 space-y-5">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center text-gold"><i class="fa-solid fa-gift text-lg"></i></div>
+                  <div><div class="text-white font-semibold">Member Discounts</div><div class="text-gray-400 text-sm">Save up to 20% on every booking</div></div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center text-gold"><i class="fa-solid fa-calendar-check text-lg"></i></div>
+                  <div><div class="text-white font-semibold">Easy Management</div><div class="text-gray-400 text-sm">Track all your bookings in one place</div></div>
+                </div>
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center text-gold"><i class="fa-solid fa-headset text-lg"></i></div>
+                  <div><div class="text-white font-semibold">24/7 Support</div><div class="text-gray-400 text-sm">We're here whenever you need us</div></div>
+                </div>
+              </div>
+
+              <div class="relative z-10 text-gray-500 text-sm">© 2026 HotelReserve. All rights reserved.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
+  <script>
+    const API_BASE_URL = 'http://localhost:8080/api';
+    const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Content-Type': 'application/json' } });
+
+    // 🚀 3D Flip Functions
+    function flipToRegister() {
+      document.getElementById('flipContainer').classList.add('flipped');
+    }
+    function flipToLogin() {
+      document.getElementById('flipContainer').classList.remove('flipped');
+    }
+
+    // 🚀 Eye Icon Toggle Function
+    function togglePassword(inputId, icon) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      }
+    }
+
+    // 🚀 Password Strength Checker
+    function checkStrength(password) {
+      let strength = 0;
+      if (password.length >= 6) strength++;
+      if (password.length >= 10) strength++;
+      if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength++;
+      if (/[0-9]/.test(password) || /[^A-Za-z0-9]/.test(password)) strength++;
+
+      const colors = ['bg-gray-200', 'bg-red-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500'];
+      const texts = ['Password strength', 'Weak', 'Fair', 'Good', 'Strong'];
+
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById('strength' + i);
+        el.className = 'password-strength flex-1 ' + (i <= strength ? colors[strength] : 'bg-gray-200');
+      }
+      document.getElementById('strengthText').textContent = texts[strength];
+    }
+
+    // 🚀 Login Form Submission
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const errorBox = document.getElementById('loginErrorBox');
+      errorBox.classList.add('hidden');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Signing in...';
+
+      try {
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const remember = document.getElementById('rememberMe').checked;
+
+        const response = await api.post('/auth/login', { email, password });
+        const data = response.data.data;
+
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        let destination = data.user.role === 'ADMIN' ? 'admin.html' : 'my-bookings.html';
+        window.location.href = destination;
+
+      } catch (err) {
+        errorBox.classList.remove('hidden');
+        document.getElementById('loginErrorMsg').textContent = err.response?.data?.message || 'Login failed.';
+        btn.disabled = false;
+        btn.innerHTML = 'Sign In <i class="fa-solid fa-arrow-right ml-2"></i>';
+      }
+    });
+
+    // 🚀 Google Login Callback
+    async function handleGoogleLogin(response) {
+        try {
+            const res = await api.post('/auth/google-login', { token: response.credential });
+            const data = res.data.data;
+            
+            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('refreshToken', data.refreshToken);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            
+            let destination = data.user.role === 'ADMIN' ? 'admin.html' : 'my-bookings.html';
+            window.location.href = destination;
+        } catch (err) {
+            alert("Google login failed. Please try again.");
+        }
+    }
+
+    // 🚀 Register Form Submission
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('registerBtn');
+      const errorBox = document.getElementById('registerErrorBox');
+      errorBox.classList.add('hidden');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Creating account...';
+
+      try {
+        const response = await api.post('/auth/register', {
+          name: document.getElementById('regName').value,
+          email: document.getElementById('regEmail').value,
+          phone: document.getElementById('regPhone').value,
+          password: document.getElementById('regPassword').value,
+        });
+        const data = response.data.data;
+        
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        window.location.href = 'my-bookings.html';
+        
+      } catch (err) {
+        errorBox.classList.remove('hidden');
+        document.getElementById('registerErrorMsg').textContent = err.response?.data?.message || 'Registration failed.';
+        btn.disabled = false;
+        btn.innerHTML = 'Create Account <i class="fa-solid fa-arrow-right ml-2"></i>';
+      }
+    });
+  
+    // 🚀 Forgot Password Logic
+    function openForgotModal() {
+        document.getElementById('forgotModal').style.display = 'flex';
+        document.getElementById('step1').classList.remove('hidden');
+        document.getElementById('step2').classList.add('hidden');
+        document.getElementById('forgotError').classList.add('hidden');
+    }
+
+    function closeForgotModal() {
+        document.getElementById('forgotModal').style.display = 'none';
+    }
+
+    async function sendPin() {
+        const email = document.getElementById('resetEmail').value;
+        if (!email) return alert("Please enter email");
+        
+        const btn = document.getElementById('sendPinBtn');
+        btn.innerHTML = "Sending...";
+        btn.disabled = true;
+
+        try {
+            await api.post('/auth/forgot-password', { email });
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            btn.innerHTML = "Send PIN";
+            btn.disabled = false;
+        } catch (err) {
+            document.getElementById('forgotError').classList.remove('hidden');
+            document.getElementById('forgotError').textContent = err.response?.data?.message || "Failed to send PIN";
+            btn.innerHTML = "Send PIN";
+            btn.disabled = false;
+        }
+    }
+
+    async function resetPassword() {
+        const email = document.getElementById('resetEmail').value;
+        const pin = document.getElementById('resetPin').value;
+        const newPassword = document.getElementById('newPassword').value;
+
+        if (!pin || !newPassword) return alert("Please enter PIN and new password");
+
+        const btn = document.getElementById('resetBtn');
+        btn.innerHTML = "Resetting...";
+        btn.disabled = true;
+
+        try {
+            await api.post('/auth/reset-password', { email, pin, newPassword });
+            alert("Password reset successful! Please login.");
+            closeForgotModal();
+            btn.innerHTML = "Reset Password";
+            btn.disabled = false;
+        } catch (err) {
+            document.getElementById('forgotError').classList.remove('hidden');
+            document.getElementById('forgotError').textContent = err.response?.data?.message || "Invalid PIN or expired";
+            btn.innerHTML = "Reset Password";
+            btn.disabled = false;
+        }
+    }
+    
+</script>
+
+    <!-- 🚀 Forgot Password Modal -->
+    <div id="forgotModal" class="modal-overlay" style="position:fixed; inset:0; background:rgba(11,31,51,0.75); backdrop-filter:blur(6px); display:none; align-items:center; justify-content:center; z-index:100; padding:20px;">
+      <div class="modal-box" style="background:#fff; border-radius:24px; max-width:440px; width:100%; padding:32px; box-shadow:0 30px 80px rgba(0,0,0,0.2);">
+        <div class="text-center mb-6">
+          <h3 class="font-serif text-2xl font-semibold text-navy mb-2">Reset Password</h3>
+          <p class="text-sm text-gray-500">Enter your email to receive a PIN.</p>
+        </div>
+        <div id="forgotError" class="hidden alert-error mb-4 text-sm"></div>
+        
+        <!-- Step 1: Email -->
+        <div id="step1">
+          <label class="block text-sm font-semibold text-navy mb-2">Email Address</label>
+          <input type="email" id="resetEmail" class="form-input mb-4" style="padding-left: 16px;" placeholder="you@example.com">
+          <button onclick="sendPin()" id="sendPinBtn" class="btn-gold">Send PIN</button>
+        </div>
+        
+        <!-- Step 2: PIN & New Password -->
+        <div id="step2" class="hidden">
+          <label class="block text-sm font-semibold text-navy mb-2">Enter 6-digit PIN</label>
+          <input type="text" id="resetPin" class="form-input mb-4" style="padding-left: 16px;" placeholder="123456">
+          <label class="block text-sm font-semibold text-navy mb-2">New Password</label>
+          <input type="password" id="newPassword" class="form-input mb-4" style="padding-left: 16px;" placeholder="••••••••">
+          <button onclick="resetPassword()" id="resetBtn" class="btn-gold">Reset Password</button>
+        </div>
+        
+        <button onclick="closeForgotModal()" class="w-full text-center text-sm text-gray-500 mt-4 hover:text-navy bg-transparent border-0">Cancel</button>
+      </div>
+    </div>
+
+</body>
+</html>
