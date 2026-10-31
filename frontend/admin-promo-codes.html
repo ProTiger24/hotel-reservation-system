@@ -230,7 +230,7 @@ tailwind.config = {
 
 <script src="https://cdn.jsdelivr.net/npm/axios@1.7.7/dist/axios.min.js"></script>
 <script>
-const API = "http://localhost:8080/api";
+const API = "https://hotel-reservation-system-update.onrender.com/api";
 const api = axios.create({ baseURL: API });
 const token = localStorage.getItem("accessToken");
 if (token) api.defaults.headers.common["Authorization"] = `Bearer ${token}`;

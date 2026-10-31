@@ -370,7 +370,7 @@
   document.body.appendChild(overlay);
 
   // Fetch active promos
-  const API_BASE = 'http://localhost:8080/api';
+  const API_BASE = 'https://hotel-reservation-system-update.onrender.com/api';
 
   fetch(API_BASE + '/promo-codes/active')
     .then(function (res) { return res.json(); })
