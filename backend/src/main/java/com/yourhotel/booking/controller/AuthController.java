@@ -4,6 +4,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.yourhotel.booking.dto.request.AdminRegisterRequest; // 🚀 নতুন ইমপোর্ট
 import com.yourhotel.booking.dto.request.LoginRequest;
 import com.yourhotel.booking.dto.request.RegisterRequest;
 import com.yourhotel.booking.dto.response.ApiResponse;
@@ -49,6 +50,12 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Registration successful", authService.register(request)));
+    }
+
+    // 🚀 ADMIN REGISTRATION ENDPOINT (এটি যোগ করা হলো)
+    @PostMapping("/register-admin")
+    public ResponseEntity<ApiResponse<AuthResponse>> registerAdmin(@Valid @RequestBody AdminRegisterRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Admin registered successfully", authService.registerAdmin(request)));
     }
 
     @PostMapping("/login")
