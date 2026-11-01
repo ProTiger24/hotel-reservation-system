@@ -42,6 +42,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/rooms/**").permitAll()
                         .requestMatchers("/api/vehicles/**").permitAll()
+                        
+                        // 🚀 bKash Callback এবং Error Path পারমিট করা হলো
+                        .requestMatchers("/api/payments/bkash/callback").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        
                         .requestMatchers("/api/payments/**").authenticated()
                         .requestMatchers("/api/drivers/**").permitAll()
                         .requestMatchers("/api/travel-packages/**").permitAll()
@@ -61,7 +66,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // 🚀 এখানে Vercel-এর লাইভ লিংকটি যুক্ত করা হয়েছে
+        // 🚀 Vercel-এর লাইভ লিংকটি এখানে আছে
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "http://localhost:3000",
