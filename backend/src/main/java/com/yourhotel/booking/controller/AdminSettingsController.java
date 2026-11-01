@@ -1,103 +1,105 @@
 package com.yourhotel.booking.controller;
 
 import com.yourhotel.booking.dto.response.ApiResponse;
-import com.yourhotel.booking.dto.response.UserResponse;
 import com.yourhotel.booking.entity.Setting;
 import com.yourhotel.booking.entity.User;
-import com.yourhotel.booking.exception.BadRequestException;
 import com.yourhotel.booking.repository.SettingRepository;
 import com.yourhotel.booking.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.LinkedHashMap;
+import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/settings")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminSettingsController {
 
+    private final SettingRepository settingRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final SettingRepository settingRepository;
 
-    public AdminSettingsController(UserRepository userRepository, PasswordEncoder passwordEncoder, SettingRepository settingRepository) {
+    public AdminSettingsController(SettingRepository settingRepository, UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.settingRepository = settingRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.settingRepository = settingRepository;
     }
 
-    // ============ PROFILE & PASSWORD ============
-    @GetMapping("/profile")
-    public ResponseEntity<ApiResponse<UserResponse>> getProfile(Authentication auth) {
-        User user = userRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new BadRequestException("User not found"));
-        return ResponseEntity.ok(ApiResponse.success(UserResponse.fromEntity(user)));
-    }
-
-    @PutMapping("/profile")
-    public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
-            @RequestBody Map<String, String> payload, Authentication auth) {
-        User user = userRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new BadRequestException("User not found"));
-        if (payload.containsKey("name")) user.setName(payload.get("name"));
-        if (payload.containsKey("phone")) user.setPhone(payload.get("phone"));
-        if (payload.containsKey("email") && !user.getEmail().equals(payload.get("email"))) {
-            if (userRepository.existsByEmail(payload.get("email"))) {
-                throw new BadRequestException("Email already in use");
-            }
-            user.setEmail(payload.get("email"));
-        }
-        User saved = userRepository.save(user);
-        return ResponseEntity.ok(ApiResponse.success("Profile updated", UserResponse.fromEntity(saved)));
-    }
-
-    @PutMapping("/password")
-    public ResponseEntity<ApiResponse<Void>> changePassword(
-            @RequestBody Map<String, String> payload, Authentication auth) {
-        User user = userRepository.findByEmail(auth.getName())
-                .orElseThrow(() -> new BadRequestException("User not found"));
-        if (!passwordEncoder.matches(payload.get("currentPassword"), user.getPassword())) {
-            throw new BadRequestException("Current password is incorrect");
-        }
-        String newPassword = payload.get("newPassword");
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new BadRequestException("New password must be at least 6 characters");
-        }
-        user.setPassword(passwordEncoder.encode(newPassword));
-        userRepository.save(user);
-        return ResponseEntity.ok(ApiResponse.success("Password changed", null));
-    }
-
-    // ============ APP SETTINGS (KEY-VALUE) ============
+    // 🚀 1. Get All Settings Grouped by Category
     @GetMapping("/all")
     public ResponseEntity<ApiResponse<Map<String, List<Setting>>>> getAllSettings() {
-        Map<String, List<Setting>> grouped = settingRepository.findAll().stream()
-                .collect(Collectors.groupingBy(Setting::getCategory, LinkedHashMap::new, Collectors.toList()));
-        return ResponseEntity.ok(ApiResponse.success(grouped));
+        List<Setting> allSettings = settingRepository.findAll();
+        
+        // ক্যাটাগরি অনুযায়ী গ্রুপ করা হচ্ছে (যেমন GENERAL, BOOKING)
+        Map<String, List<Setting>> groupedSettings = allSettings.stream()
+                .collect(Collectors.groupingBy(Setting::getCategory));
+                
+        return ResponseEntity.ok(ApiResponse.success("Settings loaded", groupedSettings));
     }
 
+    // 🚀 2. Save Settings in Bulk
     @PutMapping("/bulk")
-    public ResponseEntity<ApiResponse<Void>> updateSettings(@RequestBody Map<String, String> updates) {
-        System.out.println("🔄 Received settings update request: " + updates.keySet());
-        
-        updates.forEach((key, value) -> {
-            var settingOpt = settingRepository.findById(key);
-            if (settingOpt.isPresent()) {
-                var setting = settingOpt.get();
-                setting.setValue(value);
+    public ResponseEntity<ApiResponse<Void>> updateBulkSettings(@RequestBody Map<String, String> updates) {
+        for (Map.Entry<String, String> entry : updates.entrySet()) {
+            Optional<Setting> optionalSetting = settingRepository.findById(entry.getKey());
+            if (optionalSetting.isPresent()) {
+                Setting setting = optionalSetting.get();
+                setting.setValue(entry.getValue());
                 settingRepository.save(setting);
-            } else {
-                System.out.println("⚠️ Setting key not found in DB: " + key);
             }
-        });
-        System.out.println("✅ Settings update completed.");
+        }
         return ResponseEntity.ok(ApiResponse.success("Settings updated successfully", null));
+    }
+
+    // 🚀 3. Get Admin Profile
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<Map<String, String>>> getProfile(Principal principal) {
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Map<String, String> profile = new HashMap<>();
+        profile.put("name", user.getName());
+        profile.put("email", user.getEmail());
+        profile.put("phone", user.getPhone() != null ? user.getPhone() : "");
+        
+        return ResponseEntity.ok(ApiResponse.success("Profile loaded", profile));
+    }
+
+    // 🚀 4. Update Profile
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<Void>> updateProfile(@RequestBody Map<String, String> payload, Principal principal) {
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        user.setName(payload.get("name"));
+        user.setEmail(payload.get("email"));
+        user.setPhone(payload.get("phone"));
+        userRepository.save(user);
+        
+        return ResponseEntity.ok(ApiResponse.success("Profile updated", null));
+    }
+
+    // 🚀 5. Update Password
+    @PutMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> updatePassword(@RequestBody Map<String, String> payload, Principal principal) {
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        String currentPassword = payload.get("currentPassword");
+        String newPassword = payload.get("newPassword");
+        
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new RuntimeException("Incorrect current password");
+        }
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        
+        return ResponseEntity.ok(ApiResponse.success("Password updated", null));
     }
 }
