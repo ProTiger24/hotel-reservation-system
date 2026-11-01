@@ -12,14 +12,14 @@ public class EmailService {
 
     private final Resend resend;
 
-    // application.properties থেকে API Key নেওয়া হচ্ছে
     public EmailService(@Value("${RESEND_API_KEY}") String apiKey) {
         this.resend = new Resend(apiKey);
     }
 
+    // Core method to send email using Resend
     public void sendEmail(String to, String subject, String htmlContent) {
         CreateEmailOptions params = CreateEmailOptions.builder()
-                .from("onboarding@resend.dev") // Resend-এর ফ্রি টিয়ারে এই ইমেইলটি দিতে হবে
+                .from("onboarding@resend.dev")
                 .to(to)
                 .subject(subject)
                 .html(htmlContent)
@@ -31,5 +31,25 @@ public class EmailService {
         } catch (ResendException e) {
             System.err.println("❌ Failed to send email: " + e.getMessage());
         }
+    }
+
+    // 🚀 আপনার প্রজেক্টে আগে থেকে থাকা মেথডগুলো আবার যোগ করা হলো
+
+    public void sendPaymentSuccess(String to, String guestName, Long bookingId, String transactionId) {
+        String subject = "Payment Successful - HotelReserve";
+        String html = "<h3>Dear " + guestName + ",</h3>"
+                + "<p>Your payment for Booking ID: <strong>#" + bookingId + "</strong> was successful.</p>"
+                + "<p>Transaction ID: " + transactionId + "</p>"
+                + "<p>Thank you for choosing HotelReserve!</p>";
+        sendEmail(to, subject, html);
+    }
+
+    public void sendBookingConfirmation(String to, String guestName, Long bookingId, String roomNumber) {
+        String subject = "Booking Confirmed - HotelReserve";
+        String html = "<h3>Dear " + guestName + ",</h3>"
+                + "<p>Your booking is confirmed! Booking ID: <strong>#" + bookingId + "</strong></p>"
+                + "<p>Room Number: " + roomNumber + "</p>"
+                + "<p>We look forward to hosting you.</p>";
+        sendEmail(to, subject, html);
     }
 }
